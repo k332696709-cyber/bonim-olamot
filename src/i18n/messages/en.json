@@ -1,0 +1,134 @@
+{
+  "nav": {
+    "home": "Home",
+    "register": "Register",
+    "matchmaker": "Matchmaker",
+    "login": "Login",
+    "language": "עברית"
+  },
+  "brand": {
+    "name": "Bonim Olamot",
+    "tagline": "Matchmaking with integrity"
+  },
+  "hero": {
+    "cta": "I am looking for a partner"
+  },
+  "form": {
+    "femaleTitle": "Female Registration Form",
+    "submit": "Submit Form",
+    "submitting": "Submitting...",
+    "successMessage": "Form submitted successfully!",
+    "requiredNote": "Fields marked * are required",
+    "sections": {
+      "personal": "Personal Information",
+      "style": "Style",
+      "traits": "Character Traits",
+      "clothing": "Clothing Style",
+      "headcovering": "Head Covering After Marriage",
+      "partnerClothing": "Desired Partner Clothing",
+      "phone": "Phone Type"
+    },
+    "fields": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "age": "Age",
+      "hebrewBirthday": "Hebrew Birthday",
+      "status": "Marital Status",
+      "community": "Community",
+      "occupation": "Occupation",
+      "city": "City",
+      "phone": "Phone",
+      "email": "Email"
+    },
+    "placeholders": {
+      "firstName": "Enter first name",
+      "lastName": "Enter last name",
+      "age": "Age",
+      "hebrewBirthday": "e.g. 23 Tishrei 5785",
+      "status": "Select marital status",
+      "community": "Community / Stream",
+      "occupation": "Profession / Occupation",
+      "city": "City of residence",
+      "phone": "05X-XXXXXXX",
+      "email": "example@email.com"
+    },
+    "traits": {
+      "counter": "{{count}} of 3 selected",
+      "instruction": "Select 2–3 traits that describe you"
+    }
+  },
+  "matchmaker": {
+    "profileTitle": "Female Profile",
+    "status": {
+      "green": "Active Match",
+      "orange": "Offer This Week",
+      "light_red": "~1 Month No Offer",
+      "bright_red": "2+ Months No Offer"
+    },
+    "lock": {
+      "active": "Locked – {{hours}}h {{minutes}}m remaining",
+      "expired": "Lock expired",
+      "none": "Not locked"
+    },
+    "notes": {
+      "title": "Internal Notes",
+      "placeholder": "Add a note...",
+      "add": "Add",
+      "empty": "No notes yet"
+    },
+    "pdf": {
+      "export": "Export Profile Card",
+      "exporting": "Exporting...",
+      "cardTitle": "Profile Card – Bonim Olamot",
+      "confidential": "Confidential – Internal use only",
+      "hiddenField": "***"
+    },
+    "lock48": "Lock 48h",
+    "dashboard": {
+      "title": "Matchmaker System",
+      "subtitle": "Candidate Management – Bonim Olamot",
+      "tabs": {
+        "bachurot": "Bachurot",
+        "bachurim": "Bachurim"
+      },
+      "stats": {
+        "bachurot": "Bachurot",
+        "bachurim": "Bachurim",
+        "active": "Active Matches",
+        "urgent": "Urgent"
+      },
+      "table": {
+        "name": "Name",
+        "age": "Age",
+        "city": "City",
+        "style": "Style",
+        "status": "Status",
+        "lastOffer": "Last Offer",
+        "lock": "Lock",
+        "actions": "Actions",
+        "empty": "No candidates to display"
+      },
+      "actions": {
+        "view": "View",
+        "startWork": "Start Work",
+        "unlock": "Unlock",
+        "pdf": "PDF",
+        "notes": "Notes"
+      },
+      "lock": {
+        "hours": "h",
+        "minutes": "m"
+      }
+    }
+  },
+  "errors": {
+    "required": "Required field",
+    "minLength": "Must be at least {{min}} characters",
+    "invalidEmail": "Invalid email address",
+    "invalidPhone": "Invalid phone number (e.g. 0501234567)",
+    "minTraits": "Please select at least 2 traits",
+    "maxTraits": "You can select up to 3 traits",
+    "minAge": "Minimum age: 18",
+    "selectOption": "Please select an option"
+  }
+}

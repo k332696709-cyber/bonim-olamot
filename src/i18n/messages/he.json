@@ -1,0 +1,134 @@
+{
+  "nav": {
+    "home": "דף הבית",
+    "register": "הרשמה",
+    "matchmaker": "שדכן",
+    "login": "כניסה",
+    "language": "English"
+  },
+  "brand": {
+    "name": "בונים עולמות",
+    "tagline": "שידוכים בדרך האמת"
+  },
+  "hero": {
+    "cta": "אני מחפש/ת שידוך"
+  },
+  "form": {
+    "femaleTitle": "טופס הרשמה – מיועדת",
+    "submit": "שלח טופס",
+    "submitting": "שולח...",
+    "successMessage": "הטופס נשלח בהצלחה!",
+    "requiredNote": "שדות המסומנים ב-* הם חובה",
+    "sections": {
+      "personal": "פרטים אישיים",
+      "style": "סגנון",
+      "traits": "תכונות אופי",
+      "clothing": "סגנון לבוש",
+      "headcovering": "כיסוי ראש לאחר נישואין",
+      "partnerClothing": "לבוש בן הזוג הרצוי",
+      "phone": "סוג טלפון"
+    },
+    "fields": {
+      "firstName": "שם פרטי",
+      "lastName": "שם משפחה",
+      "age": "גיל",
+      "hebrewBirthday": "תאריך לידה עברי",
+      "status": "מצב משפחתי",
+      "community": "קהילה",
+      "occupation": "עיסוק",
+      "city": "עיר",
+      "phone": "טלפון",
+      "email": "דוא\"ל"
+    },
+    "placeholders": {
+      "firstName": "הכנס שם פרטי",
+      "lastName": "הכנס שם משפחה",
+      "age": "גיל",
+      "hebrewBirthday": "לדוג׳: כ\"ג תשרי תשפ\"ה",
+      "status": "בחר מצב משפחתי",
+      "community": "קהילה / זרם",
+      "occupation": "מקצוע / עיסוק",
+      "city": "עיר מגורים",
+      "phone": "05X-XXXXXXX",
+      "email": "example@email.com"
+    },
+    "traits": {
+      "counter": "נבחרו {{count}} מתוך 3",
+      "instruction": "בחרי 2–3 תכונות המאפיינות אותך"
+    }
+  },
+  "matchmaker": {
+    "profileTitle": "פרופיל מיועדת",
+    "status": {
+      "green": "שידוך פעיל",
+      "orange": "הצעה אחרונה השבוע",
+      "light_red": "חודש ללא הצעות",
+      "bright_red": "יותר מחודשיים ללא הצעות"
+    },
+    "lock": {
+      "active": "מוקפא – {{hours}} שעות ו-{{minutes}} דקות נותרו",
+      "expired": "פג תוקף הנעילה",
+      "none": "לא נעול"
+    },
+    "notes": {
+      "title": "הערות פנימיות",
+      "placeholder": "הוסף הערה...",
+      "add": "הוסף",
+      "empty": "אין הערות עדיין"
+    },
+    "pdf": {
+      "export": "ייצא כרטיס בירורים",
+      "exporting": "מייצא...",
+      "cardTitle": "כרטיס בירורים – בונים עולמות",
+      "confidential": "סודי – לשימוש פנימי בלבד",
+      "hiddenField": "***"
+    },
+    "lock48": "נעל 48 שעות",
+    "dashboard": {
+      "title": "מערכת השדכנים",
+      "subtitle": "ניהול מועמדים ומועמדות – בונים עולמות",
+      "tabs": {
+        "bachurot": "בחורות",
+        "bachurim": "בחורים"
+      },
+      "stats": {
+        "bachurot": "בחורות",
+        "bachurim": "בחורים",
+        "active": "שידוכים פעילים",
+        "urgent": "דחוף לטיפול"
+      },
+      "table": {
+        "name": "שם",
+        "age": "גיל",
+        "city": "עיר",
+        "style": "סגנון",
+        "status": "סטטוס",
+        "lastOffer": "הצעה אחרונה",
+        "lock": "נעילה",
+        "actions": "פעולות",
+        "empty": "אין מועמדים להצגה"
+      },
+      "actions": {
+        "view": "צפה",
+        "startWork": "פתח עבודה",
+        "unlock": "שחרר",
+        "pdf": "PDF",
+        "notes": "הערות"
+      },
+      "lock": {
+        "hours": "ש׳",
+        "minutes": "ד׳"
+      }
+    }
+  },
+  "errors": {
+    "required": "שדה חובה",
+    "minLength": "חייב להכיל לפחות {{min}} תווים",
+    "invalidEmail": "כתובת דוא\"ל לא תקינה",
+    "invalidPhone": "מספר טלפון לא תקין (לדוג׳: 0501234567)",
+    "minTraits": "יש לבחור לפחות 2 תכונות",
+    "maxTraits": "ניתן לבחור עד 3 תכונות",
+    "minAge": "גיל מינימלי: 18",
+    "selectOption": "יש לבחור אפשרות"
+  }
+}

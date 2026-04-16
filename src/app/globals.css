@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Frank+Ruhl+Libre:wght@400;500;700;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Heebo', sans-serif;
+  }
+
+  /* RTL default body */
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+  }
+
+  /* Smooth scrolling */
+  * {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  /* Hebrew serif headings */
+  .font-serif {
+    font-family: 'Frank Ruhl Libre', serif;
+  }
+}
