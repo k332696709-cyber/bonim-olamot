@@ -10,21 +10,41 @@ interface LanguageSwitcherProps {
 
 export function LanguageSwitcher({ locale }: LanguageSwitcherProps) {
   const pathname = usePathname()
-
-  // Replace current locale prefix with the other locale
-  const targetLocale = locale === 'he' ? 'en' : 'he'
-  const targetPath = pathname.replace(`/${locale}`, `/${targetLocale}`)
+  const hePath = pathname.replace(`/${locale}`, '/he') || '/he'
+  const enPath = pathname.replace(`/${locale}`, '/en') || '/en'
+  const isHe = locale === 'he'
 
   return (
-    <Link
-      href={targetPath}
-      className={cn(
-        'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium',
-        'border-navy-200 text-navy-600 hover:bg-navy-50 transition-colors duration-150',
-      )}
+    <div
+      className="inline-flex items-center rounded-lg border border-navy-200 overflow-hidden text-xs font-bold"
+      role="group"
+      aria-label="בחר שפה / Choose language"
     >
-      <span className="text-base leading-none">{locale === 'he' ? '🇺🇸' : '🇮🇱'}</span>
-      <span>{locale === 'he' ? 'English' : 'עברית'}</span>
-    </Link>
+      <Link
+        href={hePath}
+        aria-current={isHe ? 'true' : undefined}
+        className={cn(
+          'px-3 py-1.5 transition-colors duration-150 select-none',
+          isHe
+            ? 'bg-navy-600 text-white'
+            : 'text-navy-500 hover:bg-navy-50',
+        )}
+      >
+        עב
+      </Link>
+      <span className="w-px h-4 bg-navy-200 shrink-0" />
+      <Link
+        href={enPath}
+        aria-current={!isHe ? 'true' : undefined}
+        className={cn(
+          'px-3 py-1.5 transition-colors duration-150 select-none',
+          !isHe
+            ? 'bg-navy-600 text-white'
+            : 'text-navy-500 hover:bg-navy-50',
+        )}
+      >
+        EN
+      </Link>
+    </div>
   )
 }

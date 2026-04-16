@@ -16,7 +16,7 @@ export default function MatchmakerProfilePage({ params: { locale, id } }: PagePr
   const profileName   = femaleProfile?.firstName ?? maleProfile?.firstName ?? id
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10" dir={t ? 'rtl' : 'ltr'}>
+    <div className="max-w-3xl mx-auto px-4 py-10">
       {/* Back link */}
       <Link
         href={`/${locale}/matchmaker`}
