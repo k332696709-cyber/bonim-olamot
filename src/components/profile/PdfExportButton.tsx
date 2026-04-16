@@ -6,16 +6,17 @@ import { Button } from '@/components/ui/Button'
 interface PdfExportButtonProps {
   profileId: string
   locale?: string
+  gender?: 'female' | 'male'
 }
 
-export function PdfExportButton({ profileId, locale = 'he' }: PdfExportButtonProps) {
+export function PdfExportButton({ profileId, locale = 'he', gender = 'female' }: PdfExportButtonProps) {
   const [loading, setLoading] = useState(false)
   const t = locale === 'he'
 
   const handleExport = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/export/profile/${profileId}`, { method: 'POST' })
+      const res = await fetch(`/api/export/profile/${profileId}?gender=${gender}`, { method: 'POST' })
       if (!res.ok) throw new Error('Export failed')
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)

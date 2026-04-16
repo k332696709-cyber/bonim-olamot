@@ -141,6 +141,7 @@ export const MOCK_FEMALE_PROFILES: FemaleProfile[] = [
       { id: 'n4', author: 'חנה ש.', text: 'שידוך פעיל עם יוסף מ. – בשלב הבירורים.', createdAt: new Date('2025-01-10T11:00:00') },
     ],
     lockedAt: days(-2 / 24), // locked 2h ago
+    lockedBy: 'שדכן א',
     lastOfferDate: days(5),
   },
   {
@@ -306,6 +307,7 @@ export const MOCK_MALE_PROFILES: MaleProfile[] = [
       { id: 'nm2', author: 'בנימין כ.', text: 'שידוך פעיל עם דבורה פ. – בשלב הבירורים.', createdAt: new Date('2025-01-10T11:00:00') },
     ],
     lockedAt: new Date(now - 10 * 60 * 60 * 1000), // locked 10h ago
+    lockedBy: 'שדכן א',
     lastOfferDate: days(6),
   },
   {

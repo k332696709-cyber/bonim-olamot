@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { MOCK_FEMALE_PROFILES, MOCK_MALE_PROFILES } from '@/constants/mockProfiles'
 import { ProfilesTable } from '@/components/matchmaker/ProfilesTable'
+import { IdentitySwitcher } from '@/components/matchmaker/IdentitySwitcher'
 import { computeStatus, lockRemainingMs } from '@/lib/matchmaker/statusUtils'
 
 type Tab = 'bachurot' | 'bachurim'
@@ -111,7 +112,10 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
             </p>
           </div>
 
-          {/* Legend */}
+          {/* Identity switcher (demo) + Legend */}
+          <div className="flex items-center gap-4 flex-wrap">
+            <IdentitySwitcher locale={locale} />
+          </div>
           <div className="flex items-center gap-4 flex-wrap">
             <LegendItem color="#22c55e" label={t ? 'שידוך פעיל' : 'Active Match'} />
             <LegendItem color="#f97316" label={t ? 'הצעה השבוע' : 'Offer This Week'} />

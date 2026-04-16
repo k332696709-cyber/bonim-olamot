@@ -1,31 +1,32 @@
 'use client'
 
 import { useState } from 'react'
-import type { FemaleProfile, MatchmakerStatus, Note } from '@/types/registration'
+import type { FemaleProfile, MaleProfile, MatchmakerStatus, Note } from '@/types/registration'
 import { TrafficLight } from './TrafficLight'
 import { LockIndicator } from './LockIndicator'
 import { NotesThread } from './NotesThread'
 import { PdfExportButton } from './PdfExportButton'
 import { AISummary } from './AISummary'
+import { CompatibilityPanel } from './CompatibilityPanel'
 import { useLockIdentity, canActOnLock } from '@/lib/matchmaker/lockContext'
 import {
-  FEMALE_STYLE_OPTIONS,
-  TRAIT_OPTIONS_FEMALE,
-  FEMALE_CLOTHING_OPTIONS,
-  HEADCOVERING_OPTIONS,
-  FEMALE_PARTNER_CLOTHING_OPTIONS,
+  MALE_STYLE_OPTIONS,
+  TRAIT_OPTIONS_MALE,
+  MALE_CLOTHING_OPTIONS,
+  MALE_PARTNER_CLOTHING_OPTIONS,
   PHONE_TYPE_OPTIONS,
   MARITAL_STATUS_OPTIONS,
 } from '@/constants/formOptions'
 
-interface ProfileCardProps {
-  profile: FemaleProfile
-  locale?: string
+interface MaleProfileCardProps {
+  profile:          MaleProfile
+  locale?:          string
+  femaleCandidates: FemaleProfile[]
 }
 
-function getLabel<T extends string>(
-  options: { value: T; he: string; en: string }[],
-  value: T,
+function getLabel(
+  options: { value: string; he: string; en: string }[],
+  value: string,
   locale: string,
 ): string {
   const opt = options.find((o) => o.value === value)
@@ -42,30 +43,23 @@ function FieldRow({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
-export function ProfileCard({ profile, locale = 'he' }: ProfileCardProps) {
+export function MaleProfileCard({ profile, locale = 'he', femaleCandidates }: MaleProfileCardProps) {
   const { name: currentName, isAdmin } = useLockIdentity()
+  const t = locale === 'he'
 
   const [status,   setStatusState] = useState<MatchmakerStatus>(profile.matchmakerStatus)
   const [lockedAt, setLockedAt]    = useState<Date | null>(profile.lockedAt)
   const [lockedBy, setLockedBy]    = useState<string | undefined>(profile.lockedBy)
   const [notes,    setNotes]       = useState<Note[]>(profile.notes)
 
-  const t = locale === 'he'
-
-  // Ownership checks
-  const canUnlock      = canActOnLock(lockedBy, currentName, isAdmin)
-  const isGreenStatus  = status === 'green'
+  const canUnlock       = canActOnLock(lockedBy, currentName, isAdmin)
+  const isGreenStatus   = status === 'green'
   const canChangeStatus = !isGreenStatus || canActOnLock(lockedBy, currentName, isAdmin)
 
   const handleAddNote = (text: string) => {
     setNotes((prev) => [
       ...prev,
-      {
-        id:        Date.now().toString(),
-        author:    currentName,
-        text,
-        createdAt: new Date(),
-      },
+      { id: Date.now().toString(), author: currentName, text, createdAt: new Date() },
     ])
   }
 
@@ -85,11 +79,9 @@ export function ProfileCard({ profile, locale = 'he' }: ProfileCardProps) {
   const handleStatusChange = (newStatus: MatchmakerStatus) => {
     if (!canChangeStatus) return
     setStatusState(newStatus)
-    // When manually setting green, claim ownership
     if (newStatus === 'green') {
       setLockedBy(currentName)
     } else {
-      // Releasing green — clear the lock ownership
       setLockedBy(undefined)
     }
   }
@@ -97,7 +89,7 @@ export function ProfileCard({ profile, locale = 'he' }: ProfileCardProps) {
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-6">
 
-      {/* Header Card */}
+      {/* Header */}
       <div className="bg-white rounded-2xl shadow-luxury border border-gray-100 overflow-hidden">
         <div className="bg-gradient-to-l from-navy-500 to-navy-700 px-6 py-5">
           <div className="flex items-start justify-between gap-4">
@@ -109,33 +101,28 @@ export function ProfileCard({ profile, locale = 'he' }: ProfileCardProps) {
                 </span>
               </h1>
               <p className="text-navy-200 text-sm mt-1">
-                {t ? 'גיל' : 'Age'}: {profile.age}
-                {' · '}
-                {profile.city}
+                {t ? 'גיל' : 'Age'}: {profile.age} · {profile.city}
               </p>
             </div>
-            <div className="flex flex-col items-end gap-2">
-              <TrafficLight
-                status={status}
-                locale={locale}
-                onChange={handleStatusChange}
-                canChange={canChangeStatus}
-                lockedBy={lockedBy}
-              />
-            </div>
+            <TrafficLight
+              status={status}
+              locale={locale}
+              onChange={handleStatusChange}
+              canChange={canChangeStatus}
+              lockedBy={lockedBy}
+            />
           </div>
         </div>
 
-        {/* Personal Details */}
         <div className="px-6 py-4">
           <FieldRow label={t ? 'תאריך לידה עברי' : 'Hebrew Birthday'} value={profile.hebrewBirthday} />
           <FieldRow
             label={t ? 'מצב משפחתי' : 'Marital Status'}
-            value={getLabel(MARITAL_STATUS_OPTIONS, profile.status as never, locale)}
+            value={getLabel(MARITAL_STATUS_OPTIONS, profile.status, locale)}
           />
-          <FieldRow label={t ? 'קהילה' : 'Community'} value={profile.community} />
-          <FieldRow label={t ? 'עיסוק' : 'Occupation'} value={profile.occupation} />
-          <FieldRow label={t ? 'דוא"ל' : 'Email'} value={profile.email} />
+          <FieldRow label={t ? 'קהילה' : 'Community'}  value={profile.community} />
+          <FieldRow label={t ? 'עיסוק' : 'Occupation'}  value={profile.occupation} />
+          <FieldRow label={t ? 'דוא"ל' : 'Email'}       value={profile.email} />
           <FieldRow
             label={t ? 'טלפון' : 'Phone'}
             value={<span className="text-gray-400 italic">{t ? '(מוסתר)' : '(hidden)'}</span>}
@@ -143,25 +130,23 @@ export function ProfileCard({ profile, locale = 'he' }: ProfileCardProps) {
         </div>
       </div>
 
-      {/* Profile Details */}
+      {/* Profile details */}
       <div className="bg-white rounded-2xl shadow-card border border-gray-100 px-6 py-5">
         <h2 className="font-semibold text-navy-500 mb-4 text-base">
           {t ? 'פרטי פרופיל' : 'Profile Details'}
         </h2>
         <FieldRow
           label={t ? 'סגנון' : 'Style'}
-          value={getLabel(FEMALE_STYLE_OPTIONS, profile.style, locale)}
+          value={getLabel(MALE_STYLE_OPTIONS, profile.style, locale)}
         />
         <FieldRow
           label={t ? 'תכונות אופי' : 'Traits'}
           value={
             <div className="flex flex-wrap gap-1.5">
               {profile.traits.map((trait) => (
-                <span
-                  key={trait}
-                  className="bg-navy-50 text-navy-600 text-xs px-2.5 py-1 rounded-full border border-navy-100 font-medium"
-                >
-                  {getLabel(TRAIT_OPTIONS_FEMALE, trait, locale)}
+                <span key={trait}
+                  className="bg-navy-50 text-navy-600 text-xs px-2.5 py-1 rounded-full border border-navy-100 font-medium">
+                  {getLabel(TRAIT_OPTIONS_MALE, trait, locale)}
                 </span>
               ))}
             </div>
@@ -169,15 +154,11 @@ export function ProfileCard({ profile, locale = 'he' }: ProfileCardProps) {
         />
         <FieldRow
           label={t ? 'סגנון לבוש' : 'Clothing'}
-          value={getLabel(FEMALE_CLOTHING_OPTIONS, profile.clothing, locale)}
+          value={getLabel(MALE_CLOTHING_OPTIONS, profile.clothing, locale)}
         />
         <FieldRow
-          label={t ? 'כיסוי ראש' : 'Head Covering'}
-          value={getLabel(HEADCOVERING_OPTIONS, profile.headcovering, locale)}
-        />
-        <FieldRow
-          label={t ? 'לבוש בן זוג רצוי' : 'Partner Clothing'}
-          value={getLabel(FEMALE_PARTNER_CLOTHING_OPTIONS, profile.partnerClothing, locale)}
+          label={t ? 'לבוש בת זוג רצויה' : 'Partner Clothing'}
+          value={getLabel(MALE_PARTNER_CLOTHING_OPTIONS, profile.partnerClothing, locale)}
         />
         <FieldRow
           label={t ? 'סוג טלפון' : 'Phone Type'}
@@ -186,7 +167,7 @@ export function ProfileCard({ profile, locale = 'he' }: ProfileCardProps) {
       </div>
 
       {/* AI Summary */}
-      <AISummary profile={profile} gender="female" locale={locale} />
+      <AISummary profile={profile} gender="male" locale={locale} />
 
       {/* Lock + Export */}
       <div className="bg-white rounded-2xl shadow-card border border-gray-100 px-6 py-5">
@@ -202,7 +183,7 @@ export function ProfileCard({ profile, locale = 'he' }: ProfileCardProps) {
             onLock={!lockedAt ? handleLock : undefined}
             onUnlock={lockedAt ? handleUnlock : undefined}
           />
-          <PdfExportButton profileId={profile.id} locale={locale} />
+          <PdfExportButton profileId={profile.id} locale={locale} gender="male" />
         </div>
       </div>
 
@@ -214,6 +195,13 @@ export function ProfileCard({ profile, locale = 'he' }: ProfileCardProps) {
         <NotesThread notes={notes} locale={locale} onAddNote={handleAddNote} />
       </div>
 
+      {/* Compatibility Engine */}
+      <CompatibilityPanel
+        currentProfile={profile}
+        currentGender="male"
+        candidates={femaleCandidates}
+        locale={locale}
+      />
     </div>
   )
 }

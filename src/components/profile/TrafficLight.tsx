@@ -8,15 +8,17 @@ interface TrafficLightProps {
   locale?: string
   compact?: boolean
   onChange?: (status: MatchmakerStatus) => void
+  /**
+   * When false, the status switcher buttons are shown but disabled.
+   * Used to prevent non-owners from changing a Green (Active Match) status.
+   */
+  canChange?: boolean
+  /** Name of the matchmaker who owns this lock — used in the lock tooltip. */
+  lockedBy?: string
 }
 
 const STATUS_CONFIG: Record<MatchmakerStatus, {
-  color: string
-  he: string
-  en: string
-  bg: string
-  border: string
-  text: string
+  color: string; he: string; en: string; bg: string; border: string; text: string
 }> = {
   green: {
     color: '#22c55e',
@@ -54,9 +56,13 @@ const STATUS_CONFIG: Record<MatchmakerStatus, {
 
 const STATUSES: MatchmakerStatus[] = ['green', 'orange', 'light_red', 'bright_red']
 
-export function TrafficLight({ status, locale = 'he', compact = false, onChange }: TrafficLightProps) {
+export function TrafficLight({
+  status, locale = 'he', compact = false,
+  onChange, canChange = true, lockedBy,
+}: TrafficLightProps) {
+  const t = locale === 'he'
   const cfg = STATUS_CONFIG[status]
-  const label = locale === 'he' ? cfg.he : cfg.en
+  const label = t ? cfg.he : cfg.en
 
   if (compact) {
     return (
@@ -70,6 +76,10 @@ export function TrafficLight({ status, locale = 'he', compact = false, onChange 
     )
   }
 
+  const lockTooltip = t
+    ? `פרופיל זה בשידוך פעיל. רק ${lockedBy ?? 'השדכן'} או מנהל יכול לשנות את הסטטוס.`
+    : `Profile is in an active match. Only ${lockedBy ?? 'the assigned matchmaker'} or an admin can change this status.`
+
   return (
     <div className="flex flex-col gap-3">
       {/* Current status badge */}
@@ -81,27 +91,51 @@ export function TrafficLight({ status, locale = 'he', compact = false, onChange 
         <span className={cn('font-semibold text-sm', cfg.text)}>{label}</span>
       </div>
 
-      {/* Status switcher (if onChange provided) */}
+      {/* Status switcher */}
       {onChange && (
-        <div className="flex gap-2">
-          {STATUSES.map((s) => {
-            const c = STATUS_CONFIG[s]
-            return (
-              <button
-                key={s}
-                type="button"
-                onClick={() => onChange(s)}
-                title={locale === 'he' ? c.he : c.en}
-                className={cn(
-                  'w-8 h-8 rounded-full border-2 transition-all duration-150',
-                  status === s
-                    ? 'scale-125 border-gray-600'
-                    : 'border-transparent opacity-60 hover:opacity-100',
-                )}
-                style={{ backgroundColor: c.color }}
-              />
-            )
-          })}
+        <div className="relative group/lock">
+          <div className={cn('flex gap-2', !canChange && 'opacity-40')}>
+            {STATUSES.map((s) => {
+              const c = STATUS_CONFIG[s]
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  disabled={!canChange}
+                  onClick={canChange ? () => onChange(s) : undefined}
+                  title={t ? c.he : c.en}
+                  className={cn(
+                    'w-8 h-8 rounded-full border-2 transition-all duration-150',
+                    status === s
+                      ? 'scale-125 border-gray-600'
+                      : 'border-transparent opacity-60',
+                    canChange
+                      ? 'hover:opacity-100 cursor-pointer'
+                      : 'cursor-not-allowed',
+                  )}
+                  style={{ backgroundColor: c.color }}
+                />
+              )
+            })}
+          </div>
+
+          {/* Lock tooltip shown on hover when canChange = false */}
+          {!canChange && (
+            <div className="absolute bottom-full mb-2 start-0 hidden group-hover/lock:flex z-20
+                            w-64 bg-gray-900 text-white text-xs rounded-xl px-3.5 py-2.5
+                            shadow-xl pointer-events-none flex-col gap-1">
+              <div className="flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-yellow-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span className="font-semibold">{t ? 'שינוי חסום' : 'Change blocked'}</span>
+              </div>
+              <p className="text-gray-300 leading-relaxed">{lockTooltip}</p>
+              {/* Arrow */}
+              <div className="absolute top-full start-4 border-4 border-transparent border-t-gray-900" />
+            </div>
+          )}
         </div>
       )}
     </div>

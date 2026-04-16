@@ -7,29 +7,31 @@ import type { FemaleProfile, MaleProfile, Note } from '@/types/registration'
 import { TrafficLight } from '@/components/profile/TrafficLight'
 import { NotesThread } from '@/components/profile/NotesThread'
 import { computeStatus, formatLastOffer, lockRemainingMs } from '@/lib/matchmaker/statusUtils'
+import { useLockIdentity, canActOnLock } from '@/lib/matchmaker/lockContext'
 import { Button } from '@/components/ui/Button'
 import { FEMALE_STYLE_OPTIONS, MALE_STYLE_OPTIONS } from '@/constants/formOptions'
 
 type AnyProfile = FemaleProfile | MaleProfile
 
 interface RowState {
-  lockedAt: Date | null
-  notes: Note[]
-  notesOpen: boolean
-  exporting: boolean
+  lockedAt:   Date | null
+  lockedBy:   string | null
+  notes:      Note[]
+  notesOpen:  boolean
+  exporting:  boolean
 }
 
 export interface ProfilesTableProps {
   profiles: AnyProfile[]
-  gender: 'female' | 'male'
-  locale?: string
+  gender:   'female' | 'male'
+  locale?:  string
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getStyleLabel(profile: AnyProfile, gender: 'female' | 'male', locale: string): string {
   const opts = gender === 'female' ? FEMALE_STYLE_OPTIONS : MALE_STYLE_OPTIONS
-  const opt = opts.find((o) => o.value === (profile as FemaleProfile).style)
+  const opt  = opts.find((o) => o.value === (profile as FemaleProfile).style)
   return opt ? (locale === 'he' ? opt.he : opt.en) : (profile as FemaleProfile).style
 }
 
@@ -44,7 +46,6 @@ function LockBadge({ lockedAt, locale }: { lockedAt: Date; locale: string }) {
   }, [lockedAt])
 
   if (ms === 0) return null
-
   const h = Math.floor(ms / (1000 * 60 * 60))
   const m = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60))
 
@@ -56,6 +57,49 @@ function LockBadge({ lockedAt, locale }: { lockedAt: Date; locale: string }) {
       </svg>
       {locale === 'he' ? `${h}ש׳ ${m}ד׳` : `${h}h ${m}m`}
     </span>
+  )
+}
+
+// ─── "Locked by other" badge with tooltip ─────────────────────────────────────
+
+function LockedByOtherBadge({
+  lockedBy, lockedAt, locale,
+}: { lockedBy: string; lockedAt: Date | null; locale: string }) {
+  const t = locale === 'he'
+  const remaining = lockedAt ? lockRemainingMs(lockedAt) : 0
+  const h = Math.floor(remaining / (1000 * 60 * 60))
+  const m = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60))
+
+  const tooltip = t
+    ? `פרופיל זה נעול על ידי ${lockedBy}${remaining > 0 ? ` (${h}ש׳ ${m}ד׳ נותרו)` : ''}. רק הם או מנהל יכולים לשחרר אותו.`
+    : `Profile locked by ${lockedBy}${remaining > 0 ? ` (${h}h ${m}m remaining)` : ''}. Only they or an admin can release it.`
+
+  return (
+    <div className="relative group/locked inline-flex">
+      <div className="flex items-center gap-1.5 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1.5 cursor-default select-none">
+        <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        <span className="font-semibold">{lockedBy}</span>
+      </div>
+      {/* Tooltip */}
+      <div className="absolute bottom-full mb-2 start-0 hidden group-hover/locked:flex
+                      z-20 w-60 bg-gray-900 text-white text-xs rounded-xl
+                      px-3.5 py-2.5 shadow-xl pointer-events-none flex-col gap-1">
+        <div className="flex items-center gap-1.5">
+          <svg className="w-3.5 h-3.5 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <span className="font-semibold text-red-300">
+            {t ? 'פרופיל נעול' : 'Profile Locked'}
+          </span>
+        </div>
+        <p className="text-gray-300 leading-relaxed">{tooltip}</p>
+        <div className="absolute top-full start-4 border-4 border-transparent border-t-gray-900" />
+      </div>
+    </div>
   )
 }
 
@@ -97,14 +141,21 @@ const IconEye = () => (
 
 export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTableProps) {
   const t = locale === 'he'
+  const { name: currentName, isAdmin } = useLockIdentity()
 
   const [rowStates, setRowStates] = useState<Record<string, RowState>>(() =>
     Object.fromEntries(
       profiles.map((p) => [
         p.id,
-        { lockedAt: p.lockedAt, notes: [...p.notes], notesOpen: false, exporting: false },
-      ])
-    )
+        {
+          lockedAt:  p.lockedAt,
+          lockedBy:  p.lockedBy ?? null,
+          notes:     [...p.notes],
+          notesOpen: false,
+          exporting: false,
+        },
+      ]),
+    ),
   )
 
   const updateRow = useCallback((id: string, patch: Partial<RowState>) => {
@@ -112,17 +163,20 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
   }, [])
 
   const handleStartWork = useCallback((id: string) => {
-    updateRow(id, { lockedAt: new Date() })
-  }, [updateRow])
+    updateRow(id, { lockedAt: new Date(), lockedBy: currentName })
+  }, [updateRow, currentName])
 
   const handleUnlock = useCallback((id: string) => {
-    updateRow(id, { lockedAt: null })
-  }, [updateRow])
+    const rs = rowStates[id]
+    if (!rs) return
+    if (!canActOnLock(rs.lockedBy, currentName, isAdmin)) return
+    updateRow(id, { lockedAt: null, lockedBy: null })
+  }, [updateRow, rowStates, currentName, isAdmin])
 
   const handleAddNote = useCallback((id: string, text: string) => {
     const note: Note = {
-      id: `${id}-${Date.now()}`,
-      author: t ? 'שדכן' : 'Matchmaker',
+      id:        `${id}-${Date.now()}`,
+      author:    currentName,
       text,
       createdAt: new Date(),
     }
@@ -130,7 +184,7 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
       ...prev,
       [id]: { ...prev[id], notes: [...prev[id].notes, note] },
     }))
-  }, [t])
+  }, [currentName])
 
   const handleExport = useCallback(async (id: string) => {
     updateRow(id, { exporting: true })
@@ -138,8 +192,8 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
       const res = await fetch(`/api/export/profile/${id}?gender=${gender}`, { method: 'POST' })
       if (!res.ok) throw new Error('Export failed')
       const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
       a.href = url
       a.download = `profile-${id}.pdf`
       a.click()
@@ -185,9 +239,18 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
             if (!rs) return null
 
             const profileWithState: AnyProfile = { ...profile, lockedAt: rs.lockedAt }
-            const status = computeStatus(profileWithState)
-            const isLocked = rs.lockedAt !== null && lockRemainingMs(rs.lockedAt) > 0
-            const isEven = idx % 2 === 0
+            const status        = computeStatus(profileWithState)
+            const lockActive    = rs.lockedAt !== null && lockRemainingMs(rs.lockedAt) > 0
+            const isEven        = idx % 2 === 0
+
+            // Is this profile locked by someone other than the current user?
+            const lockedByOther = lockActive
+              && !!rs.lockedBy
+              && !canActOnLock(rs.lockedBy, currentName, isAdmin)
+
+            // Can the current user change the status (green is protected)?
+            const canChangeStatus = status !== 'green'
+              || canActOnLock(rs.lockedBy, currentName, isAdmin)
 
             return (
               <React.Fragment key={profile.id}>
@@ -195,11 +258,14 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                 <tr
                   className={cn(
                     'border-b border-gray-100 transition-colors duration-100',
-                    isEven ? 'bg-white' : 'bg-gray-50/50',
-                    'hover:bg-navy-50/30',
+                    lockedByOther
+                      ? 'bg-red-50/30 hover:bg-red-50/50'
+                      : isEven
+                        ? 'bg-white hover:bg-navy-50/30'
+                        : 'bg-gray-50/50 hover:bg-navy-50/30',
                   )}
                 >
-                  {/* Name – clicking opens the profile detail page */}
+                  {/* Name */}
                   <td className="px-4 py-3.5 whitespace-nowrap">
                     <Link
                       href={`/${locale}/matchmaker/profiles/${profile.id}`}
@@ -227,9 +293,13 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                     {getStyleLabel(profile, gender, locale)}
                   </td>
 
-                  {/* Status */}
+                  {/* Status — non-green always changeable; green only for owner/admin */}
                   <td className="px-4 py-3.5">
-                    <TrafficLight status={status} locale={locale} compact />
+                    <TrafficLight
+                      status={status}
+                      locale={locale}
+                      compact
+                    />
                   </td>
 
                   {/* Last Offer */}
@@ -239,19 +309,30 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
 
                   {/* Lock column */}
                   <td className="px-4 py-3.5 whitespace-nowrap">
-                    {isLocked ? (
+                    {lockedByOther ? (
+                      /* Locked by someone else — show blocked badge */
+                      <LockedByOtherBadge
+                        lockedBy={rs.lockedBy!}
+                        lockedAt={rs.lockedAt}
+                        locale={locale}
+                      />
+                    ) : lockActive ? (
+                      /* Locked by current user or admin can see/unlock */
                       <div className="flex items-center gap-2">
                         <LockBadge lockedAt={rs.lockedAt!} locale={locale} />
-                        <button
-                          type="button"
-                          onClick={() => handleUnlock(profile.id)}
-                          title={t ? 'שחרר נעילה' : 'Unlock'}
-                          className="w-5 h-5 rounded-full bg-gray-100 hover:bg-red-100 text-gray-400 hover:text-red-500 flex items-center justify-center transition-colors text-xs font-bold leading-none"
-                        >
-                          ✕
-                        </button>
+                        {canActOnLock(rs.lockedBy, currentName, isAdmin) && (
+                          <button
+                            type="button"
+                            onClick={() => handleUnlock(profile.id)}
+                            title={t ? 'שחרר נעילה' : 'Unlock'}
+                            className="w-5 h-5 rounded-full bg-gray-100 hover:bg-red-100 text-gray-400 hover:text-red-500 flex items-center justify-center transition-colors text-xs font-bold leading-none"
+                          >
+                            ✕
+                          </button>
+                        )}
                       </div>
                     ) : (
+                      /* Not locked — offer Start Work */
                       <Button
                         type="button"
                         size="sm"
@@ -268,7 +349,7 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                   {/* Actions */}
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      {/* View – opens profile detail page for all candidates */}
+                      {/* View — always available */}
                       <Link
                         href={`/${locale}/matchmaker/profiles/${profile.id}`}
                         className={cn(
@@ -281,7 +362,7 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                         {t ? 'צפה' : 'View'}
                       </Link>
 
-                      {/* PDF export */}
+                      {/* PDF — always available */}
                       <Button
                         type="button"
                         size="sm"
@@ -297,7 +378,7 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                         PDF
                       </Button>
 
-                      {/* Notes toggle */}
+                      {/* Notes — always available (anyone can add notes) */}
                       <button
                         type="button"
                         onClick={() => updateRow(profile.id, { notesOpen: !rs.notesOpen })}
@@ -312,14 +393,10 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                         <IconNotes />
                         {t ? 'הערות' : 'Notes'}
                         {rs.notes.length > 0 && (
-                          <span
-                            className={cn(
-                              'w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-bold',
-                              rs.notesOpen
-                                ? 'bg-white/20 text-white'
-                                : 'bg-navy-100 text-navy-600',
-                            )}
-                          >
+                          <span className={cn(
+                            'w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-bold',
+                            rs.notesOpen ? 'bg-white/20 text-white' : 'bg-navy-100 text-navy-600',
+                          )}>
                             {rs.notes.length}
                           </span>
                         )}
@@ -333,6 +410,17 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                   <tr className="bg-navy-50/40 border-b border-navy-100">
                     <td colSpan={8} className="px-6 py-5">
                       <div className="max-w-2xl">
+                        {lockedByOther && (
+                          <div className="flex items-center gap-2 mb-3 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                            <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {t
+                              ? `פרופיל זה נעול על ידי ${rs.lockedBy}. ניתן לצפות ולהוסיף הערות בלבד.`
+                              : `Profile locked by ${rs.lockedBy}. You can only view and add notes.`}
+                          </div>
+                        )}
                         <div className="flex items-center gap-2 mb-3">
                           <div className="w-1 h-5 bg-navy-400 rounded-full" />
                           <h4 className="text-sm font-bold text-navy-700">
