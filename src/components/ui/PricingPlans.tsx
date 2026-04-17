@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { getT } from '@/lib/i18n/translations'
 
 export type PlanType = 'free' | 'premium'
 
@@ -24,38 +25,22 @@ const StarIcon = () => (
 )
 
 export function PricingPlans({ selected, onChange, locale = 'he', gender = 'female' }: PricingPlansProps) {
-  const t = locale === 'he'
-  const candidateWord = gender === 'male'
-    ? (t ? 'מיועדים' : 'male candidates')
-    : (t ? 'מיועדות' : 'female candidates')
+  const T = getT(locale)
+  const p = T.pricing
 
-  const freeFeatures = [
-    t ? 'הרשמה למאגר השידוכים' : 'Registration to matchmaking database',
-    t ? 'יצירת פרופיל אישי' : 'Create a personal profile',
-    t ? 'יכולת עריכת הרזומה בכל עת' : 'Edit your resume/profile at any time',
-  ]
-
+  const freeFeatures = [p.freeFeature1, p.freeFeature2, p.freeFeature3]
   const premiumFeatures = [
-    t ? 'הרשמה למאגר השידוכים' : 'Registration to matchmaking database',
-    t ? 'יצירת פרופיל אישי' : 'Create a personal profile',
-    t ? 'יכולת עריכת הרזומה בכל עת' : 'Edit your resume/profile at any time',
-    t ? 'פגישה אישית עם שדכן/ת' : 'Personal meeting with a matchmaker',
-    t
-      ? `מפגש חודשי לפי סגנון וגיל עם ${candidateWord} שבתהליך`
-      : `Monthly meeting by style & age with ${candidateWord} in process`,
-    t ? 'ייעוץ עם מנטור / יועץ זוגיות' : 'Consultation with a mentor / relationship counselor',
-    t ? 'קידום ועדיפות באתר' : 'Priority & promotion on the site',
+    p.freeFeature1, p.freeFeature2, p.freeFeature3,
+    p.premiumFeature4,
+    gender === 'male' ? p.premiumFeature5m : p.premiumFeature5f,
+    p.premiumFeature6, p.premiumFeature7,
   ]
 
   return (
     <div className="flex flex-col gap-4">
       <div className="text-center mb-1">
-        <h2 className="text-lg font-semibold text-navy-600">
-          {t ? 'בחר את המנוי המתאים לך' : 'Choose your plan'}
-        </h2>
-        <p className="text-sm text-gray-400 mt-0.5">
-          {t ? 'ניתן לשדרג בכל עת' : 'You can upgrade at any time'}
-        </p>
+        <h2 className="text-lg font-semibold text-navy-600">{p.title}</h2>
+        <p className="text-sm text-gray-400 mt-0.5">{p.subtitle}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -71,30 +56,21 @@ export function PricingPlans({ selected, onChange, locale = 'he', gender = 'fema
               : 'border-gray-200 bg-white hover:border-navy-200 hover:shadow-card',
           )}
         >
-          {/* Header */}
           <div className="flex items-start justify-between gap-2 mb-4">
             <div>
-              <p className="font-bold text-navy-600 text-lg">
-                {t ? 'מנוי חינם' : 'Free Plan'}
-              </p>
+              <p className="font-bold text-navy-600 text-lg">{p.freePlan}</p>
               <p className="text-2xl font-serif font-bold text-navy-500 mt-0.5">
                 ₪0
-                <span className="text-sm font-normal text-gray-400 ms-1">
-                  {t ? '/ תמיד' : '/ always'}
-                </span>
+                <span className="text-sm font-normal text-gray-400 ms-1">{p.freePrice}</span>
               </p>
             </div>
             <div className={cn(
               'w-5 h-5 rounded-full border-2 shrink-0 mt-1 flex items-center justify-center transition-colors',
               selected === 'free' ? 'border-navy-500 bg-navy-500' : 'border-gray-300',
             )}>
-              {selected === 'free' && (
-                <div className="w-2 h-2 rounded-full bg-white" />
-              )}
+              {selected === 'free' && <div className="w-2 h-2 rounded-full bg-white" />}
             </div>
           </div>
-
-          {/* Features */}
           <ul className="flex flex-col gap-2">
             {freeFeatures.map((f, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
@@ -116,46 +92,28 @@ export function PricingPlans({ selected, onChange, locale = 'he', gender = 'fema
               : 'border-burgundy-100 bg-white hover:border-burgundy-300 hover:shadow-card',
           )}
         >
-          {/* Popular badge */}
           <div className="absolute top-3 start-3 bg-burgundy-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
-            {t ? '⭐ מומלץ' : '⭐ Recommended'}
+            {p.recommended}
           </div>
-
-          {/* Header */}
           <div className="flex items-start justify-between gap-2 mb-4 mt-7">
             <div>
-              <p className="font-bold text-burgundy-600 text-lg">
-                {t ? 'מנוי פרימיום' : 'Premium Plan'}
-              </p>
+              <p className="font-bold text-burgundy-600 text-lg">{p.premiumPlan}</p>
               <div className="mt-0.5">
-                <p className="text-2xl font-serif font-bold text-burgundy-500">
-                  3 × ₪250
-                </p>
-                <p className="text-sm text-burgundy-400 font-medium">
-                  {t ? '= ₪750 סה"כ' : '= ₪750 total'}
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {t ? '3 תשלומים חודשיים' : '3 monthly payments'}
-                </p>
+                <p className="text-2xl font-serif font-bold text-burgundy-500">3 × ₪250</p>
+                <p className="text-sm text-burgundy-400 font-medium">{p.premiumTotal}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{p.premiumPayments}</p>
               </div>
             </div>
             <div className={cn(
               'w-5 h-5 rounded-full border-2 shrink-0 mt-1 flex items-center justify-center transition-colors',
               selected === 'premium' ? 'border-burgundy-500 bg-burgundy-500' : 'border-gray-300',
             )}>
-              {selected === 'premium' && (
-                <div className="w-2 h-2 rounded-full bg-white" />
-              )}
+              {selected === 'premium' && <div className="w-2 h-2 rounded-full bg-white" />}
             </div>
           </div>
-
-          {/* Features */}
           <ul className="flex flex-col gap-2">
             {premiumFeatures.map((f, i) => (
-              <li key={i} className={cn(
-                'flex items-start gap-2 text-sm',
-                i < 3 ? 'text-gray-500' : 'text-gray-800 font-medium',
-              )}>
+              <li key={i} className={cn('flex items-start gap-2 text-sm', i < 3 ? 'text-gray-500' : 'text-gray-800 font-medium')}>
                 <span className={i < 3 ? 'text-gray-400' : 'text-burgundy-500'}>
                   {i < 3 ? <CheckIcon /> : <StarIcon />}
                 </span>
@@ -167,11 +125,8 @@ export function PricingPlans({ selected, onChange, locale = 'he', gender = 'fema
 
       </div>
 
-      {/* Selected indicator */}
       <p className="text-center text-xs text-gray-400">
-        {selected === 'free'
-          ? (t ? 'בחרת מנוי חינם — ניתן לשדרג לאחר ההרשמה' : 'Free plan selected — you can upgrade after registration')
-          : (t ? 'בחרת מנוי פרימיום — נחזור אלייך לתיאום לאחר ההרשמה' : 'Premium selected — we\'ll contact you after registration')}
+        {selected === 'free' ? p.freeSelected : p.premiumSelected}
       </p>
     </div>
   )

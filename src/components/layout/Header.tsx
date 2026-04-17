@@ -2,18 +2,19 @@ import Link from 'next/link'
 import { Logo } from './Logo'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { cn } from '@/lib/utils'
+import { getT } from '@/lib/i18n/translations'
 
 interface HeaderProps {
   locale: string
 }
 
 export function Header({ locale }: HeaderProps) {
-  const t = locale === 'he'
+  const T = getT(locale)
 
   const navLinks = [
-    { href: `/${locale}`,                    label: t ? 'דף הבית'  : 'Home' },
-    { href: `/${locale}/register/female`,    label: t ? 'הרשמה'    : 'Register' },
-    { href: `/${locale}/matchmaker`,            label: t ? 'שדכן' : 'Matchmaker' },
+    { href: `/${locale}`,                 label: T.nav.home },
+    { href: `/${locale}/register/female`, label: T.nav.register },
+    { href: `/${locale}/matchmaker`,      label: T.nav.dashboard },
   ]
 
   return (
@@ -48,7 +49,7 @@ export function Header({ locale }: HeaderProps) {
             href={`/${locale}/login`}
             className="hidden sm:flex px-4 py-2 rounded-lg bg-navy-500 text-white text-sm font-semibold hover:bg-navy-600 transition-colors duration-150"
           >
-            {t ? 'כניסה' : 'Login'}
+            {T.nav.login}
           </Link>
         </div>
 

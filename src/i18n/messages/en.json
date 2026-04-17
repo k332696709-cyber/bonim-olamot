@@ -2,7 +2,7 @@
   "nav": {
     "home": "Home",
     "register": "Register",
-    "matchmaker": "Matchmaker",
+    "matchmaker": "Dashboard",
     "login": "Login",
     "language": "עברית"
   },
@@ -15,7 +15,7 @@
   },
   "form": {
     "femaleTitle": "Female Registration Form",
-    "submit": "Submit Form",
+    "submit": "Submit",
     "submitting": "Submitting...",
     "successMessage": "Form submitted successfully!",
     "requiredNote": "Fields marked * are required",
@@ -77,7 +77,7 @@
       "empty": "No notes yet"
     },
     "pdf": {
-      "export": "Export Profile Card",
+      "export": "Generate Profile Card",
       "exporting": "Exporting...",
       "cardTitle": "Profile Card – Bonim Olamot",
       "confidential": "Confidential – Internal use only",
@@ -85,7 +85,7 @@
     },
     "lock48": "Lock 48h",
     "dashboard": {
-      "title": "Matchmaker System",
+      "title": "Dashboard",
       "subtitle": "Candidate Management – Bonim Olamot",
       "tabs": {
         "bachurot": "Bachurot",

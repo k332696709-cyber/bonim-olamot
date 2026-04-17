@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { Note } from '@/types/registration'
 import { Button } from '@/components/ui/Button'
+import { getT } from '@/lib/i18n/translations'
 
 interface NotesThreadProps {
   notes: Note[]
@@ -19,7 +20,8 @@ function formatDate(date: Date, locale: string): string {
 
 export function NotesThread({ notes, locale = 'he', onAddNote }: NotesThreadProps) {
   const [text, setText] = useState('')
-  const t = locale === 'he'
+  const T = getT(locale)
+  const d = T.dashboard
 
   const handleAdd = () => {
     const trimmed = text.trim()
@@ -30,11 +32,8 @@ export function NotesThread({ notes, locale = 'he', onAddNote }: NotesThreadProp
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Notes list */}
       {notes.length === 0 ? (
-        <p className="text-gray-400 text-sm text-center py-4">
-          {t ? 'אין הערות עדיין' : 'No notes yet'}
-        </p>
+        <p className="text-gray-400 text-sm text-center py-4">{d.noNotes}</p>
       ) : (
         <div className="flex flex-col gap-3">
           {notes.map((note) => (
@@ -51,13 +50,12 @@ export function NotesThread({ notes, locale = 'he', onAddNote }: NotesThreadProp
         </div>
       )}
 
-      {/* Add note */}
       {onAddNote && (
         <div className="flex flex-col gap-2 pt-2 border-t border-gray-100">
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={t ? 'הוסף הערה...' : 'Add a note...'}
+            placeholder={T.placeholders.addNote}
             rows={3}
             className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm
               text-gray-900 placeholder:text-gray-400 bg-white resize-none
@@ -65,13 +63,8 @@ export function NotesThread({ notes, locale = 'he', onAddNote }: NotesThreadProp
               hover:border-navy-300 transition-colors duration-150"
           />
           <div className="flex justify-end">
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleAdd}
-              disabled={!text.trim()}
-            >
-              {t ? 'הוסף' : 'Add'}
+            <Button type="button" size="sm" onClick={handleAdd} disabled={!text.trim()}>
+              {d.addNote}
             </Button>
           </div>
         </div>

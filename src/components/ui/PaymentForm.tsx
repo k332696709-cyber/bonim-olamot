@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { Label } from './Label'
 import { Input } from './Input'
+import { getT } from '@/lib/i18n/translations'
 
 interface PaymentFormProps {
   locale?: string
@@ -60,7 +60,8 @@ const LockIcon = () => (
 )
 
 export function PaymentForm({ locale = 'he', onDataChange }: PaymentFormProps) {
-  const t = locale === 'he'
+  const T = getT(locale)
+  const p = T.payment
   const [data, setData] = useState<PaymentData>({ cardholderName: '', cardNumber: '', expiry: '', cvv: '' })
   const [errors, setErrors] = useState<Partial<PaymentData>>({})
   const cardType = detectCardType(data.cardNumber)
@@ -73,41 +74,33 @@ export function PaymentForm({ locale = 'he', onDataChange }: PaymentFormProps) {
     const next = { ...data, [field]: value }
     setData(next)
     onDataChange?.(next)
-    // clear error on change
     if (errors[field]) setErrors((e) => ({ ...e, [field]: undefined }))
   }
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Security badge */}
       <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2.5">
         <span className="text-green-600"><LockIcon /></span>
-        <p className="text-green-700 text-xs font-medium">
-          {t ? 'תשלום מאובטח — פרטי הכרטיס מוצפנים ומאובטחים' : 'Secure payment — card details are encrypted'}
-        </p>
+        <p className="text-green-700 text-xs font-medium">{p.secure}</p>
       </div>
 
-      {/* Summary */}
       <div className="bg-burgundy-50 border border-burgundy-100 rounded-xl px-4 py-3 flex items-center justify-between">
         <div>
-          <p className="font-semibold text-burgundy-700 text-sm">{t ? 'מנוי פרימיום' : 'Premium Plan'}</p>
-          <p className="text-burgundy-500 text-xs mt-0.5">{t ? '3 תשלומים חודשיים' : '3 monthly payments'}</p>
+          <p className="font-semibold text-burgundy-700 text-sm">{p.plan}</p>
+          <p className="text-burgundy-500 text-xs mt-0.5">{p.payments}</p>
         </div>
         <div className="text-end">
           <p className="font-bold text-burgundy-600 text-lg">₪250</p>
-          <p className="text-burgundy-400 text-xs">{t ? 'לחודש' : '/ month'}</p>
+          <p className="text-burgundy-400 text-xs">{p.perMonth}</p>
         </div>
       </div>
 
-      {/* Card fields */}
       <div className="flex flex-col gap-4">
-
-        {/* Cardholder name */}
         <div>
-          <Label he="שם בעל הכרטיס" en="Cardholder Name" htmlFor="cardholderName" required />
+          <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{p.cardholderName} <span className="text-burgundy-500">*</span></label>
           <Input
             id="cardholderName"
-            placeholder={t ? 'כפי שמופיע על הכרטיס' : 'As it appears on the card'}
+            placeholder={p.cardholderPlaceholder}
             value={data.cardholderName}
             onChange={(e) => update('cardholderName', e.target.value)}
             error={errors.cardholderName}
@@ -115,9 +108,8 @@ export function PaymentForm({ locale = 'he', onDataChange }: PaymentFormProps) {
           />
         </div>
 
-        {/* Card number */}
         <div>
-          <Label he="מספר כרטיס" en="Card Number" htmlFor="cardNumber" required />
+          <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{p.cardNumber} <span className="text-burgundy-500">*</span></label>
           <div className="relative">
             <Input
               id="cardNumber"
@@ -136,10 +128,9 @@ export function PaymentForm({ locale = 'he', onDataChange }: PaymentFormProps) {
           </div>
         </div>
 
-        {/* Expiry + CVV */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label he="תוקף" en="Expiry" htmlFor="expiry" required />
+            <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{p.expiry} <span className="text-burgundy-500">*</span></label>
             <Input
               id="expiry"
               placeholder="MM/YY"
@@ -152,7 +143,7 @@ export function PaymentForm({ locale = 'he', onDataChange }: PaymentFormProps) {
             />
           </div>
           <div>
-            <Label he='CVV / קוד אבטחה' en="CVV" htmlFor="cvv" required />
+            <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{p.cvv} <span className="text-burgundy-500">*</span></label>
             <Input
               id="cvv"
               placeholder="•••"
@@ -168,12 +159,7 @@ export function PaymentForm({ locale = 'he', onDataChange }: PaymentFormProps) {
         </div>
       </div>
 
-      {/* Provider note */}
-      <p className="text-center text-xs text-gray-400">
-        {t
-          ? 'החיוב יבוצע לאחר חיבור ספק הסליקה · ניתן לבטל בכל עת'
-          : 'Charge will be made after connecting payment provider · Cancel anytime'}
-      </p>
+      <p className="text-center text-xs text-gray-400">{p.providerNote}</p>
     </div>
   )
 }

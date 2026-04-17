@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import type { MaleProfile, FemaleProfile } from '@/types/registration'
 import { calculateCompatibility, type CompatibilityResult, type ConflictAlert } from '@/lib/matchmaking/compatibilityEngine'
+import { getT } from '@/lib/i18n/translations'
 
 interface CompatibilityPanelProps {
   currentProfile: MaleProfile | FemaleProfile
@@ -36,7 +37,7 @@ function ScoreRing({ score }: { score: number }) {
 }
 
 function ConflictBadge({ conflict, locale }: { conflict: ConflictAlert; locale: string }) {
-  const t = locale === 'he'
+  const T = getT(locale)
   const isMajor = conflict.severity === 'major'
   return (
     <div className={`flex items-start gap-2.5 rounded-xl px-3.5 py-2.5 ${
@@ -49,10 +50,10 @@ function ConflictBadge({ conflict, locale }: { conflict: ConflictAlert; locale: 
         <span className={`text-xs font-semibold uppercase tracking-wide ${
           isMajor ? 'text-red-600' : 'text-amber-600'
         }`}>
-          {isMajor ? (t ? 'התנגשות קריטית' : 'Critical Conflict') : (t ? 'אזהרה' : 'Warning')}
+          {isMajor ? T.compatibility.critical : T.compatibility.warning}
         </span>
         <p className={`text-sm mt-0.5 ${isMajor ? 'text-red-700' : 'text-amber-700'}`}>
-          {t ? conflict.he : conflict.en}
+          {locale === 'he' ? conflict.he : conflict.en}
         </p>
       </div>
     </div>
@@ -87,7 +88,7 @@ export function CompatibilityPanel({
   locale = 'he',
 }: CompatibilityPanelProps) {
   const [selectedId, setSelectedId] = useState<string>('')
-  const t = locale === 'he'
+  const T = getT(locale)
 
   const selectedCandidate = useMemo(
     () => candidates.find((c) => c.id === selectedId) ?? null,
@@ -105,41 +106,37 @@ export function CompatibilityPanel({
   const minorConflicts = result?.conflicts.filter((c) => c.severity === 'minor') ?? []
 
   const scoreLabel = result
-    ? result.score >= 80 ? (t ? 'התאמה גבוהה' : 'High Match')
-      : result.score >= 60 ? (t ? 'התאמה טובה' : 'Good Match')
-      : result.score >= 40 ? (t ? 'התאמה בינונית' : 'Moderate Match')
-      : (t ? 'התאמה נמוכה' : 'Low Match')
+    ? result.score >= 80 ? T.compatibility.highMatch
+      : result.score >= 60 ? T.compatibility.goodMatch
+      : result.score >= 40 ? T.compatibility.moderateMatch
+      : T.compatibility.lowMatch
     : ''
 
   const breakdownLabels = {
-    style:     t ? 'סגנון' : 'Style',
-    values:    t ? 'ערכים' : 'Values',
-    practical: t ? 'מעשי' : 'Practical',
-    traits:    t ? 'אופי' : 'Traits',
+    style:     T.compatibility.style,
+    values:    T.compatibility.values,
+    practical: T.compatibility.practical,
+    traits:    T.compatibility.traits,
   }
 
   return (
     <div className="bg-white rounded-2xl shadow-card border border-gray-100 px-6 py-5">
       <h2 className="font-semibold text-navy-500 text-base mb-4 flex items-center gap-2">
         <span className="text-lg">⚡</span>
-        {t ? 'מנוע תאימות' : 'Compatibility Engine'}
+        {T.compatibility.title}
       </h2>
 
-      {/* Candidate selector */}
       <div className="mb-5">
         <label className="block text-sm text-gray-500 mb-1.5">
-          {t
-            ? (currentGender === 'male' ? 'בחר בחורה להשוואה' : 'בחר בחור להשוואה')
-            : (currentGender === 'male' ? 'Select a Bachurah to compare' : 'Select a Bachur to compare')
-          }
+          {currentGender === 'male' ? T.compatibility.selectFemale : T.compatibility.selectMale}
         </label>
         <select
           value={selectedId}
           onChange={(e) => setSelectedId(e.target.value)}
           className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-navy-300 focus:border-navy-300"
-          dir={t ? 'rtl' : 'ltr'}
+          dir={locale === 'he' ? 'rtl' : 'ltr'}
         >
-          <option value="">{t ? '— בחר/י —' : '— Select —'}</option>
+          <option value="">{T.compatibility.selectOption}</option>
           {candidates.map((c) => (
             <option key={c.id} value={c.id}>
               {c.firstName} · {c.age} · {c.city}
@@ -157,12 +154,10 @@ export function CompatibilityPanel({
             <div>
               <p className="text-lg font-bold text-gray-800">{scoreLabel}</p>
               <p className="text-sm text-gray-400 mt-0.5">
-                {t ? `ניקוד: ${result.score}/100` : `Score: ${result.score}/100`}
+                {locale === 'he' ? `ניקוד: ${result.score}/100` : `Score: ${result.score}/100`}
               </p>
               {majorConflicts.length === 0 && result.score >= 60 && (
-                <p className="text-xs text-green-600 mt-1 font-medium">
-                  {t ? 'אין התנגשויות קריטיות' : 'No critical conflicts detected'}
-                </p>
+                <p className="text-xs text-green-600 mt-1 font-medium">{T.compatibility.noConflicts}</p>
               )}
             </div>
           </div>
@@ -170,7 +165,7 @@ export function CompatibilityPanel({
           {/* Breakdown bars */}
           <div className="space-y-2">
             <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
-              {t ? 'פירוט' : 'Breakdown'}
+              {T.compatibility.breakdown}
             </p>
             {(Object.keys(result.breakdown) as (keyof typeof result.breakdown)[]).map((key) => (
               <BreakdownBar
@@ -186,11 +181,9 @@ export function CompatibilityPanel({
           {/* Highlights */}
           {(result.highlightsHe.length > 0 || result.highlights.length > 0) && (
             <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-              <p className="text-xs font-semibold text-green-700 mb-2">
-                {t ? 'נקודות חוזק' : 'Strengths'}
-              </p>
+              <p className="text-xs font-semibold text-green-700 mb-2">{T.compatibility.strengths}</p>
               <ul className="space-y-1">
-                {(t ? result.highlightsHe : result.highlights).map((h, i) => (
+                {(locale === 'he' ? result.highlightsHe : result.highlights).map((h, i) => (
                   <li key={i} className="flex items-center gap-2 text-sm text-green-700">
                     <span className="text-green-500 text-xs">✓</span>
                     {h}
@@ -204,7 +197,7 @@ export function CompatibilityPanel({
           {result.conflicts.length > 0 && (
             <div className="space-y-2">
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                {t ? 'התראות' : 'Alerts'}
+                {T.compatibility.alerts}
               </p>
               {majorConflicts.map((c, i) => (
                 <ConflictBadge key={`major-${i}`} conflict={c} locale={locale} />
@@ -219,9 +212,7 @@ export function CompatibilityPanel({
 
       {!selectedId && (
         <p className="text-sm text-gray-400 italic text-center py-4">
-          {t
-            ? 'בחר מועמד/ת כדי לחשב התאמה'
-            : 'Select a candidate to calculate compatibility'}
+          {T.compatibility.selectPrompt}
         </p>
       )}
     </div>

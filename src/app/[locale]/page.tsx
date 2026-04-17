@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { Logo } from '@/components/layout/Logo'
+import { getT } from '@/lib/i18n/translations'
 
 export default function HomePage({ params: { locale } }: { params: { locale: string } }) {
-  const t = locale === 'he'
+  const T = getT(locale)
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
@@ -11,13 +12,12 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
           <Logo size="lg" className="justify-center mb-8" />
 
           <h1 className="text-4xl sm:text-5xl font-serif font-bold text-navy-500 mb-3 leading-tight">
-            {t ? 'בונים עולמות' : 'Bonim Olamot'}
+            {T.brand.name}
           </h1>
           <p className="text-lg text-gray-500 mb-12">
-            {t ? 'שידוכים בדרך האמת' : 'Matchmaking with integrity'}
+            {T.brand.tagline}
           </p>
 
-          {/* Two entry points */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto">
             {/* Male */}
             <Link
@@ -32,11 +32,11 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
                 </svg>
               </div>
               <div>
-                <p className="font-bold text-navy-600 text-lg">{t ? 'מיועד' : 'Male Candidate'}</p>
-                <p className="text-gray-400 text-sm mt-0.5">{t ? 'טופס הרשמה לבחור' : 'Registration for men'}</p>
+                <p className="font-bold text-navy-600 text-lg">{T.home.male}</p>
+                <p className="text-gray-400 text-sm mt-0.5">{T.home.maleDesc}</p>
               </div>
               <span className="text-navy-400 text-sm font-medium group-hover:text-navy-600">
-                {t ? 'להרשמה ←' : 'Register →'}
+                {T.home.maleCta}
               </span>
             </Link>
 
@@ -53,18 +53,18 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
                 </svg>
               </div>
               <div>
-                <p className="font-bold text-burgundy-600 text-lg">{t ? 'מיועדת' : 'Female Candidate'}</p>
-                <p className="text-gray-400 text-sm mt-0.5">{t ? 'טופס הרשמה לבחורה' : 'Registration for women'}</p>
+                <p className="font-bold text-burgundy-600 text-lg">{T.home.female}</p>
+                <p className="text-gray-400 text-sm mt-0.5">{T.home.femaleDesc}</p>
               </div>
               <span className="text-burgundy-400 text-sm font-medium group-hover:text-burgundy-600">
-                {t ? 'להרשמה ←' : 'Register →'}
+                {T.home.femaleCta}
               </span>
             </Link>
           </div>
 
           <div className="mt-10 text-sm text-gray-400">
             <Link href={`/${locale}/matchmaker`} className="hover:text-navy-500 transition-colors">
-              {t ? 'כניסת שדכן' : 'Matchmaker Login'} →
+              {T.home.matchmakerLogin} →
             </Link>
           </div>
         </div>

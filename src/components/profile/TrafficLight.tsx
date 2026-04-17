@@ -2,56 +2,24 @@
 
 import { cn } from '@/lib/utils'
 import type { MatchmakerStatus } from '@/types/registration'
+import { getT } from '@/lib/i18n/translations'
 
 interface TrafficLightProps {
   status: MatchmakerStatus
   locale?: string
   compact?: boolean
   onChange?: (status: MatchmakerStatus) => void
-  /**
-   * When false, the status switcher buttons are shown but disabled.
-   * Used to prevent non-owners from changing a Green (Active Match) status.
-   */
   canChange?: boolean
-  /** Name of the matchmaker who owns this lock — used in the lock tooltip. */
   lockedBy?: string
 }
 
 const STATUS_CONFIG: Record<MatchmakerStatus, {
-  color: string; he: string; en: string; bg: string; border: string; text: string
+  color: string; key: MatchmakerStatus; bg: string; border: string; text: string
 }> = {
-  green: {
-    color: '#22c55e',
-    he: 'שידוך פעיל',
-    en: 'Active Match',
-    bg: 'bg-green-50',
-    border: 'border-green-200',
-    text: 'text-green-700',
-  },
-  orange: {
-    color: '#f97316',
-    he: 'הצעה אחרונה השבוע',
-    en: 'Offer This Week',
-    bg: 'bg-orange-50',
-    border: 'border-orange-200',
-    text: 'text-orange-700',
-  },
-  light_red: {
-    color: '#f87171',
-    he: 'חודש ללא הצעות',
-    en: '~1 Month No Offer',
-    bg: 'bg-red-50',
-    border: 'border-red-200',
-    text: 'text-red-400',
-  },
-  bright_red: {
-    color: '#dc2626',
-    he: 'יותר מחודשיים',
-    en: '2+ Months No Offer',
-    bg: 'bg-red-100',
-    border: 'border-red-300',
-    text: 'text-red-700',
-  },
+  green:     { color: '#22c55e', key: 'green',     bg: 'bg-green-50',  border: 'border-green-200',  text: 'text-green-700' },
+  orange:    { color: '#f97316', key: 'orange',    bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700' },
+  light_red: { color: '#f87171', key: 'light_red', bg: 'bg-red-50',    border: 'border-red-200',    text: 'text-red-400' },
+  bright_red:{ color: '#dc2626', key: 'bright_red',bg: 'bg-red-100',   border: 'border-red-300',    text: 'text-red-700' },
 }
 
 const STATUSES: MatchmakerStatus[] = ['green', 'orange', 'light_red', 'bright_red']
@@ -60,9 +28,9 @@ export function TrafficLight({
   status, locale = 'he', compact = false,
   onChange, canChange = true, lockedBy,
 }: TrafficLightProps) {
-  const t = locale === 'he'
+  const T = getT(locale)
   const cfg = STATUS_CONFIG[status]
-  const label = t ? cfg.he : cfg.en
+  const label = T.status[cfg.key]
 
   if (compact) {
     return (
@@ -76,13 +44,12 @@ export function TrafficLight({
     )
   }
 
-  const lockTooltip = t
+  const lockTooltip = locale === 'he'
     ? `פרופיל זה בשידוך פעיל. רק ${lockedBy ?? 'השדכן'} או מנהל יכול לשנות את הסטטוס.`
     : `Profile is in an active match. Only ${lockedBy ?? 'the assigned matchmaker'} or an admin can change this status.`
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Current status badge */}
       <div className={cn('inline-flex items-center gap-2.5 px-4 py-2 rounded-full border', cfg.bg, cfg.border)}>
         <span
           className="w-3.5 h-3.5 rounded-full shrink-0 shadow-md"
@@ -91,7 +58,6 @@ export function TrafficLight({
         <span className={cn('font-semibold text-sm', cfg.text)}>{label}</span>
       </div>
 
-      {/* Status switcher */}
       {onChange && (
         <div className="relative group/lock">
           <div className={cn('flex gap-2', !canChange && 'opacity-40')}>
@@ -103,15 +69,11 @@ export function TrafficLight({
                   type="button"
                   disabled={!canChange}
                   onClick={canChange ? () => onChange(s) : undefined}
-                  title={t ? c.he : c.en}
+                  title={T.status[c.key]}
                   className={cn(
                     'w-8 h-8 rounded-full border-2 transition-all duration-150',
-                    status === s
-                      ? 'scale-125 border-gray-600'
-                      : 'border-transparent opacity-60',
-                    canChange
-                      ? 'hover:opacity-100 cursor-pointer'
-                      : 'cursor-not-allowed',
+                    status === s ? 'scale-125 border-gray-600' : 'border-transparent opacity-60',
+                    canChange ? 'hover:opacity-100 cursor-pointer' : 'cursor-not-allowed',
                   )}
                   style={{ backgroundColor: c.color }}
                 />
@@ -119,7 +81,6 @@ export function TrafficLight({
             })}
           </div>
 
-          {/* Lock tooltip shown on hover when canChange = false */}
           {!canChange && (
             <div className="absolute bottom-full mb-2 start-0 hidden group-hover/lock:flex z-20
                             w-64 bg-gray-900 text-white text-xs rounded-xl px-3.5 py-2.5
@@ -129,10 +90,9 @@ export function TrafficLight({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
-                <span className="font-semibold">{t ? 'שינוי חסום' : 'Change blocked'}</span>
+                <span className="font-semibold">{T.status.changeBlocked}</span>
               </div>
               <p className="text-gray-300 leading-relaxed">{lockTooltip}</p>
-              {/* Arrow */}
               <div className="absolute top-full start-4 border-4 border-transparent border-t-gray-900" />
             </div>
           )}

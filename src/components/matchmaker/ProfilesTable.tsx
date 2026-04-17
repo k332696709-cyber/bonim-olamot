@@ -4,6 +4,7 @@ import React, { useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import type { FemaleProfile, MaleProfile, Note } from '@/types/registration'
+import { getT } from '@/lib/i18n/translations'
 import { TrafficLight } from '@/components/profile/TrafficLight'
 import { NotesThread } from '@/components/profile/NotesThread'
 import { computeStatus, formatLastOffer, lockRemainingMs } from '@/lib/matchmaker/statusUtils'
@@ -65,12 +66,12 @@ function LockBadge({ lockedAt, locale }: { lockedAt: Date; locale: string }) {
 function LockedByOtherBadge({
   lockedBy, lockedAt, locale,
 }: { lockedBy: string; lockedAt: Date | null; locale: string }) {
-  const t = locale === 'he'
+  const T = getT(locale)
   const remaining = lockedAt ? lockRemainingMs(lockedAt) : 0
   const h = Math.floor(remaining / (1000 * 60 * 60))
   const m = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60))
 
-  const tooltip = t
+  const tooltip = locale === 'he'
     ? `פרופיל זה נעול על ידי ${lockedBy}${remaining > 0 ? ` (${h}ש׳ ${m}ד׳ נותרו)` : ''}. רק הם או מנהל יכולים לשחרר אותו.`
     : `Profile locked by ${lockedBy}${remaining > 0 ? ` (${h}h ${m}m remaining)` : ''}. Only they or an admin can release it.`
 
@@ -92,9 +93,7 @@ function LockedByOtherBadge({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
-          <span className="font-semibold text-red-300">
-            {t ? 'פרופיל נעול' : 'Profile Locked'}
-          </span>
+          <span className="font-semibold text-red-300">{T.dashboard.profileLocked}</span>
         </div>
         <p className="text-gray-300 leading-relaxed">{tooltip}</p>
         <div className="absolute top-full start-4 border-4 border-transparent border-t-gray-900" />
@@ -140,7 +139,7 @@ const IconEye = () => (
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTableProps) {
-  const t = locale === 'he'
+  const T = getT(locale)
   const { name: currentName, isAdmin } = useLockIdentity()
 
   const [rowStates, setRowStates] = useState<Record<string, RowState>>(() =>
@@ -205,21 +204,20 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
     }
   }, [gender, updateRow])
 
-  const cols = t
-    ? ['שם', 'גיל', 'עיר', 'סגנון', 'סטטוס', 'הצעה אחרונה', 'נעילה', 'פעולות']
-    : ['Name', 'Age', 'City', 'Style', 'Status', 'Last Offer', 'Lock', 'Actions']
+  const d = T.dashboard
+  const cols = [d.cols.name, d.cols.age, d.cols.city, d.cols.style, d.cols.status, d.cols.lastOffer, d.cols.lock, d.cols.actions]
 
   if (profiles.length === 0) {
     return (
       <div className="rounded-2xl border border-gray-200 bg-white py-16 text-center text-gray-400 text-sm shadow-card">
-        {t ? 'אין מועמדים להצגה' : 'No candidates to display'}
+        {d.empty}
       </div>
     )
   }
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-card bg-white">
-      <table className="w-full border-collapse text-sm" dir={t ? 'rtl' : 'ltr'}>
+      <table className="w-full border-collapse text-sm" dir={locale === 'he' ? 'rtl' : 'ltr'}>
         <thead>
           <tr className="bg-gradient-to-l from-navy-600 to-navy-700">
             {cols.map((col) => (
@@ -324,7 +322,7 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                           <button
                             type="button"
                             onClick={() => handleUnlock(profile.id)}
-                            title={t ? 'שחרר נעילה' : 'Unlock'}
+                            title={d.unlockBtn}
                             className="w-5 h-5 rounded-full bg-gray-100 hover:bg-red-100 text-gray-400 hover:text-red-500 flex items-center justify-center transition-colors text-xs font-bold leading-none"
                           >
                             ✕
@@ -341,7 +339,7 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                         className="text-xs gap-1.5 whitespace-nowrap"
                       >
                         <IconPlay />
-                        {t ? 'פתח עבודה' : 'Start Work'}
+                        {d.startWork}
                       </Button>
                     )}
                   </td>
@@ -359,7 +357,7 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                         )}
                       >
                         <IconEye />
-                        {t ? 'צפה' : 'View'}
+                        {d.view}
                       </Link>
 
                       {/* PDF — always available */}
@@ -391,7 +389,7 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                         )}
                       >
                         <IconNotes />
-                        {t ? 'הערות' : 'Notes'}
+                        {d.notes}
                         {rs.notes.length > 0 && (
                           <span className={cn(
                             'w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-bold',
@@ -416,7 +414,7 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            {t
+                            {locale === 'he'
                               ? `פרופיל זה נעול על ידי ${rs.lockedBy}. ניתן לצפות ולהוסיף הערות בלבד.`
                               : `Profile locked by ${rs.lockedBy}. You can only view and add notes.`}
                           </div>
@@ -424,7 +422,7 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                         <div className="flex items-center gap-2 mb-3">
                           <div className="w-1 h-5 bg-navy-400 rounded-full" />
                           <h4 className="text-sm font-bold text-navy-700">
-                            {t ? 'הערות פנימיות' : 'Internal Notes'}
+                            {d.internalNotes}
                             <span className="text-navy-400 font-normal ms-2">
                               – {profile.firstName} {profile.lastName.charAt(0)}.
                             </span>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { getT } from '@/lib/i18n/translations'
 
 interface LockIndicatorProps {
   lockedAt: Date | null
@@ -39,7 +40,7 @@ export function LockIndicator({
     return () => clearInterval(id)
   }, [lockedAt])
 
-  const t = locale === 'he'
+  const T = getT(locale)
   const isLocked  = lockedAt !== null
   const isExpired = isLocked && remaining === 0
   const isActive  = isLocked && !isExpired
@@ -47,13 +48,10 @@ export function LockIndicator({
   return (
     <div className="flex flex-col gap-2">
 
-      {/* ── Active lock ── */}
       {isActive && (
         <div className={cn(
           'flex items-start gap-2.5 rounded-xl px-4 py-3',
-          canUnlock
-            ? 'bg-orange-50 border border-orange-200'
-            : 'bg-red-50 border border-red-200',
+          canUnlock ? 'bg-orange-50 border border-orange-200' : 'bg-red-50 border border-red-200',
         )}>
           <svg
             className={cn('w-5 h-5 shrink-0 mt-0.5', canUnlock ? 'text-orange-500' : 'text-red-500')}
@@ -66,50 +64,43 @@ export function LockIndicator({
           <div className="flex-1 min-w-0">
             <p className={cn('font-semibold text-sm', canUnlock ? 'text-orange-700' : 'text-red-700')}>
               {canUnlock
-                ? (t ? 'פרופיל נעול (על ידך)' : 'Locked (by you)')
-                : (t ? `נעול על ידי ${lockedBy ?? t ? 'שדכן אחר' : 'another matchmaker'}` : `Locked by ${lockedBy ?? 'another matchmaker'}`)}
+                ? T.lock.lockedByYou
+                : (locale === 'he'
+                    ? `נעול על ידי ${lockedBy ?? 'שדכן אחר'}`
+                    : `Locked by ${lockedBy ?? 'another matchmaker'}`)}
             </p>
             <p className={cn('text-xs mt-0.5', canUnlock ? 'text-orange-600' : 'text-red-500')}>
-              {t
+              {locale === 'he'
                 ? `${formatRemaining(remaining, locale)} נותרו`
                 : `${formatRemaining(remaining, locale)} remaining`}
             </p>
             {!canUnlock && (
-              <p className="text-xs text-red-400 mt-1">
-                {t
-                  ? 'רק הם או מנהל יכולים לשחרר נעילה זו'
-                  : 'Only they or an admin can release this lock'}
-              </p>
+              <p className="text-xs text-red-400 mt-1">{T.lock.onlyAdminRelease}</p>
             )}
           </div>
 
-          {/* Unlock button — only for the owner/admin */}
           {canUnlock && onUnlock && (
             <button
               type="button"
               onClick={onUnlock}
               className="shrink-0 text-xs font-medium text-orange-600 hover:text-red-600 border border-orange-300 hover:border-red-300 rounded-lg px-2.5 py-1 transition-colors"
             >
-              {t ? 'שחרר' : 'Unlock'}
+              {T.lock.unlock}
             </button>
           )}
         </div>
       )}
 
-      {/* ── Expired lock ── */}
       {isExpired && (
         <div className="flex items-center gap-2.5 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
           <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
           </svg>
-          <p className="text-gray-500 text-sm">
-            {t ? 'פג תוקף הנעילה' : 'Lock expired'}
-          </p>
+          <p className="text-gray-500 text-sm">{T.lock.expired}</p>
         </div>
       )}
 
-      {/* ── Not locked — show lock button ── */}
       {!isLocked && onLock && (
         <button
           type="button"
@@ -123,7 +114,7 @@ export function LockIndicator({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
-          {t ? 'נעל 48 שעות' : 'Lock 48h'}
+          {T.lock.lock48}
         </button>
       )}
     </div>

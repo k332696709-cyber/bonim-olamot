@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import type { MaleProfile, FemaleProfile } from '@/types/registration'
+import { getT } from '@/lib/i18n/translations'
 
 interface AISummaryProps {
   profile: MaleProfile | FemaleProfile
@@ -13,7 +14,7 @@ export function AISummary({ profile, gender, locale = 'he' }: AISummaryProps) {
   const [bullets, setBullets] = useState<string[]>([])
   const [source, setSource] = useState<'ai' | 'structured' | null>(null)
   const [loading, setLoading] = useState(true)
-  const t = locale === 'he'
+  const T = getT(locale)
 
   useEffect(() => {
     let cancelled = false
@@ -55,11 +56,11 @@ export function AISummary({ profile, gender, locale = 'he' }: AISummaryProps) {
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-semibold text-navy-500 text-base flex items-center gap-2">
           <span className="text-lg">✦</span>
-          {t ? 'סיכום AI' : 'AI Summary'}
+          {T.ai.title}
         </h2>
         {source === 'ai' && !loading && (
           <span className="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-0.5 font-medium">
-            {t ? 'מבוסס AI' : 'AI-powered'}
+            {T.ai.powered}
           </span>
         )}
       </div>
@@ -77,9 +78,7 @@ export function AISummary({ profile, gender, locale = 'he' }: AISummaryProps) {
           ))}
         </div>
       ) : bullets.length === 0 ? (
-        <p className="text-sm text-gray-400 italic">
-          {t ? 'אין מידע מספיק לסיכום' : 'Not enough information for a summary'}
-        </p>
+        <p className="text-sm text-gray-400 italic">{T.ai.empty}</p>
       ) : (
         <ul className="space-y-2.5">
           {bullets.map((bullet, i) => (
@@ -95,17 +94,13 @@ export function AISummary({ profile, gender, locale = 'he' }: AISummaryProps) {
         <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
           {profile.aboutMe && (
             <div>
-              <p className="text-xs font-medium text-gray-400 mb-1">
-                {t ? 'על עצמי (מקורי)' : 'About Me (original)'}
-              </p>
+              <p className="text-xs font-medium text-gray-400 mb-1">{T.ai.aboutMe}</p>
               <p className="text-sm text-gray-600 leading-relaxed">{profile.aboutMe}</p>
             </div>
           )}
           {profile.aboutPartner && (
             <div>
-              <p className="text-xs font-medium text-gray-400 mb-1">
-                {t ? 'מה מחפש/ת (מקורי)' : 'Looking For (original)'}
-              </p>
+              <p className="text-xs font-medium text-gray-400 mb-1">{T.ai.lookingFor}</p>
               <p className="text-sm text-gray-600 leading-relaxed">{profile.aboutPartner}</p>
             </div>
           )}

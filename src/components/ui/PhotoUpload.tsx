@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { getT } from '@/lib/i18n/translations'
 
 interface PhotoUploadProps {
   value: string[]
@@ -13,7 +14,7 @@ interface PhotoUploadProps {
 export function PhotoUpload({ value, onChange, max = 5, locale = 'he' }: PhotoUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
-  const t = locale === 'he'
+  const T = getT(locale)
 
   const addFiles = (files: FileList | null) => {
     if (!files) return
@@ -34,9 +35,12 @@ export function PhotoUpload({ value, onChange, max = 5, locale = 'he' }: PhotoUp
     onChange(value.filter((_, i) => i !== index))
   }
 
+  const instruction = locale === 'he'
+    ? `לחץ לבחירה או גרור לכאן (עד ${max} תמונות)`
+    : `Click to select or drag here (up to ${max} photos)`
+
   return (
     <div className="flex flex-col gap-3">
-      {/* Drop zone */}
       <div
         onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
         onDragLeave={() => setDragging(false)}
@@ -56,17 +60,11 @@ export function PhotoUpload({ value, onChange, max = 5, locale = 'he' }: PhotoUp
               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           <div>
-            <p className="font-medium text-sm text-navy-600">
-              {t ? 'העלה תמונות שידוכים' : 'Upload matchmaking photos'}
-            </p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {t
-                ? `לחץ לבחירה או גרור לכאן (עד ${max} תמונות)`
-                : `Click to select or drag here (up to ${max} photos)`}
-            </p>
+            <p className="font-medium text-sm text-navy-600">{T.photo.upload}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{instruction}</p>
           </div>
           <span className="text-xs text-gray-400">
-            {value.length}/{max} {t ? 'תמונות' : 'photos'}
+            {value.length}/{max} {locale === 'he' ? 'תמונות' : 'photos'}
           </span>
         </div>
         <input
@@ -79,7 +77,6 @@ export function PhotoUpload({ value, onChange, max = 5, locale = 'he' }: PhotoUp
         />
       </div>
 
-      {/* Previews */}
       {value.length > 0 && (
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
           {value.map((src, i) => (
@@ -97,7 +94,7 @@ export function PhotoUpload({ value, onChange, max = 5, locale = 'he' }: PhotoUp
               </button>
               {i === 0 && (
                 <span className="absolute bottom-1 start-1 bg-navy-500 text-white text-xs px-1.5 py-0.5 rounded">
-                  {t ? 'ראשית' : 'Main'}
+                  {T.photo.main}
                 </span>
               )}
             </div>

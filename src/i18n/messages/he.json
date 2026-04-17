@@ -2,7 +2,7 @@
   "nav": {
     "home": "דף הבית",
     "register": "הרשמה",
-    "matchmaker": "שדכן",
+    "matchmaker": "לוח בקרה",
     "login": "כניסה",
     "language": "English"
   },
@@ -15,7 +15,7 @@
   },
   "form": {
     "femaleTitle": "טופס הרשמה – מיועדת",
-    "submit": "שלח טופס",
+    "submit": "שליחה",
     "submitting": "שולח...",
     "successMessage": "הטופס נשלח בהצלחה!",
     "requiredNote": "שדות המסומנים ב-* הם חובה",
@@ -77,7 +77,7 @@
       "empty": "אין הערות עדיין"
     },
     "pdf": {
-      "export": "ייצא כרטיס בירורים",
+      "export": "הפק כרטיס בירורים",
       "exporting": "מייצא...",
       "cardTitle": "כרטיס בירורים – בונים עולמות",
       "confidential": "סודי – לשימוש פנימי בלבד",
@@ -85,7 +85,7 @@
     },
     "lock48": "נעל 48 שעות",
     "dashboard": {
-      "title": "מערכת השדכנים",
+      "title": "לוח בקרה",
       "subtitle": "ניהול מועמדים ומועמדות – בונים עולמות",
       "tabs": {
         "bachurot": "בחורות",

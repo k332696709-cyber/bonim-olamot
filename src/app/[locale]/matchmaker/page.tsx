@@ -6,6 +6,7 @@ import { MOCK_FEMALE_PROFILES, MOCK_MALE_PROFILES } from '@/constants/mockProfil
 import { ProfilesTable } from '@/components/matchmaker/ProfilesTable'
 import { IdentitySwitcher } from '@/components/matchmaker/IdentitySwitcher'
 import { computeStatus, lockRemainingMs } from '@/lib/matchmaker/statusUtils'
+import { getT } from '@/lib/i18n/translations'
 
 type Tab = 'bachurot' | 'bachurim'
 
@@ -58,7 +59,8 @@ function LegendItem({ color, label }: { color: string; label: string }) {
 
 export default function MatchmakerPage({ params }: { params: { locale: string } }) {
   const { locale } = params
-  const t = locale === 'he'
+  const T = getT(locale)
+  const d = T.dashboard
 
   const [tab, setTab] = useState<Tab>('bachurot')
 
@@ -76,9 +78,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
   }, [])
 
   const tabLabel = (which: Tab) =>
-    which === 'bachurot'
-      ? (t ? 'בחורות' : 'Bachurot')
-      : (t ? 'בחורים' : 'Bachurim')
+    which === 'bachurot' ? d.bachurot : d.bachurim
 
   const tabCount = (which: Tab) =>
     which === 'bachurot' ? stats.totalF : stats.totalM
@@ -96,19 +96,13 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
                 href={`/${locale}`}
                 className="text-xs text-navy-400 hover:text-navy-600 transition-colors"
               >
-                {t ? 'בונים עולמות' : 'Bonim Olamot'}
+                {d.breadcrumb}
               </Link>
               <span className="text-gray-300 text-xs">/</span>
-              <span className="text-xs text-gray-500">
-                {t ? 'מערכת השדכנים' : 'Matchmaker System'}
-              </span>
+              <span className="text-xs text-gray-500">{d.title}</span>
             </div>
-            <h1 className="text-xl font-bold text-navy-700 font-serif">
-              {t ? 'מערכת השדכנים' : 'Matchmaker System'}
-            </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
-              {t ? 'ניהול מועמדים ומועמדות – בונים עולמות' : 'Candidate Management – Bonim Olamot'}
-            </p>
+            <h1 className="text-xl font-bold text-navy-700 font-serif">{d.title}</h1>
+            <p className="text-sm text-gray-500 mt-0.5">{d.subtitle}</p>
           </div>
 
           {/* Identity switcher (demo) + Legend */}
@@ -116,10 +110,10 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
             <IdentitySwitcher locale={locale} />
           </div>
           <div className="flex items-center gap-4 flex-wrap">
-            <LegendItem color="#22c55e" label={t ? 'שידוך פעיל' : 'Active Match'} />
-            <LegendItem color="#f97316" label={t ? 'הצעה השבוע' : 'Offer This Week'} />
-            <LegendItem color="#f87171" label={t ? 'חודש ללא הצעות' : '1 Month No Offer'} />
-            <LegendItem color="#dc2626" label={t ? 'יותר מחודשיים' : '2+ Months'} />
+            <LegendItem color="#22c55e" label={d.legend.green} />
+            <LegendItem color="#f97316" label={d.legend.orange} />
+            <LegendItem color="#f87171" label={d.legend.lightRed} />
+            <LegendItem color="#dc2626" label={d.legend.brightRed} />
           </div>
         </div>
       </header>
@@ -128,30 +122,10 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
 
         {/* ── Stats row ── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <StatCard
-            value={stats.totalF}
-            label={t ? 'בחורות' : 'Bachurot'}
-            color="navy"
-            icon="👩"
-          />
-          <StatCard
-            value={stats.totalM}
-            label={t ? 'בחורים' : 'Bachurim'}
-            color="navy"
-            icon="👨"
-          />
-          <StatCard
-            value={stats.active}
-            label={t ? 'שידוכים פעילים' : 'Active Matches'}
-            color="green"
-            icon="🔒"
-          />
-          <StatCard
-            value={stats.urgent}
-            label={t ? 'דחוף לטיפול' : 'Urgent'}
-            color="red"
-            icon="🚨"
-          />
+          <StatCard value={stats.totalF} label={d.bachurot}      color="navy"   icon="👩" />
+          <StatCard value={stats.totalM} label={d.bachurim}     color="navy"   icon="👨" />
+          <StatCard value={stats.active} label={d.activeMatches} color="green"  icon="🔒" />
+          <StatCard value={stats.urgent} label={d.urgent}       color="red"    icon="🚨" />
         </div>
 
         {/* ── Tab bar + table ── */}
@@ -195,43 +169,13 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
 
         {/* ── Status guide ── */}
         <section className="bg-white rounded-2xl border border-gray-200 shadow-card px-6 py-5">
-          <h2 className="text-sm font-bold text-navy-600 mb-4">
-            {t ? 'מדריך מצבים' : 'Status Guide'}
-          </h2>
+          <h2 className="text-sm font-bold text-navy-600 mb-4">{d.statusGuide}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              {
-                color: '#22c55e',
-                bg: 'bg-green-50',
-                border: 'border-green-200',
-                text: 'text-green-700',
-                title: t ? 'שידוך פעיל (ירוק)' : 'Active Match (Green)',
-                desc: t ? 'הפרופיל נעול לעבודה פעילה (48 שעות)' : 'Profile locked for active work (48 hours)',
-              },
-              {
-                color: '#f97316',
-                bg: 'bg-orange-50',
-                border: 'border-orange-200',
-                text: 'text-orange-700',
-                title: t ? 'הצעה השבוע (כתום)' : 'Offer This Week (Orange)',
-                desc: t ? 'הצעת שידוך נשלחה בשבוע האחרון' : 'A match offer was sent in the last week',
-              },
-              {
-                color: '#f87171',
-                bg: 'bg-red-50',
-                border: 'border-red-200',
-                text: 'text-red-400',
-                title: t ? 'אדום בהיר – חודש ללא הצעות' : 'Light Red – 1 Month No Offer',
-                desc: t ? 'לא נשלחה הצעה במשך חודש' : 'No offer sent for approximately one month',
-              },
-              {
-                color: '#dc2626',
-                bg: 'bg-red-100',
-                border: 'border-red-300',
-                text: 'text-red-700',
-                title: t ? 'אדום עז – יותר מחודשיים' : 'Bright Red – 2+ Months',
-                desc: t ? 'לא נשלחה הצעה ביותר מחודשיים, או מעולם' : 'No offer sent for over two months, or never',
-              },
+              { color: '#22c55e', bg: 'bg-green-50',  border: 'border-green-200',  text: 'text-green-700', title: d.statusGuideItems.greenTitle,    desc: d.statusGuideItems.greenDesc },
+              { color: '#f97316', bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700',title: d.statusGuideItems.orangeTitle,   desc: d.statusGuideItems.orangeDesc },
+              { color: '#f87171', bg: 'bg-red-50',    border: 'border-red-200',    text: 'text-red-400',   title: d.statusGuideItems.lightRedTitle, desc: d.statusGuideItems.lightRedDesc },
+              { color: '#dc2626', bg: 'bg-red-100',   border: 'border-red-300',    text: 'text-red-700',   title: d.statusGuideItems.brightRedTitle,desc: d.statusGuideItems.brightRedDesc },
             ].map((item) => (
               <div key={item.title} className={`rounded-xl border ${item.bg} ${item.border} p-4`}>
                 <div className="flex items-center gap-2 mb-2">

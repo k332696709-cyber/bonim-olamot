@@ -1,58 +1,58 @@
 'use client'
 
 import { useFormContext } from 'react-hook-form'
-import { Label } from '@/components/ui/Label'
 import { Input } from '@/components/ui/Input'
 import { SelectField } from '@/components/ui/SelectField'
 import { FormSection } from '@/components/ui/FormSection'
 import { MARITAL_STATUS_FEMALE } from '@/constants/formOptions'
 import type { FemaleRegistrationData } from '@/lib/validations/femaleRegistration'
+import { getT } from '@/lib/i18n/translations'
 
 export function FemalePersonalSection({ locale }: { locale: string }) {
   const { register, formState: { errors } } = useFormContext<FemaleRegistrationData>()
-  const t = locale === 'he'
+  const T = getT(locale)
 
   return (
-    <FormSection title={t ? 'פרטים אישיים' : 'Personal Information'}>
+    <FormSection title={T.sections.personal}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
-          <Label he="שם" en="First Name" htmlFor="firstName" required />
-          <Input id="firstName" placeholder={t ? 'שם פרטי' : 'First name'} error={errors.firstName?.message} {...register('firstName')} />
+          <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{T.fields.firstName} <span className="text-burgundy-500">*</span></label>
+          <Input id="firstName" placeholder={T.placeholders.firstName} error={errors.firstName?.message} {...register('firstName')} />
         </div>
         <div>
-          <Label he="שם משפחה" en="Last Name" htmlFor="lastName" required />
-          <Input id="lastName" placeholder={t ? 'שם משפחה' : 'Last name'} error={errors.lastName?.message} {...register('lastName')} />
+          <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{T.fields.lastName} <span className="text-burgundy-500">*</span></label>
+          <Input id="lastName" placeholder={T.placeholders.lastName} error={errors.lastName?.message} {...register('lastName')} />
         </div>
         <div>
-          <Label he="גיל" en="Age" htmlFor="age" required />
-          <Input id="age" type="number" numeric placeholder="גיל" error={errors.age?.message} {...register('age')} />
+          <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{T.fields.age} <span className="text-burgundy-500">*</span></label>
+          <Input id="age" type="number" numeric placeholder={T.fields.age} error={errors.age?.message} {...register('age')} />
         </div>
         <div>
-          <Label he="תאריך לידה עברי + שנה" en="Hebrew Birthday + Year" htmlFor="hebrewBirthday" required />
-          <Input id="hebrewBirthday" placeholder='לדוג׳: כ"ג תשרי תשפ"ה' error={errors.hebrewBirthday?.message} {...register('hebrewBirthday')} />
+          <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{T.fields.hebrewBirthday} <span className="text-burgundy-500">*</span></label>
+          <Input id="hebrewBirthday" placeholder={T.placeholders.hebrewBirthday} error={errors.hebrewBirthday?.message} {...register('hebrewBirthday')} />
         </div>
         <div>
-          <Label he="סטטוס" en="Status" htmlFor="status" required />
-          <SelectField id="status" options={MARITAL_STATUS_FEMALE} placeholder={t ? 'בחרי סטטוס' : 'Select status'} locale={locale} error={errors.status?.message} defaultValue="" {...register('status')} />
+          <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{T.fields.status} <span className="text-burgundy-500">*</span></label>
+          <SelectField id="status" options={MARITAL_STATUS_FEMALE} placeholder={T.placeholders.statusFemale} locale={locale} error={errors.status?.message} defaultValue="" {...register('status')} />
         </div>
         <div>
-          <Label he="השתייכות / קהילה" en="Community" htmlFor="community" required />
-          <Input id="community" placeholder={t ? 'קהילה / זרם' : 'Community'} error={errors.community?.message} {...register('community')} />
+          <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{T.fields.community} <span className="text-burgundy-500">*</span></label>
+          <Input id="community" placeholder={T.placeholders.community} error={errors.community?.message} {...register('community')} />
         </div>
         <div>
-          <Label he="עיסוק / לימודים" en="Occupation / Studies" htmlFor="occupation" required />
-          <Input id="occupation" placeholder={t ? 'מקצוע / לימודים' : 'Occupation'} error={errors.occupation?.message} {...register('occupation')} />
+          <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{T.fields.occupation} <span className="text-burgundy-500">*</span></label>
+          <Input id="occupation" placeholder={T.placeholders.occupation} error={errors.occupation?.message} {...register('occupation')} />
         </div>
         <div>
-          <Label he="עיר מגורים" en="City" htmlFor="city" required />
-          <Input id="city" placeholder={t ? 'עיר' : 'City'} error={errors.city?.message} {...register('city')} />
+          <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{T.fields.city} <span className="text-burgundy-500">*</span></label>
+          <Input id="city" placeholder={T.placeholders.city} error={errors.city?.message} {...register('city')} />
         </div>
         <div>
-          <Label he="מספר טלפון" en="Phone" htmlFor="phone" required />
+          <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{T.fields.phone} <span className="text-burgundy-500">*</span></label>
           <Input id="phone" type="tel" numeric placeholder="0501234567" error={errors.phone?.message} {...register('phone')} />
         </div>
         <div>
-          <Label he="אימייל" en="Email" htmlFor="email" required />
+          <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{T.fields.email} <span className="text-burgundy-500">*</span></label>
           <Input id="email" type="email" numeric placeholder="example@email.com" error={errors.email?.message} {...register('email')} />
         </div>
       </div>

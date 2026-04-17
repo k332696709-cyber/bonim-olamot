@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { FemaleProfile, MaleProfile, MatchmakerStatus, Note } from '@/types/registration'
+import { getT } from '@/lib/i18n/translations'
 import { TrafficLight } from './TrafficLight'
 import { LockIndicator } from './LockIndicator'
 import { NotesThread } from './NotesThread'
@@ -45,7 +46,7 @@ function FieldRow({ label, value }: { label: string; value: React.ReactNode }) {
 
 export function MaleProfileCard({ profile, locale = 'he', femaleCandidates }: MaleProfileCardProps) {
   const { name: currentName, isAdmin } = useLockIdentity()
-  const t = locale === 'he'
+  const T = getT(locale)
 
   const [status,   setStatusState] = useState<MatchmakerStatus>(profile.matchmakerStatus)
   const [lockedAt, setLockedAt]    = useState<Date | null>(profile.lockedAt)
@@ -97,11 +98,11 @@ export function MaleProfileCard({ profile, locale = 'he', femaleCandidates }: Ma
               <h1 className="text-white text-xl font-serif font-bold">
                 {profile.firstName}
                 <span className="text-navy-200 text-base font-normal ms-2">
-                  {t ? '(שם משפחה מוסתר)' : '(last name hidden)'}
+                  {T.profile.lastNameHidden}
                 </span>
               </h1>
               <p className="text-navy-200 text-sm mt-1">
-                {t ? 'גיל' : 'Age'}: {profile.age} · {profile.city}
+                {T.profile.age}: {profile.age} · {profile.city}
               </p>
             </div>
             <TrafficLight
@@ -115,32 +116,30 @@ export function MaleProfileCard({ profile, locale = 'he', femaleCandidates }: Ma
         </div>
 
         <div className="px-6 py-4">
-          <FieldRow label={t ? 'תאריך לידה עברי' : 'Hebrew Birthday'} value={profile.hebrewBirthday} />
+          <FieldRow label={T.profile.hebrewBirthday} value={profile.hebrewBirthday} />
           <FieldRow
-            label={t ? 'מצב משפחתי' : 'Marital Status'}
+            label={T.profile.maritalStatus}
             value={getLabel(MARITAL_STATUS_OPTIONS, profile.status, locale)}
           />
-          <FieldRow label={t ? 'קהילה' : 'Community'}  value={profile.community} />
-          <FieldRow label={t ? 'עיסוק' : 'Occupation'}  value={profile.occupation} />
-          <FieldRow label={t ? 'דוא"ל' : 'Email'}       value={profile.email} />
+          <FieldRow label={T.profile.community} value={profile.community} />
+          <FieldRow label={T.profile.occupation} value={profile.occupation} />
+          <FieldRow label={T.profile.email}      value={profile.email} />
           <FieldRow
-            label={t ? 'טלפון' : 'Phone'}
-            value={<span className="text-gray-400 italic">{t ? '(מוסתר)' : '(hidden)'}</span>}
+            label={T.profile.phone}
+            value={<span className="text-gray-400 italic">{T.profile.phoneHidden}</span>}
           />
         </div>
       </div>
 
       {/* Profile details */}
       <div className="bg-white rounded-2xl shadow-card border border-gray-100 px-6 py-5">
-        <h2 className="font-semibold text-navy-500 mb-4 text-base">
-          {t ? 'פרטי פרופיל' : 'Profile Details'}
-        </h2>
+        <h2 className="font-semibold text-navy-500 mb-4 text-base">{T.profile.profileDetails}</h2>
         <FieldRow
-          label={t ? 'סגנון' : 'Style'}
+          label={T.profile.style}
           value={getLabel(MALE_STYLE_OPTIONS, profile.style, locale)}
         />
         <FieldRow
-          label={t ? 'תכונות אופי' : 'Traits'}
+          label={T.profile.traits}
           value={
             <div className="flex flex-wrap gap-1.5">
               {profile.traits.map((trait) => (
@@ -153,15 +152,15 @@ export function MaleProfileCard({ profile, locale = 'he', femaleCandidates }: Ma
           }
         />
         <FieldRow
-          label={t ? 'סגנון לבוש' : 'Clothing'}
+          label={T.profile.clothing}
           value={getLabel(MALE_CLOTHING_OPTIONS, profile.clothing, locale)}
         />
         <FieldRow
-          label={t ? 'לבוש בת זוג רצויה' : 'Partner Clothing'}
+          label={T.profile.partnerClothingMale}
           value={getLabel(MALE_PARTNER_CLOTHING_OPTIONS, profile.partnerClothing, locale)}
         />
         <FieldRow
-          label={t ? 'סוג טלפון' : 'Phone Type'}
+          label={T.profile.phoneType}
           value={getLabel(PHONE_TYPE_OPTIONS, profile.phoneType, locale)}
         />
       </div>
@@ -171,9 +170,7 @@ export function MaleProfileCard({ profile, locale = 'he', femaleCandidates }: Ma
 
       {/* Lock + Export */}
       <div className="bg-white rounded-2xl shadow-card border border-gray-100 px-6 py-5">
-        <h2 className="font-semibold text-navy-500 mb-4 text-base">
-          {t ? 'ניהול רשומה' : 'Record Management'}
-        </h2>
+        <h2 className="font-semibold text-navy-500 mb-4 text-base">{T.profile.recordManagement}</h2>
         <div className="flex flex-wrap items-start gap-4 justify-between">
           <LockIndicator
             lockedAt={lockedAt}
@@ -189,9 +186,7 @@ export function MaleProfileCard({ profile, locale = 'he', femaleCandidates }: Ma
 
       {/* Internal Notes */}
       <div className="bg-white rounded-2xl shadow-card border border-gray-100 px-6 py-5">
-        <h2 className="font-semibold text-navy-500 mb-4 text-base">
-          {t ? 'הערות פנימיות' : 'Internal Notes'}
-        </h2>
+        <h2 className="font-semibold text-navy-500 mb-4 text-base">{T.profile.internalNotes}</h2>
         <NotesThread notes={notes} locale={locale} onAddNote={handleAddNote} />
       </div>
 

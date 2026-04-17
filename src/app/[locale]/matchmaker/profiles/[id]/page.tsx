@@ -3,13 +3,14 @@ import { ProfileCard } from '@/components/profile/ProfileCard'
 import { CompatibilityPanel } from '@/components/profile/CompatibilityPanel'
 import { MaleProfileCard } from '@/components/profile/MaleProfileCard'
 import { MOCK_FEMALE_PROFILES, MOCK_MALE_PROFILES } from '@/constants/mockProfiles'
+import { getT } from '@/lib/i18n/translations'
 
 interface PageProps {
   params: { locale: string; id: string }
 }
 
 export default function MatchmakerProfilePage({ params: { locale, id } }: PageProps) {
-  const t = locale === 'he'
+  const T = getT(locale)
 
   const femaleProfile = MOCK_FEMALE_PROFILES.find((p) => p.id === id)
   const maleProfile   = MOCK_MALE_PROFILES.find((p) => p.id === id)
@@ -25,17 +26,15 @@ export default function MatchmakerProfilePage({ params: { locale, id } }: PagePr
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
-        {t ? 'חזרה ללוח הבקרה' : 'Back to Dashboard'}
+        {T.profile.backToDashboard}
       </Link>
 
       <div className="mb-6">
         <h1 className="text-xl font-serif font-bold text-navy-600">
-          {femaleProfile
-            ? (t ? 'תצוגת שדכן – מיועדת' : 'Matchmaker View – Female Candidate')
-            : (t ? 'תצוגת שדכן – מיועד' : 'Matchmaker View – Male Candidate')}
+          {femaleProfile ? T.profile.femaleTitle : T.profile.maleTitle}
         </h1>
         <p className="text-sm text-gray-400 mt-1">
-          {profileName} · {t ? 'שם משפחה וטלפון מוסתרים' : 'Last name and phone hidden'}
+          {profileName} · {T.profile.lastNamePhone}
         </p>
       </div>
 
@@ -61,7 +60,7 @@ export default function MatchmakerProfilePage({ params: { locale, id } }: PagePr
         </>
       ) : (
         <div className="text-center py-16 text-gray-400">
-          {t ? 'פרופיל לא נמצא' : 'Profile not found'}
+          {T.profile.notFound}
         </div>
       )}
     </div>

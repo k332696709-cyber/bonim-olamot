@@ -16,7 +16,7 @@ export function LanguageSwitcher({ locale }: LanguageSwitcherProps) {
 
   return (
     <div
-      className="inline-flex items-center rounded-lg border border-navy-200 overflow-hidden text-xs font-bold"
+      className="inline-flex items-center rounded-full border border-navy-200 overflow-hidden text-xs font-semibold shadow-sm"
       role="group"
       aria-label="בחר שפה / Choose language"
     >
@@ -24,26 +24,26 @@ export function LanguageSwitcher({ locale }: LanguageSwitcherProps) {
         href={hePath}
         aria-current={isHe ? 'true' : undefined}
         className={cn(
-          'px-3 py-1.5 transition-colors duration-150 select-none',
+          'px-3.5 py-1.5 transition-colors duration-150 select-none',
           isHe
             ? 'bg-navy-600 text-white'
             : 'text-navy-500 hover:bg-navy-50',
         )}
       >
-        עב
+        עברית
       </Link>
       <span className="w-px h-4 bg-navy-200 shrink-0" />
       <Link
         href={enPath}
         aria-current={!isHe ? 'true' : undefined}
         className={cn(
-          'px-3 py-1.5 transition-colors duration-150 select-none',
+          'px-3.5 py-1.5 transition-colors duration-150 select-none',
           !isHe
             ? 'bg-navy-600 text-white'
             : 'text-navy-500 hover:bg-navy-50',
         )}
       >
-        EN
+        English
       </Link>
     </div>
   )
