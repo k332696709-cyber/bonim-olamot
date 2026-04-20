@@ -30,7 +30,7 @@ export const femaleRegistrationSchema = z.object({
   flexibility:     z.enum(['preferred','important','very_important','not_important'], { errorMap: () => ({ message: 'יש לבחור' }) }),
 
   clothing:        z.enum(['very_simple','simple','classic','stylish','respectable','modern','very_modern'], { errorMap: () => ({ message: 'יש לבחור סגנון לבוש' }) }),
-  headcovering:    z.array(z.string()).min(1, 'יש לבחור לפחות אפשרות אחת').max(2, 'ניתן לבחור עד 2 אפשרויות'),
+  headcovering:    z.enum(['wig_no_cut','wig_with_cut','wig_only','wig_plus_cover','kerchief_only','no_preference'], { errorMap: () => ({ message: 'יש לבחור כיסוי ראש' }) }),
   partnerClothing: z.enum(['only_bw','bw_elegant','colorful_weekday','very_modern'], { errorMap: () => ({ message: 'יש לבחור' }) }),
   phoneType:       z.enum(['kosher','filtered','smartphone','work_smartphone'], { errorMap: () => ({ message: 'יש לבחור סוג טלפון' }) }),
 

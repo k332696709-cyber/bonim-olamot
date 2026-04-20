@@ -56,9 +56,9 @@ export function FemaleValuesSection({ locale }: { locale: string }) {
         )} />
       </FormSection>
 
-      <FormSection title={T.sections.headcovering} subtitle={locale === 'he' ? 'ניתן לבחור עד 2 אפשרויות' : 'Select up to 2'}>
-        <Controller name="headcovering" control={control} defaultValue={[]} render={({ field }) => (
-          <CheckboxGroup options={HEADCOVERING_OPTIONS} value={field.value as string[]} onChange={field.onChange} max={2} min={1} error={errors.headcovering?.message as string | undefined} locale={locale} />
+      <FormSection title={T.sections.headcovering}>
+        <Controller name="headcovering" control={control} render={({ field }) => (
+          <RadioGroup name="headcovering" options={HEADCOVERING_OPTIONS} value={field.value} onChange={field.onChange} error={errors.headcovering?.message} locale={locale} />
         )} />
       </FormSection>
 

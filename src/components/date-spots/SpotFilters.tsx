@@ -121,7 +121,7 @@ export function SpotFilters({ filters, onChange, totalShown, totalAll }: SpotFil
           <span className="text-xs text-gray-500">סינון פעיל:</span>
           {filters.search && (
             <span className="text-xs bg-navy-50 text-navy-700 border border-navy-200 rounded-full px-2.5 py-0.5">
-              "{filters.search}"
+              &ldquo;{filters.search}&rdquo;
             </span>
           )}
           {filters.category !== 'all' && (
