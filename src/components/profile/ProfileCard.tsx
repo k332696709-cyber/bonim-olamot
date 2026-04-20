@@ -134,6 +134,16 @@ export function ProfileCard({ profile, locale = 'he' }: ProfileCardProps) {
             label={T.profile.maritalStatus}
             value={getLabel(MARITAL_STATUS_OPTIONS, profile.status as never, locale)}
           />
+          {(profile.status === 'divorced' || profile.status === 'widowed') && profile.hasChildren !== undefined && (
+            <FieldRow
+              label={T.profile.hasChildren}
+              value={
+                profile.hasChildren
+                  ? `${T.profile.withChildren}${profile.numberOfChildren ? ` (${profile.numberOfChildren})` : ''}`
+                  : T.profile.withoutChildren
+              }
+            />
+          )}
           <FieldRow label={T.profile.community} value={profile.community} />
           <FieldRow label={T.profile.occupation} value={profile.occupation} />
           <FieldRow label={T.profile.email} value={profile.email} />

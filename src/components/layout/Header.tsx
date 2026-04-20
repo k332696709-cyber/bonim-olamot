@@ -10,11 +10,13 @@ interface HeaderProps {
 
 export function Header({ locale }: HeaderProps) {
   const T = getT(locale)
+  const isHe = locale === 'he'
 
   const navLinks = [
     { href: `/${locale}`,                 label: T.nav.home },
-    { href: `/${locale}/register/female`, label: T.nav.register },
-    { href: `/${locale}/matchmaker`,      label: T.nav.dashboard },
+    { href: `/${locale}/register/male`,   label: isHe ? 'הרשמה למיועד' : 'Male Registration' },
+    { href: `/${locale}/register/female`, label: isHe ? 'הרשמה למיועדת' : 'Female Registration' },
+    { href: `/${locale}/date-spots`,      label: isHe ? '💑 מקומות לדייט' : '💑 Date Spots' },
   ]
 
   return (
@@ -45,9 +47,21 @@ export function Header({ locale }: HeaderProps) {
         {/* Right controls */}
         <div className="flex items-center gap-2">
           <LanguageSwitcher locale={locale} />
+
+          {/* Donations button */}
+          <Link
+            href={`/${locale}/donations`}
+            className="hidden sm:flex px-4 py-2 rounded-lg border border-burgundy-300 text-burgundy-600
+              text-sm font-semibold hover:bg-burgundy-50 transition-colors duration-150"
+          >
+            {isHe ? '❤️ תרומות' : '❤️ Donate'}
+          </Link>
+
+          {/* Matchmaker login */}
           <Link
             href={`/${locale}/login`}
-            className="hidden sm:flex px-4 py-2 rounded-lg bg-navy-500 text-white text-sm font-semibold hover:bg-navy-600 transition-colors duration-150"
+            className="hidden sm:flex px-4 py-2 rounded-lg bg-navy-500 text-white
+              text-sm font-semibold hover:bg-navy-600 transition-colors duration-150"
           >
             {T.nav.login}
           </Link>

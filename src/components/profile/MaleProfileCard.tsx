@@ -121,6 +121,16 @@ export function MaleProfileCard({ profile, locale = 'he', femaleCandidates }: Ma
             label={T.profile.maritalStatus}
             value={getLabel(MARITAL_STATUS_OPTIONS, profile.status, locale)}
           />
+          {(profile.status === 'divorced' || profile.status === 'widowed') && profile.hasChildren !== undefined && (
+            <FieldRow
+              label={T.profile.hasChildren}
+              value={
+                profile.hasChildren
+                  ? `${T.profile.withChildren}${profile.numberOfChildren ? ` (${profile.numberOfChildren})` : ''}`
+                  : T.profile.withoutChildren
+              }
+            />
+          )}
           <FieldRow label={T.profile.community} value={profile.community} />
           <FieldRow label={T.profile.occupation} value={profile.occupation} />
           <FieldRow label={T.profile.email}      value={profile.email} />

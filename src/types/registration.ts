@@ -32,6 +32,8 @@ export interface MaleRegistrationData {
   age: number
   hebrewBirthday: string
   status: string
+  hasChildren?: boolean
+  numberOfChildren?: number
   community: string
   occupation: string
   city: string
@@ -79,6 +81,8 @@ export interface FemaleRegistrationData {
   age: number
   hebrewBirthday: string
   status: string
+  hasChildren?: boolean
+  numberOfChildren?: number
   community: string
   occupation: string
   city: string

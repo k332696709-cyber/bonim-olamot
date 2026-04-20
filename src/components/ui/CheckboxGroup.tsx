@@ -8,6 +8,7 @@ interface CheckboxGroupProps {
   value: string[]
   onChange: (value: string[]) => void
   max?: number
+  min?: number
   error?: string
   locale?: string
 }
@@ -17,6 +18,7 @@ export function CheckboxGroup({
   value,
   onChange,
   max = 3,
+  min = 2,
   error,
   locale = 'he',
 }: CheckboxGroupProps) {
@@ -58,16 +60,16 @@ export function CheckboxGroup({
         <span
           className={cn(
             'text-xs',
-            value.length === 0 ? 'text-gray-400' : value.length < 2 ? 'text-amber-500' : 'text-green-600',
+            value.length === 0 ? 'text-gray-400' : value.length < min ? 'text-amber-500' : 'text-green-600',
           )}
         >
           {locale === 'he'
             ? `נבחרו ${value.length} מתוך ${max}`
             : `${value.length} of ${max} selected`}
         </span>
-        {value.length < 2 && (
+        {value.length < min && (
           <span className="text-xs text-gray-400">
-            {locale === 'he' ? `בחרי לפחות 2` : 'Select at least 2'}
+            {locale === 'he' ? `בחר לפחות ${min}` : `Select at least ${min}`}
           </span>
         )}
       </div>

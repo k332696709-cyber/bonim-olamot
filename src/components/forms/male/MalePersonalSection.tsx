@@ -8,9 +8,18 @@ import { MARITAL_STATUS_MALE } from '@/constants/formOptions'
 import type { MaleRegistrationData } from '@/lib/validations/maleRegistration'
 import { getT } from '@/lib/i18n/translations'
 
+const HAS_CHILDREN_OPTIONS = [
+  { value: 'true',  he: 'עם ילדים',   en: 'With Children' },
+  { value: 'false', he: 'ללא ילדים',  en: 'Without Children' },
+]
+
 export function MalePersonalSection({ locale }: { locale: string }) {
-  const { register, formState: { errors } } = useFormContext<MaleRegistrationData>()
+  const { register, watch, setValue, formState: { errors } } = useFormContext<MaleRegistrationData>()
   const T = getT(locale)
+
+  const statusValue      = watch('status')
+  const hasChildrenValue = watch('hasChildren')
+  const showChildrenFields = statusValue === 'divorced' || statusValue === 'widowed'
 
   return (
     <FormSection title={T.sections.personal}>
@@ -31,10 +40,60 @@ export function MalePersonalSection({ locale }: { locale: string }) {
           <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{T.fields.hebrewBirthday} <span className="text-burgundy-500">*</span></label>
           <Input id="hebrewBirthday" placeholder={T.placeholders.hebrewBirthday} error={errors.hebrewBirthday?.message} {...register('hebrewBirthday')} />
         </div>
-        <div>
+        <div className={showChildrenFields ? '' : 'md:col-span-2'}>
           <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{T.fields.status} <span className="text-burgundy-500">*</span></label>
           <SelectField id="status" options={MARITAL_STATUS_MALE} placeholder={T.placeholders.statusMale} locale={locale} error={errors.status?.message} defaultValue="" {...register('status')} />
         </div>
+
+        {showChildrenFields && (
+          <div>
+            <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{T.fields.hasChildren} <span className="text-burgundy-500">*</span></label>
+            <select
+              className={[
+                'w-full rounded-lg border px-3.5 py-2.5 text-sm text-gray-900 bg-white',
+                'focus:outline-none focus:ring-2 focus:ring-navy-400 focus:border-navy-400',
+                'transition-colors duration-150 cursor-pointer',
+                errors.hasChildren
+                  ? 'border-burgundy-400 focus:ring-burgundy-300'
+                  : 'border-gray-300 hover:border-navy-300',
+              ].join(' ')}
+              value={hasChildrenValue === undefined ? '' : String(hasChildrenValue)}
+              onChange={(e) => {
+                if (e.target.value === '') {
+                  setValue('hasChildren', undefined, { shouldValidate: true })
+                } else {
+                  setValue('hasChildren', e.target.value === 'true', { shouldValidate: true })
+                  if (e.target.value === 'false') setValue('numberOfChildren', undefined, { shouldValidate: true })
+                }
+              }}
+            >
+              <option value="" disabled>{T.placeholders.hasChildrenMale}</option>
+              {HAS_CHILDREN_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {locale === 'he' ? opt.he : opt.en}
+                </option>
+              ))}
+            </select>
+            {errors.hasChildren && (
+              <p className="mt-1 text-xs text-burgundy-500 text-start">{errors.hasChildren.message}</p>
+            )}
+          </div>
+        )}
+
+        {showChildrenFields && hasChildrenValue === true && (
+          <div>
+            <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{T.fields.numberOfChildren} <span className="text-burgundy-500">*</span></label>
+            <Input
+              id="numberOfChildren"
+              type="number"
+              numeric
+              placeholder={T.fields.numberOfChildren}
+              error={errors.numberOfChildren?.message}
+              {...register('numberOfChildren')}
+            />
+          </div>
+        )}
+
         <div>
           <label className="block mb-1.5 font-semibold text-navy-500 text-sm">{T.fields.community} <span className="text-burgundy-500">*</span></label>
           <Input id="community" placeholder={T.placeholders.community} error={errors.community?.message} {...register('community')} />

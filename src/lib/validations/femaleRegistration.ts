@@ -10,6 +10,8 @@ export const femaleRegistrationSchema = z.object({
   age:             z.coerce.number().int().min(18, 'גיל מינימלי: 18').max(120),
   hebrewBirthday:  z.string().min(3, 'נא להזין תאריך לידה עברי'),
   status:          z.string().min(1, 'יש לבחור מצב משפחתי'),
+  hasChildren:     z.boolean().optional(),
+  numberOfChildren: z.coerce.number().int().min(1, 'יש להזין מספר ילדים').optional(),
   community:       z.string().min(1, 'נא להזין קהילה'),
   occupation:      z.string().min(1, 'נא להזין עיסוק'),
   city:            z.string().min(1, 'נא להזין עיר'),
@@ -28,12 +30,21 @@ export const femaleRegistrationSchema = z.object({
   flexibility:     z.enum(['preferred','important','very_important','not_important'], { errorMap: () => ({ message: 'יש לבחור' }) }),
 
   clothing:        z.enum(['very_simple','simple','classic','stylish','respectable','modern','very_modern'], { errorMap: () => ({ message: 'יש לבחור סגנון לבוש' }) }),
-  headcovering:    z.enum(['wig_no_cut','wig_with_cut','wig_only','wig_plus_cover','kerchief_only','no_preference'], { errorMap: () => ({ message: 'יש לבחור כיסוי ראש' }) }),
+  headcovering:    z.array(z.string()).min(1, 'יש לבחור לפחות אפשרות אחת').max(2, 'ניתן לבחור עד 2 אפשרויות'),
   partnerClothing: z.enum(['only_bw','bw_elegant','colorful_weekday','very_modern'], { errorMap: () => ({ message: 'יש לבחור' }) }),
   phoneType:       z.enum(['kosher','filtered','smartphone','work_smartphone'], { errorMap: () => ({ message: 'יש לבחור סוג טלפון' }) }),
 
   aboutMe:         z.string().default(''),
   aboutPartner:    z.string().default(''),
+}).superRefine((data, ctx) => {
+  if (data.status === 'divorced' || data.status === 'widowed') {
+    if (data.hasChildren === undefined) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'יש לציין האם יש ילדים', path: ['hasChildren'] })
+    }
+    if (data.hasChildren === true && !data.numberOfChildren) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'יש להזין מספר ילדים', path: ['numberOfChildren'] })
+    }
+  }
 })
 
 export type FemaleRegistrationData = z.infer<typeof femaleRegistrationSchema>

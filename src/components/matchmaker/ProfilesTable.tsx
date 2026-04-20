@@ -373,7 +373,7 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                         )}
                       >
                         {!rs.exporting && <IconPdf />}
-                        PDF
+                        {d.pdf}
                       </Button>
 
                       {/* Notes — always available (anyone can add notes) */}

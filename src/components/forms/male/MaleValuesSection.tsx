@@ -43,15 +43,15 @@ export function MaleValuesSection({ locale }: { locale: string }) {
         )} />
       </FormSection>
 
-      <FormSection title={T.sections.clothing}>
-        <Controller name="clothing" control={control} render={({ field }) => (
-          <RadioGroup name="clothing" options={MALE_CLOTHING_OPTIONS} value={field.value} onChange={field.onChange} error={errors.clothing?.message} locale={locale} />
+      <FormSection title={T.sections.clothing} subtitle={locale === 'he' ? 'ניתן לבחור עד 2 אפשרויות' : 'Select up to 2'}>
+        <Controller name="clothing" control={control} defaultValue={[]} render={({ field }) => (
+          <CheckboxGroup options={MALE_CLOTHING_OPTIONS} value={field.value as string[]} onChange={field.onChange} max={2} min={1} error={errors.clothing?.message as string | undefined} locale={locale} />
         )} />
       </FormSection>
 
-      <FormSection title={T.sections.partnerClothingMale}>
-        <Controller name="partnerClothing" control={control} render={({ field }) => (
-          <RadioGroup name="partnerClothing" options={MALE_PARTNER_CLOTHING_OPTIONS} value={field.value} onChange={field.onChange} error={errors.partnerClothing?.message} locale={locale} />
+      <FormSection title={T.sections.partnerClothingMale} subtitle={locale === 'he' ? 'ניתן לבחור עד 2 אפשרויות' : 'Select up to 2'}>
+        <Controller name="partnerClothing" control={control} defaultValue={[]} render={({ field }) => (
+          <CheckboxGroup options={MALE_PARTNER_CLOTHING_OPTIONS} value={field.value as string[]} onChange={field.onChange} max={2} min={1} error={errors.partnerClothing?.message as string | undefined} locale={locale} />
         )} />
       </FormSection>
 

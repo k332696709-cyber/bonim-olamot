@@ -47,11 +47,6 @@ export function RadioGroup({
               <span className="text-sm font-medium">
                 {locale === 'he' ? opt.he : opt.en}
               </span>
-              {locale === 'he' && opt.en && (
-                <span className="text-xs text-gray-400 ms-auto">
-                  {opt.en}
-                </span>
-              )}
             </label>
           )
         })}
