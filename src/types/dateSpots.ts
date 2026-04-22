@@ -32,16 +32,16 @@ export interface DateSpot {
 
 // ─── Category / Region label maps ────────────────────────────────────────────
 
-export const CATEGORY_LABELS: Record<SpotCategory, { he: string; emoji: string }> = {
-  restaurant:  { he: 'מסעדות',              emoji: '🍽️' },
-  hotel_lobby: { he: 'בתי מלון / לובי',    emoji: '🏨' },
-  park:        { he: 'פארקים וטבע',         emoji: '🌳' },
-  quiet:       { he: 'מקומות שקטים',        emoji: '🕊️' },
+export const CATEGORY_LABELS: Record<SpotCategory, { he: string; en: string; emoji: string }> = {
+  restaurant:  { he: 'מסעדות',           en: 'Restaurants',    emoji: '🍽️' },
+  hotel_lobby: { he: 'בתי מלון / לובי', en: 'Hotel Lobbies',  emoji: '🏨' },
+  park:        { he: 'פארקים וטבע',      en: 'Parks & Nature', emoji: '🌳' },
+  quiet:       { he: 'מקומות שקטים',     en: 'Quiet Spots',   emoji: '🕊️' },
 }
 
-export const REGION_LABELS: Record<SpotRegion, string> = {
-  jerusalem: 'ירושלים',
-  center:    'מרכז',
-  north:     'צפון',
-  south:     'דרום',
+export const REGION_LABELS: Record<SpotRegion, { he: string; en: string }> = {
+  jerusalem: { he: 'ירושלים', en: 'Jerusalem' },
+  center:    { he: 'מרכז',    en: 'Center'    },
+  north:     { he: 'צפון',    en: 'North'     },
+  south:     { he: 'דרום',    en: 'South'     },
 }

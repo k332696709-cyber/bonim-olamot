@@ -221,11 +221,11 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
                   <div className="bg-gradient-to-l from-navy-50 to-navy-100 px-4 py-2.5 flex items-center gap-2">
                     <span className="text-lg">{cat.emoji}</span>
                     <span className="text-xs font-semibold text-navy-600 bg-white/70 rounded-full px-2.5 py-0.5">
-                      {cat.he}
+                      {isHe ? cat.he : cat.en}
                     </span>
                     {spot.kosher && (
                       <span className="text-[10px] font-bold rounded-full px-2 py-0.5 bg-green-100 text-green-700 ms-auto">
-                        ✓ כשר
+                        {isHe ? '✓ כשר' : '✓ Kosher'}
                       </span>
                     )}
                   </div>
@@ -272,7 +272,7 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
 
       {/* ══ Footer ════════════════════════════════════════════════════════════ */}
       <footer className="border-t border-gray-100 py-5 text-center text-xs text-gray-400">
-        © {new Date().getFullYear()} ארגון בונים עולמות
+        © {new Date().getFullYear()} {T.brand.orgName}
       </footer>
     </div>
   )

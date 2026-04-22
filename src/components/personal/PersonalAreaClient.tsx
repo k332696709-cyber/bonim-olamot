@@ -11,56 +11,57 @@ import {
   type CandidateSession,
 } from '@/lib/auth/candidateSession'
 
-// ─── Gender-aware Hebrew strings ──────────────────────────────────────────────
+// ─── Gender & locale-aware strings ───────────────────────────────────────────
 
-function gT(gender: 'male' | 'female' | null) {
+function gT(gender: 'male' | 'female' | null, locale = 'he') {
+  const isHe = locale === 'he'
   if (!gender) return {
-    welcome: 'שלום',
-    candidateNoun: 'מועמד/ת',
-    active: 'פעיל/ה',
-    paused: 'מוקפא/ת',
-    activeDesc: 'פעיל/ה – בתהליך חיפוש',
-    pausedDesc: 'מוקפא/ת – לא בתהליך כרגע',
-    editProfile: 'עריכת פרופיל',
-    registerLink: '/register/male',
-    suggestionsTitle: 'הצעות שקיבלת',
-    suggestionsSubtitle: 'הצעות שידוך שנשלחו אלייך',
-    partnerLabel: 'מועמד/ת מומלצ/ת',
-    profileTitle: 'הפרופיל שלי',
-    notRegistered: 'עדיין לא נרשמת?',
-    statusToggleHint: 'ניתן להחליף סטטוס בכל עת',
+    welcome:           isHe ? 'שלום'              : 'Hello',
+    candidateNoun:     isHe ? 'מועמד/ת'           : 'Candidate',
+    active:            isHe ? 'פעיל/ה'            : 'Active',
+    paused:            isHe ? 'מוקפא/ת'           : 'On Hold',
+    activeDesc:        isHe ? 'פעיל/ה – בתהליך חיפוש' : 'Active – searching for a match',
+    pausedDesc:        isHe ? 'מוקפא/ת – לא בתהליך כרגע' : 'On Hold – not in process',
+    editProfile:       isHe ? 'עריכת פרופיל'      : 'Edit Profile',
+    registerLink:      '/register/male',
+    suggestionsTitle:  isHe ? 'הצעות שקיבלת'      : 'Your Suggestions',
+    suggestionsSubtitle: isHe ? 'הצעות שידוך שנשלחו אלייך' : 'Match suggestions sent to you',
+    partnerLabel:      isHe ? 'מועמד/ת מומלצ/ת'   : 'Recommended Candidate',
+    profileTitle:      isHe ? 'הפרופיל שלי'        : 'My Profile',
+    notRegistered:     isHe ? 'עדיין לא נרשמת?'   : 'Not registered yet?',
+    statusToggleHint:  isHe ? 'ניתן להחליף סטטוס בכל עת' : 'You can change your status at any time',
   }
   if (gender === 'male') return {
-    welcome: 'ברוך הבא',
-    candidateNoun: 'מועמד',
-    active: 'פעיל',
-    paused: 'מוקפא',
-    activeDesc: 'פעיל – מחפש שידוך',
-    pausedDesc: 'מוקפא – לא בתהליך כרגע',
-    editProfile: 'עריכת פרופיל',
-    registerLink: '/register/male',
-    suggestionsTitle: 'הצעות שקיבלת',
-    suggestionsSubtitle: 'הצעות שידוך שנשלחו אלייך על ידי שדכן/ית',
-    partnerLabel: 'בחורה מומלצת',
-    profileTitle: 'הפרופיל שלי',
-    notRegistered: 'עדיין לא נרשמת?',
-    statusToggleHint: 'ניתן לשנות סטטוס בכל עת',
+    welcome:           isHe ? 'ברוך הבא'          : 'Welcome',
+    candidateNoun:     isHe ? 'מועמד'              : 'Candidate',
+    active:            isHe ? 'פעיל'               : 'Active',
+    paused:            isHe ? 'מוקפא'              : 'On Hold',
+    activeDesc:        isHe ? 'פעיל – מחפש שידוך' : 'Active – seeking a match',
+    pausedDesc:        isHe ? 'מוקפא – לא בתהליך כרגע' : 'On Hold – not in process',
+    editProfile:       isHe ? 'עריכת פרופיל'       : 'Edit Profile',
+    registerLink:      '/register/male',
+    suggestionsTitle:  isHe ? 'הצעות שקיבלת'       : 'Your Suggestions',
+    suggestionsSubtitle: isHe ? 'הצעות שידוך שנשלחו אלייך על ידי שדכן/ית' : 'Match suggestions sent to you by a matchmaker',
+    partnerLabel:      isHe ? 'בחורה מומלצת'        : 'Recommended Match',
+    profileTitle:      isHe ? 'הפרופיל שלי'         : 'My Profile',
+    notRegistered:     isHe ? 'עדיין לא נרשמת?'    : 'Not registered yet?',
+    statusToggleHint:  isHe ? 'ניתן לשנות סטטוס בכל עת' : 'You can change your status at any time',
   }
   return {
-    welcome: 'ברוכה הבאה',
-    candidateNoun: 'מועמדת',
-    active: 'פעילה',
-    paused: 'מוקפאת',
-    activeDesc: 'פעילה – מחפשת שידוך',
-    pausedDesc: 'מוקפאת – לא בתהליך כרגע',
-    editProfile: 'עריכת פרופיל',
-    registerLink: '/register/female',
-    suggestionsTitle: 'הצעות שקיבלת',
-    suggestionsSubtitle: 'הצעות שידוך שנשלחו אלייך על ידי שדכן/ית',
-    partnerLabel: 'בחור מומלץ',
-    profileTitle: 'הפרופיל שלי',
-    notRegistered: 'עדיין לא נרשמת?',
-    statusToggleHint: 'ניתן לשנות סטטוס בכל עת',
+    welcome:           isHe ? 'ברוכה הבאה'         : 'Welcome',
+    candidateNoun:     isHe ? 'מועמדת'              : 'Candidate',
+    active:            isHe ? 'פעילה'               : 'Active',
+    paused:            isHe ? 'מוקפאת'              : 'On Hold',
+    activeDesc:        isHe ? 'פעילה – מחפשת שידוך' : 'Active – seeking a match',
+    pausedDesc:        isHe ? 'מוקפאת – לא בתהליך כרגע' : 'On Hold – not in process',
+    editProfile:       isHe ? 'עריכת פרופיל'        : 'Edit Profile',
+    registerLink:      '/register/female',
+    suggestionsTitle:  isHe ? 'הצעות שקיבלת'        : 'Your Suggestions',
+    suggestionsSubtitle: isHe ? 'הצעות שידוך שנשלחו אלייך על ידי שדכן/ית' : 'Match suggestions sent to you by a matchmaker',
+    partnerLabel:      isHe ? 'בחור מומלץ'           : 'Recommended Match',
+    profileTitle:      isHe ? 'הפרופיל שלי'          : 'My Profile',
+    notRegistered:     isHe ? 'עדיין לא נרשמת?'     : 'Not registered yet?',
+    statusToggleHint:  isHe ? 'ניתן לשנות סטטוס בכל עת' : 'You can change your status at any time',
   }
 }
 
@@ -134,8 +135,8 @@ const SUGGESTIONS_FOR_FEMALE: Suggestion[] = [
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
-function StatusBadge({ status, gender }: { status: 'active' | 'paused'; gender: 'male' | 'female' }) {
-  const t = gT(gender)
+function StatusBadge({ status, gender, locale = 'he' }: { status: 'active' | 'paused'; gender: 'male' | 'female'; locale?: string }) {
+  const t = gT(gender, locale)
   const isActive = status === 'active'
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold
@@ -150,11 +151,12 @@ function StatusBadge({ status, gender }: { status: 'active' | 'paused'; gender: 
   )
 }
 
-function ResponseBadge({ status }: { status: Suggestion['responseStatus'] }) {
+function ResponseBadge({ status, locale = 'he' }: { status: Suggestion['responseStatus']; locale?: string }) {
+  const isHe = locale === 'he'
   const map = {
-    pending:  { label: 'ממתין לתשובה', cls: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
-    accepted: { label: 'קיבלת / הסכמת', cls: 'bg-green-50 text-green-700 border-green-200' },
-    declined: { label: 'סירבת',         cls: 'bg-red-50  text-red-600   border-red-200'   },
+    pending:  { label: isHe ? 'ממתין לתשובה'    : 'Awaiting response', cls: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+    accepted: { label: isHe ? 'קיבלת / הסכמת'  : 'Accepted',          cls: 'bg-green-50 text-green-700 border-green-200' },
+    declined: { label: isHe ? 'סירבת'           : 'Declined',          cls: 'bg-red-50  text-red-600   border-red-200'   },
   }[status]
   return (
     <span className={`inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${map.cls}`}>
@@ -257,7 +259,7 @@ function WelcomeView({
 
 function ProfileTab({ session, locale }: { session: CandidateSession; locale: string }) {
   const isHe = locale === 'he'
-  const t = gT(session.gender)
+  const t = gT(session.gender, locale)
   const isMale = session.gender === 'male'
 
   const fields = [
@@ -316,7 +318,7 @@ function ProfileTab({ session, locale }: { session: CandidateSession; locale: st
 
 function SuggestionsTab({ session, locale }: { session: CandidateSession; locale: string }) {
   const isHe = locale === 'he'
-  const t = gT(session.gender)
+  const t = gT(session.gender, locale)
   const suggestions = session.gender === 'male' ? SUGGESTIONS_FOR_MALE : SUGGESTIONS_FOR_FEMALE
 
   return (
@@ -335,10 +337,10 @@ function SuggestionsTab({ session, locale }: { session: CandidateSession; locale
                 {t.partnerLabel}: {s.firstName}
               </span>
               <span className="text-xs text-gray-500">
-                גיל {s.age} · {s.city} · {s.styleLabel} · {s.community}
+                {isHe ? 'גיל' : 'Age'} {s.age} · {s.city} · {s.styleLabel} · {s.community}
               </span>
             </div>
-            <ResponseBadge status={s.responseStatus} />
+            <ResponseBadge status={s.responseStatus} locale={locale} />
           </div>
 
           {/* Matchmaker note */}
@@ -383,7 +385,7 @@ function DashboardView({
   onLogout: () => void
 }) {
   const isHe = locale === 'he'
-  const t = gT(session.gender)
+  const t = gT(session.gender, locale)
   const isMale = session.gender === 'male'
   const [activeTab, setActiveTab] = useState<'profile' | 'suggestions'>('profile')
   const [status, setStatus] = useState<'active' | 'paused'>(session.status)
@@ -431,7 +433,7 @@ function DashboardView({
             <span className="text-sm font-bold text-gray-700">
               {isHe ? 'הסטטוס שלי' : 'My Status'}
             </span>
-            <StatusBadge status={status} gender={session.gender} />
+            <StatusBadge status={status} gender={session.gender} locale={locale} />
           </div>
 
           <div className="grid grid-cols-2 gap-2">

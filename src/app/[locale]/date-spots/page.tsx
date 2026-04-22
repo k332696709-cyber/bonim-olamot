@@ -28,17 +28,17 @@ export default function DateSpotsPage({ params: { locale } }: { params: { locale
           <div className="flex items-center justify-center gap-8 mt-8 text-sm text-navy-300">
             <div className="flex flex-col items-center">
               <span className="text-2xl font-bold text-white">{DATE_SPOTS_MOCK.length}</span>
-              <span>מקומות</span>
+              <span>{isHe ? 'מקומות' : 'Spots'}</span>
             </div>
             <div className="w-px h-8 bg-navy-600" />
             <div className="flex flex-col items-center">
               <span className="text-2xl font-bold text-white">4</span>
-              <span>אזורים</span>
+              <span>{isHe ? 'אזורים' : 'Regions'}</span>
             </div>
             <div className="w-px h-8 bg-navy-600" />
             <div className="flex flex-col items-center">
               <span className="text-2xl font-bold text-white">4</span>
-              <span>קטגוריות</span>
+              <span>{isHe ? 'קטגוריות' : 'Categories'}</span>
             </div>
           </div>
         </div>
@@ -47,14 +47,18 @@ export default function DateSpotsPage({ params: { locale } }: { params: { locale
       {/* ── Tips strip ── */}
       <div className="bg-burgundy-600 text-white px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center gap-3 flex-wrap justify-center text-sm">
-          <span className="font-bold">💡 טיפ:</span>
-          <span>לפגישה ראשונה — לובי מלון או בית קפה שקט. לפגישות מתקדמות — מסעדת שף או טיול בטבע.</span>
+          <span className="font-bold">💡 {isHe ? 'טיפ:' : 'Tip:'}</span>
+          <span>
+            {isHe
+              ? 'לפגישה ראשונה — לובי מלון או בית קפה שקט. לפגישות מתקדמות — מסעדת שף או טיול בטבע.'
+              : 'For a first date — a hotel lobby or quiet café. For later dates — a chef restaurant or nature walk.'}
+          </span>
         </div>
       </div>
 
       {/* ── Main content ── */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
-        <DateSpotsClient spots={DATE_SPOTS_MOCK} />
+        <DateSpotsClient spots={DATE_SPOTS_MOCK} locale={locale} />
       </main>
 
       {/* ── Footer CTA ── */}

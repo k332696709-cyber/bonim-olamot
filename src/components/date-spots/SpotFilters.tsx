@@ -11,33 +11,38 @@ export interface FilterState {
 }
 
 interface SpotFiltersProps {
-  filters:   FilterState
-  onChange:  (f: FilterState) => void
+  filters:    FilterState
+  onChange:   (f: FilterState) => void
   totalShown: number
   totalAll:   number
+  locale?:    string
 }
 
-const CATEGORIES: Array<{ value: SpotCategory | 'all'; label: string; emoji: string }> = [
-  { value: 'all',         label: 'הכל',              emoji: '✨' },
-  { value: 'restaurant',  label: CATEGORY_LABELS.restaurant.he,  emoji: CATEGORY_LABELS.restaurant.emoji  },
-  { value: 'hotel_lobby', label: CATEGORY_LABELS.hotel_lobby.he, emoji: CATEGORY_LABELS.hotel_lobby.emoji },
-  { value: 'park',        label: CATEGORY_LABELS.park.he,        emoji: CATEGORY_LABELS.park.emoji        },
-  { value: 'quiet',       label: CATEGORY_LABELS.quiet.he,       emoji: CATEGORY_LABELS.quiet.emoji       },
-]
-
-const REGIONS: Array<{ value: SpotRegion | 'all'; label: string }> = [
-  { value: 'all',       label: 'כל הארץ'                  },
-  { value: 'jerusalem', label: REGION_LABELS.jerusalem      },
-  { value: 'center',    label: REGION_LABELS.center         },
-  { value: 'north',     label: REGION_LABELS.north          },
-  { value: 'south',     label: REGION_LABELS.south          },
-]
-
-export function SpotFilters({ filters, onChange, totalShown, totalAll }: SpotFiltersProps) {
+export function SpotFilters({ filters, onChange, totalShown, totalAll, locale = 'he' }: SpotFiltersProps) {
+  const isHe = locale === 'he'
   const set = (patch: Partial<FilterState>) => onChange({ ...filters, ...patch })
 
+  const CATEGORIES: Array<{ value: SpotCategory | 'all'; label: string; emoji: string }> = [
+    { value: 'all',         label: isHe ? 'הכל' : 'All',                           emoji: '✨' },
+    { value: 'restaurant',  label: isHe ? CATEGORY_LABELS.restaurant.he  : CATEGORY_LABELS.restaurant.en,  emoji: CATEGORY_LABELS.restaurant.emoji  },
+    { value: 'hotel_lobby', label: isHe ? CATEGORY_LABELS.hotel_lobby.he : CATEGORY_LABELS.hotel_lobby.en, emoji: CATEGORY_LABELS.hotel_lobby.emoji },
+    { value: 'park',        label: isHe ? CATEGORY_LABELS.park.he        : CATEGORY_LABELS.park.en,        emoji: CATEGORY_LABELS.park.emoji        },
+    { value: 'quiet',       label: isHe ? CATEGORY_LABELS.quiet.he       : CATEGORY_LABELS.quiet.en,       emoji: CATEGORY_LABELS.quiet.emoji       },
+  ]
+
+  const REGIONS: Array<{ value: SpotRegion | 'all'; label: string }> = [
+    { value: 'all',       label: isHe ? 'כל הארץ'    : 'All Regions'                },
+    { value: 'jerusalem', label: isHe ? REGION_LABELS.jerusalem.he : REGION_LABELS.jerusalem.en },
+    { value: 'center',    label: isHe ? REGION_LABELS.center.he    : REGION_LABELS.center.en    },
+    { value: 'north',     label: isHe ? REGION_LABELS.north.he     : REGION_LABELS.north.en     },
+    { value: 'south',     label: isHe ? REGION_LABELS.south.he     : REGION_LABELS.south.en     },
+  ]
+
+  const activeCategory = filters.category !== 'all' ? CATEGORY_LABELS[filters.category] : null
+  const activeRegion   = filters.region   !== 'all' ? REGION_LABELS[filters.region]     : null
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" dir={isHe ? 'rtl' : 'ltr'}>
 
       {/* Search bar */}
       <div className="relative">
@@ -50,10 +55,10 @@ export function SpotFilters({ filters, onChange, totalShown, totalAll }: SpotFil
           type="text"
           value={filters.search}
           onChange={(e) => set({ search: e.target.value })}
-          placeholder="חיפוש לפי שם או עיר..."
+          placeholder={isHe ? 'חיפוש לפי שם או עיר...' : 'Search by name or city...'}
           className="w-full ps-10 pe-4 py-3 rounded-xl border border-gray-200 text-sm bg-white
             focus:outline-none focus:ring-2 focus:ring-navy-300 focus:border-navy-400 transition"
-          dir="rtl"
+          dir={isHe ? 'rtl' : 'ltr'}
         />
         {filters.search && (
           <button
@@ -88,7 +93,9 @@ export function SpotFilters({ filters, onChange, totalShown, totalAll }: SpotFil
 
       {/* Region selector */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs font-semibold text-gray-500 shrink-0">אזור:</span>
+        <span className="text-xs font-semibold text-gray-500 shrink-0">
+          {isHe ? 'אזור:' : 'Region:'}
+        </span>
         <div className="flex flex-wrap gap-2">
           {REGIONS.map(({ value, label }) => (
             <button
@@ -110,28 +117,28 @@ export function SpotFilters({ filters, onChange, totalShown, totalAll }: SpotFil
         {/* Result count */}
         <span className="text-xs text-gray-400 ms-auto">
           {totalShown === totalAll
-            ? `${totalAll} מקומות`
-            : `${totalShown} מתוך ${totalAll} מקומות`}
+            ? isHe ? `${totalAll} מקומות` : `${totalAll} spots`
+            : isHe ? `${totalShown} מתוך ${totalAll} מקומות` : `${totalShown} of ${totalAll} spots`}
         </span>
       </div>
 
       {/* Active filters summary */}
       {(filters.search || filters.category !== 'all' || filters.region !== 'all') && (
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs text-gray-500">סינון פעיל:</span>
+          <span className="text-xs text-gray-500">{isHe ? 'סינון פעיל:' : 'Active filters:'}</span>
           {filters.search && (
             <span className="text-xs bg-navy-50 text-navy-700 border border-navy-200 rounded-full px-2.5 py-0.5">
               &ldquo;{filters.search}&rdquo;
             </span>
           )}
-          {filters.category !== 'all' && (
+          {activeCategory && (
             <span className="text-xs bg-navy-50 text-navy-700 border border-navy-200 rounded-full px-2.5 py-0.5">
-              {CATEGORY_LABELS[filters.category].emoji} {CATEGORY_LABELS[filters.category].he}
+              {activeCategory.emoji} {isHe ? activeCategory.he : activeCategory.en}
             </span>
           )}
-          {filters.region !== 'all' && (
+          {activeRegion && (
             <span className="text-xs bg-burgundy-50 text-burgundy-700 border border-burgundy-200 rounded-full px-2.5 py-0.5">
-              📍 {REGION_LABELS[filters.region]}
+              📍 {isHe ? activeRegion.he : activeRegion.en}
             </span>
           )}
           <button
@@ -139,7 +146,7 @@ export function SpotFilters({ filters, onChange, totalShown, totalAll }: SpotFil
             onClick={() => onChange({ search: '', category: 'all', region: 'all' })}
             className="text-xs text-gray-400 hover:text-red-500 transition-colors underline"
           >
-            נקה הכל
+            {isHe ? 'נקה הכל' : 'Clear all'}
           </button>
         </div>
       )}

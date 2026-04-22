@@ -6,7 +6,8 @@ import { SpotFilters, type FilterState } from './SpotFilters'
 import { SpotCard } from './SpotCard'
 
 interface DateSpotsClientProps {
-  spots: DateSpot[]
+  spots:   DateSpot[]
+  locale?: string
 }
 
 const DEFAULT_FILTERS: FilterState = {
@@ -15,7 +16,8 @@ const DEFAULT_FILTERS: FilterState = {
   region:   'all',
 }
 
-export function DateSpotsClient({ spots }: DateSpotsClientProps) {
+export function DateSpotsClient({ spots, locale = 'he' }: DateSpotsClientProps) {
+  const isHe = locale === 'he'
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
 
   const filtered = useMemo(() => {
@@ -47,6 +49,7 @@ export function DateSpotsClient({ spots }: DateSpotsClientProps) {
           onChange={setFilters}
           totalShown={filtered.length}
           totalAll={spots.length}
+          locale={locale}
         />
       </div>
 
@@ -54,21 +57,21 @@ export function DateSpotsClient({ spots }: DateSpotsClientProps) {
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((spot) => (
-            <SpotCard key={spot.id} spot={spot} />
+            <SpotCard key={spot.id} spot={spot} locale={locale} />
           ))}
         </div>
       ) : (
         <div className="flex flex-col items-center gap-3 py-20 text-center">
           <span className="text-5xl">🔍</span>
           <p className="text-lg font-semibold text-gray-500">
-            לא נמצאו מקומות התואמים לחיפוש
+            {isHe ? 'לא נמצאו מקומות התואמים לחיפוש' : 'No spots match your search'}
           </p>
           <button
             type="button"
             onClick={() => setFilters(DEFAULT_FILTERS)}
             className="text-sm text-navy-600 hover:underline"
           >
-            נקה פילטרים
+            {isHe ? 'נקה פילטרים' : 'Clear filters'}
           </button>
         </div>
       )}
