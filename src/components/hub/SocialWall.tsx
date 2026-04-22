@@ -16,7 +16,7 @@ function interleave<T>(a: T[], b: T[]): T[] {
   return out
 }
 
-const ALL_TAGGABLE: TaggedProfile[] = interleave(
+const ALL_TAGGABLE: TaggedProfile[] = interleave<TaggedProfile>(
   MOCK_FEMALE_PROFILES.map(p => ({
     id: p.id,
     name: `${p.firstName} ${p.lastName}`,
