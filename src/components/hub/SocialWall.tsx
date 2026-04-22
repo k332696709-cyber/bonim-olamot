@@ -4,18 +4,30 @@ import { useState, useRef } from 'react'
 import type { SocialPost, TaggedProfile } from '@/types/hub'
 import { MOCK_FEMALE_PROFILES, MOCK_MALE_PROFILES } from '@/constants/mockProfiles'
 
-const ALL_TAGGABLE: TaggedProfile[] = [
-  ...MOCK_FEMALE_PROFILES.map(p => ({
+// Interleave female and male profiles so both genders appear in the
+// default (empty-search) dropdown view, not just the first 8 females.
+function interleave<T>(a: T[], b: T[]): T[] {
+  const out: T[] = []
+  const len = Math.max(a.length, b.length)
+  for (let i = 0; i < len; i++) {
+    if (i < a.length) out.push(a[i])
+    if (i < b.length) out.push(b[i])
+  }
+  return out
+}
+
+const ALL_TAGGABLE: TaggedProfile[] = interleave(
+  MOCK_FEMALE_PROFILES.map(p => ({
     id: p.id,
     name: `${p.firstName} ${p.lastName}`,
     gender: 'female' as const,
   })),
-  ...MOCK_MALE_PROFILES.map(p => ({
+  MOCK_MALE_PROFILES.map(p => ({
     id: p.id,
     name: `${p.firstName} ${p.lastName}`,
     gender: 'male' as const,
   })),
-]
+)
 
 function timeAgo(date: Date, isHe: boolean): string {
   const diffMs = Date.now() - date.getTime()
@@ -85,16 +97,27 @@ export function SocialWall({ posts, currentUserName, currentUserEmail, locale, o
   const [taggedProfiles, setTaggedProfiles] = useState<TaggedProfile[]>([])
   const [showTagDropdown, setShowTagDropdown] = useState(false)
   const [tagSearch, setTagSearch] = useState('')
+  const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const filteredProfiles = ALL_TAGGABLE.filter(p =>
-    p.name.includes(tagSearch) && !taggedProfiles.find(t => t.id === p.id)
-  ).slice(0, 8)
+  const filteredProfiles = ALL_TAGGABLE.filter(p => {
+    const matchesSearch = tagSearch === '' || p.name.includes(tagSearch)
+    const matchesGender = genderFilter === 'all' || p.gender === genderFilter
+    const notAlreadyTagged = !taggedProfiles.find(t => t.id === p.id)
+    return matchesSearch && matchesGender && notAlreadyTagged
+  }).slice(0, 10)
+
+  function openTagDropdown() {
+    setGenderFilter('all')
+    setTagSearch('')
+    setShowTagDropdown(v => !v)
+  }
 
   function handleTagSelect(profile: TaggedProfile) {
     setTaggedProfiles(prev => [...prev, profile])
     setShowTagDropdown(false)
     setTagSearch('')
+    setGenderFilter('all')
     textareaRef.current?.focus()
   }
 
@@ -156,7 +179,7 @@ export function SocialWall({ posts, currentUserName, currentUserEmail, locale, o
           <div className="relative">
             <button
               type="button"
-              onClick={() => setShowTagDropdown(v => !v)}
+              onClick={openTagDropdown}
               className="flex items-center gap-1.5 text-xs text-navy-500 hover:text-navy-700 transition-colors
                 px-2.5 py-1.5 rounded-lg border border-navy-100 hover:border-navy-200 bg-navy-50"
             >
@@ -166,9 +189,10 @@ export function SocialWall({ posts, currentUserName, currentUserEmail, locale, o
 
             {showTagDropdown && (
               <div
-                className="absolute top-10 start-0 z-30 bg-white border border-gray-200 rounded-xl shadow-lg w-60 p-2"
+                className="absolute top-10 start-0 z-30 bg-white border border-gray-200 rounded-xl shadow-lg w-72 p-2"
                 dir={isHe ? 'rtl' : 'ltr'}
               >
+                {/* Search input */}
                 <input
                   autoFocus
                   value={tagSearch}
@@ -178,9 +202,33 @@ export function SocialWall({ posts, currentUserName, currentUserEmail, locale, o
                     outline-none focus:border-navy-400"
                   dir={isHe ? 'rtl' : 'ltr'}
                 />
-                <div className="max-h-44 overflow-y-auto">
+
+                {/* Gender filter tabs */}
+                <div className="flex gap-1 mb-2">
+                  {([
+                    { key: 'all',    label: isHe ? 'הכל'       : 'All' },
+                    { key: 'female', label: isHe ? 'מיועדות 👩' : 'Female 👩' },
+                    { key: 'male',   label: isHe ? 'מיועדים 👨' : 'Male 👨' },
+                  ] as const).map(tab => (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => setGenderFilter(tab.key)}
+                      className={`flex-1 text-[10px] font-semibold py-1 rounded-lg transition-colors
+                        ${genderFilter === tab.key
+                          ? 'bg-navy-600 text-white'
+                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                        }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Results list */}
+                <div className="max-h-48 overflow-y-auto">
                   {filteredProfiles.length === 0 ? (
-                    <p className="text-xs text-gray-400 text-center py-2">
+                    <p className="text-xs text-gray-400 text-center py-3">
                       {isHe ? 'לא נמצא' : 'Not found'}
                     </p>
                   ) : (
@@ -189,13 +237,26 @@ export function SocialWall({ posts, currentUserName, currentUserEmail, locale, o
                         key={p.id}
                         type="button"
                         onClick={() => handleTagSelect(p)}
-                        className="w-full text-start text-xs px-2 py-1.5 rounded-lg hover:bg-navy-50
-                          flex items-center gap-2 transition-colors"
+                        className="w-full text-start text-xs px-2.5 py-2 rounded-lg hover:bg-navy-50
+                          flex items-center gap-2 transition-colors border border-transparent
+                          hover:border-navy-100"
                       >
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${p.gender === 'female' ? 'bg-pink-400' : 'bg-blue-400'}`} />
-                        <span>{p.name}</span>
-                        <span className="text-gray-400 text-[10px] ms-auto">
-                          {p.gender === 'female' ? (isHe ? 'מיועדת' : 'F') : (isHe ? 'מיועד' : 'M')}
+                        {/* Gender dot */}
+                        <span className={`w-2 h-2 rounded-full shrink-0
+                          ${p.gender === 'female' ? 'bg-pink-400' : 'bg-blue-400'}`}
+                        />
+                        {/* Name */}
+                        <span className="font-medium text-gray-800 flex-1">{p.name}</span>
+                        {/* Gender label badge */}
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0
+                          ${p.gender === 'female'
+                            ? 'bg-pink-50 text-pink-600 border border-pink-200'
+                            : 'bg-blue-50 text-blue-600 border border-blue-200'
+                          }`}
+                        >
+                          {p.gender === 'female'
+                            ? (isHe ? 'מיועדת' : 'F')
+                            : (isHe ? 'מיועד'  : 'M')}
                         </span>
                       </button>
                     ))
