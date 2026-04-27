@@ -4,6 +4,7 @@ import { LanguageSwitcher } from './LanguageSwitcher'
 import { MobileNav } from './MobileNav'
 import { cn } from '@/lib/utils'
 import { getT } from '@/lib/i18n/translations'
+import { NotificationBell } from './NotificationBell'
 
 interface HeaderProps {
   locale: string
@@ -48,6 +49,7 @@ export function Header({ locale }: HeaderProps) {
 
         {/* Right controls */}
         <div className="flex items-center gap-2">
+          <NotificationBell locale={locale} />
           <LanguageSwitcher locale={locale} />
 
           {/* Matchmaker login — desktop only */}
