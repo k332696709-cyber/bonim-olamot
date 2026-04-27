@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import '../globals.css'
 import { Header } from '@/components/layout/Header'
+import { Footer } from '@/components/layout/Footer'
 
 export const metadata: Metadata = {
   title: 'בונים עולמות – שידוכים',
@@ -20,6 +21,7 @@ export default function LocaleLayout({
       <body>
         <Header locale={locale} />
         {children}
+        <Footer locale={locale} />
       </body>
     </html>
   )

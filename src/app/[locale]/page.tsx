@@ -270,10 +270,6 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
         </div>
       </section>
 
-      {/* ══ Footer ════════════════════════════════════════════════════════════ */}
-      <footer className="border-t border-gray-100 py-5 text-center text-xs text-gray-400">
-        © {new Date().getFullYear()} {T.brand.orgName}
-      </footer>
     </div>
   )
 }
