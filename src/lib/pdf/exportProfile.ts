@@ -1,5 +1,4 @@
 import path from 'path'
-import fs from 'fs'
 import {
   Document,
   Page,
@@ -32,23 +31,28 @@ import {
   MALE_PARTNER_STYLE_OPTIONS,
 } from '@/constants/formOptions'
 
-// ─── Font Registration ─────────────────────────────────────────────────────────
-// Read font bytes at startup and embed as base64 data URIs.
-// This bypasses any path/URL resolution issues on Windows and Vercel.
+// ─── Font Registration (lazy) ──────────────────────────────────────────────────
+// Registering at module top-level runs during Next.js build/bundle phase when
+// process.cwd() may be wrong and fs may not yet be safe to call.
+// Instead we register once, lazily, on the first real PDF request.
 
-function fontDataUri(filename: string): string {
-  const p = path.join(process.cwd(), 'public', 'fonts', filename)
-  const buf = fs.readFileSync(p)
-  return `data:font/truetype;base64,${buf.toString('base64')}`
+let _heeboReady = false
+
+function ensureHeebo() {
+  if (_heeboReady) return
+  const dir = path.join(process.cwd(), 'public', 'fonts')
+  // Use forward slashes — @react-pdf/renderer's fontkit does not accept
+  // Windows-style backslash paths even on Windows.
+  const toSlash = (p: string) => p.replace(/\\/g, '/')
+  Font.register({
+    family: 'Heebo',
+    fonts: [
+      { src: toSlash(path.join(dir, 'Heebo-Regular.ttf')), fontWeight: 400 },
+      { src: toSlash(path.join(dir, 'Heebo-Bold.ttf')),    fontWeight: 700 },
+    ],
+  })
+  _heeboReady = true
 }
-
-Font.register({
-  family: 'Heebo',
-  fonts: [
-    { src: fontDataUri('Heebo-Regular.ttf'), fontWeight: 400 },
-    { src: fontDataUri('Heebo-Bold.ttf'),    fontWeight: 700 },
-  ],
-})
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -438,6 +442,7 @@ function PageFooter(
 // ─── Female Full Resume ────────────────────────────────────────────────────────
 
 export function buildFullResumePdf(profile: FemaleProfile, lang: LangKey = 'he') {
+  ensureHeebo()
   const styles = makeStyles(lang)
   const L = UI[lang]
   const { lastName: _ln, phone: _ph, email: _em, ...safe } = profile
@@ -612,6 +617,7 @@ export function buildFullResumePdf(profile: FemaleProfile, lang: LangKey = 'he')
 // ─── Male Full Resume ──────────────────────────────────────────────────────────
 
 export function buildMaleFullResumePdf(profile: MaleProfile, lang: LangKey = 'he') {
+  ensureHeebo()
   const styles = makeStyles(lang)
   const L = UI[lang]
   const { lastName: _ln, phone: _ph, email: _em, ...safe } = profile
@@ -868,6 +874,7 @@ const legacyStyles = StyleSheet.create({
 })
 
 export function buildProfilePdf(profile: FemaleProfile) {
+  ensureHeebo()
   const { lastName: _lastName, phone: _phone, ...safeProfile } = profile
 
   return React.createElement(
@@ -966,6 +973,7 @@ export function buildProfilePdf(profile: FemaleProfile) {
 }
 
 export function buildMaleProfilePdf(profile: MaleProfile) {
+  ensureHeebo()
   const { lastName: _lastName, phone: _phone, ...safeProfile } = profile
 
   return React.createElement(
