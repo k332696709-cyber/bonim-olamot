@@ -1,5 +1,5 @@
 import path from 'path'
-import { pathToFileURL } from 'url'
+import fs from 'fs'
 import {
   Document,
   Page,
@@ -33,18 +33,20 @@ import {
 } from '@/constants/formOptions'
 
 // ─── Font Registration ─────────────────────────────────────────────────────────
-// pathToFileURL converts Windows backslash paths → proper file:// URIs that
-// @react-pdf/renderer's fontkit can load cross-platform.
+// Read font bytes at startup and embed as base64 data URIs.
+// This bypasses any path/URL resolution issues on Windows and Vercel.
 
-function fontUrl(filename: string): string {
-  return pathToFileURL(path.join(process.cwd(), 'public', 'fonts', filename)).href
+function fontDataUri(filename: string): string {
+  const p = path.join(process.cwd(), 'public', 'fonts', filename)
+  const buf = fs.readFileSync(p)
+  return `data:font/truetype;base64,${buf.toString('base64')}`
 }
 
 Font.register({
   family: 'Heebo',
   fonts: [
-    { src: fontUrl('Heebo-Regular.ttf'), fontWeight: 400 },
-    { src: fontUrl('Heebo-Bold.ttf'),    fontWeight: 700 },
+    { src: fontDataUri('Heebo-Regular.ttf'), fontWeight: 400 },
+    { src: fontDataUri('Heebo-Bold.ttf'),    fontWeight: 700 },
   ],
 })
 
