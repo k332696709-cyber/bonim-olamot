@@ -1,4 +1,5 @@
 import path from 'path'
+import fs from 'fs'
 import {
   Document,
   Page,
@@ -31,27 +32,38 @@ import {
   MALE_PARTNER_STYLE_OPTIONS,
 } from '@/constants/formOptions'
 
-// ─── Font Registration (lazy) ──────────────────────────────────────────────────
-// Registering at module top-level runs during Next.js build/bundle phase when
-// process.cwd() may be wrong and fs may not yet be safe to call.
-// Instead we register once, lazily, on the first real PDF request.
+// ─── Font Registration (lazy, data-URI) ────────────────────────────────────────
+// Root cause of previous failures: fontkit.open(path) chokes when the path
+// contains non-ASCII characters (e.g. Hebrew folder names like "קלוד קוד").
+//
+// Solution confirmed from @react-pdf/font source:
+//   if (isDataUrl(src)) → decodes base64 via atob() — no filesystem involved.
+//
+// We read the TTF bytes with Node's fs.readFileSync (which handles Unicode
+// paths correctly) and hand fontkit a plain base64 data URI instead of a path.
+// This is done lazily (on first PDF request) so process.cwd() is stable.
 
 let _heeboReady = false
 
 function ensureHeebo() {
   if (_heeboReady) return
-  const dir = path.join(process.cwd(), 'public', 'fonts')
-  // Use forward slashes — @react-pdf/renderer's fontkit does not accept
-  // Windows-style backslash paths even on Windows.
-  const toSlash = (p: string) => p.replace(/\\/g, '/')
-  Font.register({
-    family: 'Heebo',
-    fonts: [
-      { src: toSlash(path.join(dir, 'Heebo-Regular.ttf')), fontWeight: 400 },
-      { src: toSlash(path.join(dir, 'Heebo-Bold.ttf')),    fontWeight: 700 },
-    ],
-  })
-  _heeboReady = true
+  try {
+    const dir     = path.join(process.cwd(), 'public', 'fonts')
+    const regBuf  = fs.readFileSync(path.join(dir, 'Heebo-Regular.ttf'))
+    const boldBuf = fs.readFileSync(path.join(dir, 'Heebo-Bold.ttf'))
+    Font.register({
+      family: 'Heebo',
+      fonts: [
+        { src: `data:font/truetype;base64,${regBuf.toString('base64')}`,  fontWeight: 400 },
+        { src: `data:font/truetype;base64,${boldBuf.toString('base64')}`, fontWeight: 700 },
+      ],
+    })
+    _heeboReady = true
+    console.log('[PDF] Heebo registered via data URI ✓')
+  } catch (err) {
+    // Leave _heeboReady = false so the next request retries.
+    console.error('[PDF] Font registration failed — PDF will fall back to Courier:', err)
+  }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
