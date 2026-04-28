@@ -7,6 +7,7 @@ import { TrafficLight } from './TrafficLight'
 import { LockIndicator } from './LockIndicator'
 import { NotesThread } from './NotesThread'
 import { PdfExportButton } from './PdfExportButton'
+import { FullResumeButton } from './FullResumeButton'
 import { AISummary } from './AISummary'
 import { CompatibilityPanel } from './CompatibilityPanel'
 import { useLockIdentity, canActOnLock } from '@/lib/matchmaker/lockContext'
@@ -191,6 +192,7 @@ export function MaleProfileCard({ profile, locale = 'he', femaleCandidates }: Ma
             onUnlock={lockedAt ? handleUnlock : undefined}
           />
           <PdfExportButton profileId={profile.id} locale={locale} gender="male" />
+          <FullResumeButton profileId={profile.id} locale={locale} gender="male" />
         </div>
       </div>
 
