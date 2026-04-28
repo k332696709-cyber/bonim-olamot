@@ -1,4 +1,5 @@
 import path from 'path'
+import { pathToFileURL } from 'url'
 import {
   Document,
   Page,
@@ -32,14 +33,18 @@ import {
 } from '@/constants/formOptions'
 
 // ─── Font Registration ─────────────────────────────────────────────────────────
+// pathToFileURL converts Windows backslash paths → proper file:// URIs that
+// @react-pdf/renderer's fontkit can load cross-platform.
 
-const FONTS_PATH = path.join(process.cwd(), 'public', 'fonts')
+function fontUrl(filename: string): string {
+  return pathToFileURL(path.join(process.cwd(), 'public', 'fonts', filename)).href
+}
 
 Font.register({
   family: 'Heebo',
   fonts: [
-    { src: path.join(FONTS_PATH, 'Heebo-Regular.ttf'), fontWeight: 400 },
-    { src: path.join(FONTS_PATH, 'Heebo-Bold.ttf'), fontWeight: 700 },
+    { src: fontUrl('Heebo-Regular.ttf'), fontWeight: 400 },
+    { src: fontUrl('Heebo-Bold.ttf'),    fontWeight: 700 },
   ],
 })
 
@@ -785,7 +790,7 @@ const legacyStyles = StyleSheet.create({
   page: {
     padding: 40,
     backgroundColor: '#ffffff',
-    fontFamily: 'Helvetica',
+    fontFamily: 'Heebo',
     direction: 'rtl',
   },
   header: {
@@ -797,7 +802,7 @@ const legacyStyles = StyleSheet.create({
   headerTitle: {
     color: '#ffffff',
     fontSize: 18,
-    fontFamily: 'Helvetica-Bold',
+    fontWeight: 700,
     marginBottom: 4,
   },
   headerSub: {
@@ -815,7 +820,7 @@ const legacyStyles = StyleSheet.create({
   sectionTitle: {
     color: LEGACY_NAVY,
     fontSize: 12,
-    fontFamily: 'Helvetica-Bold',
+    fontWeight: 700,
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
     paddingBottom: 4,
@@ -835,8 +840,8 @@ const legacyStyles = StyleSheet.create({
   rowValue: {
     color: '#111827',
     fontSize: 10,
+    fontWeight: 700,
     flex: 1,
-    fontFamily: 'Helvetica-Bold',
   },
   hiddenValue: {
     color: '#9CA3AF',
