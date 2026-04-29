@@ -61,12 +61,12 @@ export default function AboutPage({ params: { locale } }: { params: { locale: st
     <div className="min-h-[calc(100vh-4rem)] bg-gray-50" dir={isHe ? 'rtl' : 'ltr'}>
 
       {/* ── Hero ──────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-b from-navy-800 to-navy-950 text-white text-center px-4 py-16 sm:py-20">
+      <div className="bg-gradient-to-b from-navy-900 to-navy-950 text-white text-center px-4 py-16 sm:py-20">
         <div className="text-5xl mb-5">🏡</div>
         <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-4 leading-tight">
           {isHe ? 'אודות בונים עולמות' : 'About Bonim Olamot'}
         </h1>
-        <p className="text-navy-200 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
+        <p className="text-white font-medium text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
           {isHe
             ? 'ארגון שידוכים מקצועי, ערכי ואנושי — המחויב לבניית בתים יהודיים על אדני אמת, כבוד ויראת שמיים.'
             : 'A professional, values-driven matchmaking organization — committed to building Jewish homes on foundations of truth, dignity, and reverence.'}

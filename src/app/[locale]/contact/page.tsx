@@ -85,12 +85,12 @@ export default function ContactPage({ params: { locale } }: { params: { locale: 
     <div className="min-h-[calc(100vh-4rem)] bg-gray-50" dir={isHe ? 'rtl' : 'ltr'}>
 
       {/* ── Hero ───────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-b from-navy-800 to-navy-950 text-white text-center px-4 py-16 sm:py-20">
+      <div className="bg-gradient-to-b from-navy-900 to-navy-950 text-white text-center px-4 py-16 sm:py-20">
         <div className="text-5xl mb-5">💬</div>
         <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-4 leading-tight">
           {isHe ? 'אנחנו כאן בשבילך' : 'We Are Here for You'}
         </h1>
-        <p className="text-navy-200 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
+        <p className="text-white font-medium text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
           {isHe
             ? 'יש לך שאלה, בקשה או רצון ליצור קשר? נשמח לשמוע ממך — בכל אמצעי שנוח לך.'
             : 'Have a question, request, or just want to reach out? We\'d love to hear from you — in whatever way works best.'}
