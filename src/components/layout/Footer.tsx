@@ -15,6 +15,7 @@ export function Footer({ locale }: FooterProps) {
     { href: `/${locale}/donations`,  label: isHe ? 'תרומות'           : 'Donations' },
     { href: `/${locale}/about`,      label: isHe ? 'אודות'            : 'About Us' },
     { href: `/${locale}/terms`,      label: isHe ? 'תקנון'            : 'Terms of Service' },
+    { href: `/${locale}/contact`,    label: isHe ? 'צור קשר'          : 'Contact Us' },
   ]
 
   const registerLinks = [
