@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Logo } from '@/components/layout/Logo'
 import { setSession } from '@/lib/auth/session'
+import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage({ params: { locale } }: { params: { locale: string } }) {
   const router = useRouter()
@@ -13,10 +14,49 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(isHe ? 'פרטי הכניסה שגויים. נסה שוב.' : 'Incorrect credentials. Please try again.')
+    setError('')
+    setLoading(true)
+
+    try {
+      const supabase = createClient()
+
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (authError || !authData.user) {
+        setError(isHe ? 'פרטי הכניסה שגויים. נסה שוב.' : 'Incorrect credentials. Please try again.')
+        return
+      }
+
+      // Fetch matchmaker profile
+      const { data: matchmaker, error: dbError } = await supabase
+        .from('matchmakers')
+        .select('first_name, last_name, email, is_admin')
+        .eq('email', authData.user.email!)
+        .single()
+
+      if (dbError || !matchmaker) {
+        await supabase.auth.signOut()
+        setError(isHe ? 'משתמש זה אינו רשום כשדכן.' : 'This user is not registered as a matchmaker.')
+        return
+      }
+
+      setSession({
+        name: `${matchmaker.first_name} ${matchmaker.last_name}`,
+        email: matchmaker.email,
+        role: matchmaker.is_admin ? 'admin' : 'matchmaker',
+      })
+
+      router.push(`/${locale}/matchmaker`)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -37,7 +77,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
             {isHe ? 'גישה לממשק הניהול – בונים עולמות' : 'Access the management dashboard'}
           </p>
 
-          <form onSubmit={handleLogin} className="flex flex-col gap-4 mb-6" dir={isHe ? 'rtl' : 'ltr'}>
+          <form onSubmit={handleLogin} className="flex flex-col gap-4" dir={isHe ? 'rtl' : 'ltr'}>
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-gray-700">
                 {isHe ? 'כתובת דוא"ל' : 'Email address'}
@@ -52,6 +92,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
                   focus:border-navy-400 transition"
                 dir="ltr"
                 autoComplete="email"
+                required
               />
             </div>
 
@@ -68,24 +109,25 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
                   placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-navy-300
                   focus:border-navy-400 transition"
                 autoComplete="current-password"
+                required
               />
             </div>
 
-            {/* Error message */}
             {error && (
               <p className="text-sm text-red-500 text-center">{error}</p>
             )}
 
-            {/* Submit */}
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-navy-600 hover:bg-navy-700 text-white text-sm
-                font-bold shadow-md hover:shadow-lg transition-all duration-150"
+              disabled={loading}
+              className="w-full py-3 rounded-xl bg-navy-600 hover:bg-navy-700 disabled:opacity-60
+                text-white text-sm font-bold shadow-md hover:shadow-lg transition-all duration-150"
             >
-              {isHe ? 'כניסה' : 'Sign In'}
+              {loading
+                ? (isHe ? 'מתחבר...' : 'Signing in...')
+                : (isHe ? 'כניסה' : 'Sign In')}
             </button>
           </form>
-
         </div>
 
         {/* Back link */}

@@ -13,6 +13,7 @@ import {
 import { ProfilesTable } from '@/components/matchmaker/ProfilesTable'
 import { computeStatus, lockRemainingMs } from '@/lib/matchmaker/statusUtils'
 import { getSession, clearSession, type MatchmakerSession } from '@/lib/auth/session'
+import { createClient } from '@/lib/supabase/client'
 import { getT } from '@/lib/i18n/translations'
 import { AnnouncementBar } from '@/components/hub/AnnouncementBar'
 import { SocialWall } from '@/components/hub/SocialWall'
@@ -128,8 +129,9 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
   const isAdmin = session?.role === 'admin'
   const currentEmail = session?.email ?? ''
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     clearSession()
+    await createClient().auth.signOut()
     router.push(`/${locale}/login`)
   }
 
