@@ -16,28 +16,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-
-    // Demo credentials – replace with real auth when backend is ready
-    const DEMO_EMAIL = 'shadchan@bonim-olamot.co.il'
-    const DEMO_PASSWORD = 'demo1234'
-
-    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-      setSession({ name: 'שדכן ראשי', email, role: 'matchmaker' })
-      router.push(`/${locale}/matchmaker`)
-    } else {
-      setError(isHe ? 'פרטי הכניסה שגויים. נסה שוב.' : 'Incorrect credentials. Please try again.')
-    }
-  }
-
-  const handleDemoLogin = () => {
-    setSession({ name: 'שדכן ראשי', email: 'shadchan@bonim-olamot.co.il', role: 'matchmaker' })
-    router.push(`/${locale}/matchmaker`)
-  }
-
-  const handleAdminDemoLogin = () => {
-    setSession({ name: 'מנהל ראשי', email: 'admin@bonim-olamot.co.il', role: 'admin' })
-    router.push(`/${locale}/matchmaker`)
+    setError(isHe ? 'פרטי הכניסה שגויים. נסה שוב.' : 'Incorrect credentials. Please try again.')
   }
 
   return (
@@ -107,37 +86,6 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
             </button>
           </form>
 
-          {/* Demo notice */}
-          <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4 text-xs text-amber-700">
-            <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>
-              {isHe
-                ? 'מצב הדגמה – לחץ "כניסה מהירה לדמו" כדי לדלג על האימות.'
-                : 'Demo mode – click "Quick Demo Login" to skip authentication.'}
-            </span>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              className="w-full py-2.5 rounded-xl border border-navy-200 text-navy-600 text-sm
-                font-semibold hover:bg-navy-50 transition-colors duration-150"
-            >
-              {isHe ? 'כניסה מהירה – שדכן ←' : 'Quick Demo – Matchmaker →'}
-            </button>
-            <button
-              type="button"
-              onClick={handleAdminDemoLogin}
-              className="w-full py-2.5 rounded-xl border border-purple-200 text-purple-600 text-sm
-                font-semibold hover:bg-purple-50 transition-colors duration-150"
-            >
-              {isHe ? 'כניסה מהירה – מנהל ←' : 'Quick Demo – Admin →'}
-            </button>
-          </div>
         </div>
 
         {/* Back link */}
