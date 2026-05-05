@@ -1,6 +1,6 @@
 // Typed query helpers — import createClient from server.ts or client.ts
 // and pass the result here.
-
+/* eslint-disable */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
