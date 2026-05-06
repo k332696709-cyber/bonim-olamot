@@ -116,6 +116,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
 
   const [tab, setTab] = useState<Tab>('bachurot')
   const [session, setSession] = useState<MatchmakerSession | null>(null)
+  const [sessionChecked, setSessionChecked] = useState(false)
   const [announcement, setAnnouncement] = useState<Announcement>(MOCK_ANNOUNCEMENT)
   const [posts, setPosts] = useState<SocialPost[]>([])
   const [matchProgress, setMatchProgress] = useState<MatchProgress[]>([])
@@ -124,8 +125,13 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
   const [loadingProfiles, setLoadingProfiles] = useState(true)
 
   useEffect(() => {
-    setSession(getSession())
-  }, [])
+    const s = getSession()
+    setSession(s)
+    setSessionChecked(true)
+    if (!s) {
+      router.replace(`/${locale}/login`)
+    }
+  }, [locale, router])
 
   useEffect(() => {
     async function fetchAll() {
@@ -299,6 +305,14 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
 
   const tabLabel = (which: Tab) => which === 'bachurot' ? d.bachurot : d.bachurim
   const tabCount = (which: Tab) => which === 'bachurot' ? stats.totalF : stats.totalM
+
+  if (!sessionChecked) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-sm text-gray-400">{isHe ? 'טוען...' : 'Loading...'}</p>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50" dir={isHe ? 'rtl' : 'ltr'}>
