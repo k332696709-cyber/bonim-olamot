@@ -2,32 +2,7 @@
 
 import { useState, useRef } from 'react'
 import type { SocialPost, TaggedProfile } from '@/types/hub'
-import { MOCK_FEMALE_PROFILES, MOCK_MALE_PROFILES } from '@/constants/mockProfiles'
-
-// Interleave female and male profiles so both genders appear in the
-// default (empty-search) dropdown view, not just the first 8 females.
-function interleave<T>(a: T[], b: T[]): T[] {
-  const out: T[] = []
-  const len = Math.max(a.length, b.length)
-  for (let i = 0; i < len; i++) {
-    if (i < a.length) out.push(a[i])
-    if (i < b.length) out.push(b[i])
-  }
-  return out
-}
-
-const ALL_TAGGABLE: TaggedProfile[] = interleave<TaggedProfile>(
-  MOCK_FEMALE_PROFILES.map(p => ({
-    id: p.id,
-    name: `${p.firstName} ${p.lastName}`,
-    gender: 'female' as const,
-  })),
-  MOCK_MALE_PROFILES.map(p => ({
-    id: p.id,
-    name: `${p.firstName} ${p.lastName}`,
-    gender: 'male' as const,
-  })),
-)
+import { createClient } from '@/lib/supabase/client'
 
 function timeAgo(date: Date, isHe: boolean): string {
   const diffMs = Date.now() - date.getTime()
@@ -87,20 +62,23 @@ interface SocialWallProps {
   posts: SocialPost[]
   currentUserName: string
   currentUserEmail: string
+  currentMatchmakerId: string
   locale: string
   onNewPost: (post: SocialPost) => void
+  taggableProfiles: TaggedProfile[]
 }
 
-export function SocialWall({ posts, currentUserName, currentUserEmail, locale, onNewPost }: SocialWallProps) {
+export function SocialWall({ posts, currentUserName, currentUserEmail, currentMatchmakerId, locale, onNewPost, taggableProfiles }: SocialWallProps) {
   const isHe = locale === 'he'
   const [content, setContent] = useState('')
+  const [posting, setPosting] = useState(false)
   const [taggedProfiles, setTaggedProfiles] = useState<TaggedProfile[]>([])
   const [showTagDropdown, setShowTagDropdown] = useState(false)
   const [tagSearch, setTagSearch] = useState('')
   const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const filteredProfiles = ALL_TAGGABLE.filter(p => {
+  const filteredProfiles = taggableProfiles.filter(p => {
     const matchesSearch = tagSearch === '' || p.name.includes(tagSearch)
     const matchesGender = genderFilter === 'all' || p.gender === genderFilter
     const notAlreadyTagged = !taggedProfiles.find(t => t.id === p.id)
@@ -125,19 +103,39 @@ export function SocialWall({ posts, currentUserName, currentUserEmail, locale, o
     setTaggedProfiles(prev => prev.filter(p => p.id !== id))
   }
 
-  function handleSubmit() {
-    if (!content.trim()) return
-    onNewPost({
-      id: `p_${Date.now()}`,
-      author: currentUserName,
-      authorEmail: currentUserEmail,
-      content: content.trim(),
-      taggedProfiles,
-      createdAt: new Date(),
-      isAnnouncement: false,
-    })
+  async function handleSubmit() {
+    if (!content.trim() || posting) return
+    const trimmedContent = content.trim()
+    const postedTags = [...taggedProfiles]
+    setPosting(true)
     setContent('')
     setTaggedProfiles([])
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('social_posts')
+        .insert({
+          author_id: currentMatchmakerId || null,
+          content: trimmedContent,
+          tagged_profiles: postedTags as any,
+          is_announcement: false,
+        })
+        .select('id, created_at')
+        .single()
+      if (!error && data) {
+        onNewPost({
+          id: data.id,
+          author: currentUserName,
+          authorEmail: currentUserEmail,
+          content: trimmedContent,
+          taggedProfiles: postedTags,
+          createdAt: new Date(data.created_at),
+          isAnnouncement: false,
+        })
+      }
+    } finally {
+      setPosting(false)
+    }
   }
 
   return (
@@ -269,11 +267,11 @@ export function SocialWall({ posts, currentUserName, currentUserEmail, locale, o
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={!content.trim()}
+            disabled={!content.trim() || posting}
             className="text-xs font-semibold px-4 py-1.5 bg-navy-600 text-white rounded-lg
               hover:bg-navy-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {isHe ? 'פרסם' : 'Post'}
+            {posting ? (isHe ? 'שולח...' : 'Posting...') : (isHe ? 'פרסם' : 'Post')}
           </button>
         </div>
       </div>

@@ -5,8 +5,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   MOCK_ANNOUNCEMENT,
-  MOCK_SOCIAL_POSTS,
-  MOCK_MATCH_PROGRESS,
   MOCK_LEADERBOARD,
 } from '@/constants/mockHubData'
 import type { FemaleProfile, MaleProfile } from '@/types/registration'
@@ -20,7 +18,7 @@ import { SocialWall } from '@/components/hub/SocialWall'
 import { MatchProgressSection } from '@/components/hub/MatchProgressSection'
 import { PerformanceScorecard } from '@/components/hub/PerformanceScorecard'
 import { AdminLeaderboard } from '@/components/hub/AdminLeaderboard'
-import type { SocialPost, Announcement, MatchProgress, MatchStage } from '@/types/hub'
+import type { SocialPost, Announcement, MatchProgress, MatchStage, TaggedProfile } from '@/types/hub'
 
 type Tab = 'bachurot' | 'bachurim'
 
@@ -119,8 +117,8 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
   const [tab, setTab] = useState<Tab>('bachurot')
   const [session, setSession] = useState<MatchmakerSession | null>(null)
   const [announcement, setAnnouncement] = useState<Announcement>(MOCK_ANNOUNCEMENT)
-  const [posts, setPosts] = useState<SocialPost[]>(MOCK_SOCIAL_POSTS)
-  const [matchProgress, setMatchProgress] = useState<MatchProgress[]>(MOCK_MATCH_PROGRESS)
+  const [posts, setPosts] = useState<SocialPost[]>([])
+  const [matchProgress, setMatchProgress] = useState<MatchProgress[]>([])
   const [femaleProfiles, setFemaleProfiles] = useState<FemaleProfile[]>([])
   const [maleProfiles, setMaleProfiles] = useState<MaleProfile[]>([])
   const [loadingProfiles, setLoadingProfiles] = useState(true)
@@ -130,14 +128,18 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
   }, [])
 
   useEffect(() => {
-    async function fetchProfiles() {
+    async function fetchAll() {
       const supabase = createClient()
-      const { data } = await supabase
+
+      // 1. Profiles
+      const { data: profilesData } = await supabase
         .from('profiles')
         .select('*, profile_notes(id, content, created_at, matchmakers(first_name, last_name))')
         .order('created_at', { ascending: false })
 
-      if (data) {
+      const profileMap: Record<string, { firstName: string; lastName: string }> = {}
+
+      if (profilesData) {
         const mapProfile = (row: any) => ({
           id: row.id,
           firstName: row.first_name,
@@ -180,12 +182,64 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
             createdAt: new Date(n.created_at),
           })),
         })
-        setFemaleProfiles(data.filter(r => r.gender === 'female').map(mapProfile))
-        setMaleProfiles(data.filter(r => r.gender === 'male').map(mapProfile))
+        const females = profilesData.filter(r => r.gender === 'female').map(mapProfile)
+        const males = profilesData.filter(r => r.gender === 'male').map(mapProfile)
+        setFemaleProfiles(females)
+        setMaleProfiles(males)
+        for (const row of profilesData) {
+          profileMap[row.id] = { firstName: row.first_name, lastName: row.last_name }
+        }
       }
       setLoadingProfiles(false)
+
+      // 2. Social posts
+      const { data: postsData } = await supabase
+        .from('social_posts')
+        .select('*, matchmakers(first_name, last_name, email)')
+        .order('created_at', { ascending: false })
+        .limit(50)
+
+      if (postsData) {
+        setPosts(postsData.map((row: any) => ({
+          id: row.id,
+          author: row.matchmakers
+            ? `${row.matchmakers.first_name} ${row.matchmakers.last_name}`
+            : '',
+          authorEmail: row.matchmakers?.email ?? '',
+          content: row.content,
+          taggedProfiles: (row.tagged_profiles as TaggedProfile[]) ?? [],
+          createdAt: new Date(row.created_at),
+          isAnnouncement: row.is_announcement ?? false,
+        })))
+      }
+
+      // 3. Matches
+      const { data: matchesData } = await supabase
+        .from('matches')
+        .select('id, female_id, male_id, matchmaker_id, stage, updated_at, matchmakers(first_name, last_name, email)')
+        .order('updated_at', { ascending: false })
+
+      if (matchesData) {
+        setMatchProgress(matchesData.map((row: any) => ({
+          id: row.id,
+          femaleId: row.female_id,
+          femaleName: profileMap[row.female_id]
+            ? `${profileMap[row.female_id].firstName} ${profileMap[row.female_id].lastName}`
+            : '',
+          maleId: row.male_id,
+          maleName: profileMap[row.male_id]
+            ? `${profileMap[row.male_id].firstName} ${profileMap[row.male_id].lastName}`
+            : '',
+          stage: row.stage as MatchStage,
+          matchmakerName: row.matchmakers
+            ? `${row.matchmakers.first_name} ${row.matchmakers.last_name}`
+            : '',
+          matchmakerEmail: row.matchmakers?.email ?? '',
+          updatedAt: new Date(row.updated_at),
+        })))
+      }
     }
-    fetchProfiles()
+    fetchAll()
   }, [])
 
   const isAdmin = session?.role === 'admin'
@@ -205,10 +259,14 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
     setPosts(prev => [post, ...prev])
   }, [])
 
-  const handleStageUpdate = useCallback((matchId: string, newStage: MatchStage) => {
+  const handleStageUpdate = useCallback(async (matchId: string, newStage: MatchStage) => {
     setMatchProgress(prev =>
       prev.map(m => m.id === matchId ? { ...m, stage: newStage, updatedAt: new Date() } : m)
     )
+    await createClient()
+      .from('matches')
+      .update({ stage: newStage, updated_at: new Date().toISOString() })
+      .eq('id', matchId)
   }, [])
 
   const stats = useMemo(() => {
@@ -216,6 +274,22 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
     const active = all.filter(p => p.lockedAt !== null && lockRemainingMs(p.lockedAt) > 0).length
     const urgent = all.filter(p => computeStatus(p) === 'bright_red').length
     return { totalF: femaleProfiles.length, totalM: maleProfiles.length, active, urgent }
+  }, [femaleProfiles, maleProfiles])
+
+  const taggableProfiles = useMemo<TaggedProfile[]>(() => {
+    const result: TaggedProfile[] = []
+    const len = Math.max(femaleProfiles.length, maleProfiles.length)
+    for (let i = 0; i < len; i++) {
+      if (i < femaleProfiles.length) {
+        const p = femaleProfiles[i]
+        result.push({ id: p.id, name: `${p.firstName} ${p.lastName}`, gender: 'female' })
+      }
+      if (i < maleProfiles.length) {
+        const p = maleProfiles[i]
+        result.push({ id: p.id, name: `${p.firstName} ${p.lastName}`, gender: 'male' })
+      }
+    }
+    return result
   }, [femaleProfiles, maleProfiles])
 
   const myLeaderboardEntry = useMemo(
@@ -294,8 +368,10 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
                 posts={posts}
                 currentUserName={session?.name ?? ''}
                 currentUserEmail={currentEmail}
+                currentMatchmakerId={session?.matchmakerId ?? ''}
                 locale={locale}
                 onNewPost={handleNewPost}
+                taggableProfiles={taggableProfiles}
               />
             </div>
 
