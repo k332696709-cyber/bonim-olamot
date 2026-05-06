@@ -3,13 +3,13 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { MOCK_FEMALE_PROFILES, MOCK_MALE_PROFILES } from '@/constants/mockProfiles'
 import {
   MOCK_ANNOUNCEMENT,
   MOCK_SOCIAL_POSTS,
   MOCK_MATCH_PROGRESS,
   MOCK_LEADERBOARD,
 } from '@/constants/mockHubData'
+import type { FemaleProfile, MaleProfile } from '@/types/registration'
 import { ProfilesTable } from '@/components/matchmaker/ProfilesTable'
 import { computeStatus, lockRemainingMs } from '@/lib/matchmaker/statusUtils'
 import { getSession, clearSession, type MatchmakerSession } from '@/lib/auth/session'
@@ -121,9 +121,71 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
   const [announcement, setAnnouncement] = useState<Announcement>(MOCK_ANNOUNCEMENT)
   const [posts, setPosts] = useState<SocialPost[]>(MOCK_SOCIAL_POSTS)
   const [matchProgress, setMatchProgress] = useState<MatchProgress[]>(MOCK_MATCH_PROGRESS)
+  const [femaleProfiles, setFemaleProfiles] = useState<FemaleProfile[]>([])
+  const [maleProfiles, setMaleProfiles] = useState<MaleProfile[]>([])
+  const [loadingProfiles, setLoadingProfiles] = useState(true)
 
   useEffect(() => {
     setSession(getSession())
+  }, [])
+
+  useEffect(() => {
+    async function fetchProfiles() {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('profiles')
+        .select('*, profile_notes(id, content, created_at, matchmakers(first_name, last_name))')
+        .order('created_at', { ascending: false })
+
+      if (data) {
+        const mapProfile = (row: any) => ({
+          id: row.id,
+          firstName: row.first_name,
+          lastName: row.last_name,
+          age: row.age,
+          hebrewBirthday: row.hebrew_birthday ?? '',
+          status: row.marital_status ?? 'single',
+          hasChildren: row.has_children,
+          numberOfChildren: row.number_of_children ?? undefined,
+          community: row.community ?? '',
+          occupation: row.occupation ?? '',
+          city: row.city ?? '',
+          phone: row.phone ?? '',
+          email: row.email ?? '',
+          photos: row.photos ?? [],
+          style: row.style ?? '',
+          partnerStyle: row.partner_style ?? '',
+          preferredStream: row.preferred_stream ?? '',
+          traits: row.traits ?? [],
+          relationshipValues: row.relationship_values ?? [],
+          brings: row.brings ?? [],
+          doesntSuit: row.doesnt_suit ?? '',
+          flexibility: row.flexibility ?? 'preferred',
+          clothing: row.clothing ?? '',
+          headcovering: row.headcovering ?? '',
+          partnerClothing: row.partner_clothing ?? '',
+          phoneType: row.phone_type ?? 'kosher',
+          aboutMe: row.about_me ?? '',
+          aboutPartner: row.about_partner ?? '',
+          matchmakerStatus: row.matchmaker_status,
+          lockedAt: row.locked_at ? new Date(row.locked_at) : null,
+          lockedBy: row.locked_by ?? undefined,
+          lastOfferDate: row.last_offer_date ? new Date(row.last_offer_date) : null,
+          notes: (row.profile_notes ?? []).map((n: any) => ({
+            id: n.id,
+            author: n.matchmakers
+              ? `${n.matchmakers.first_name} ${n.matchmakers.last_name}`
+              : '',
+            text: n.content,
+            createdAt: new Date(n.created_at),
+          })),
+        })
+        setFemaleProfiles(data.filter(r => r.gender === 'female').map(mapProfile))
+        setMaleProfiles(data.filter(r => r.gender === 'male').map(mapProfile))
+      }
+      setLoadingProfiles(false)
+    }
+    fetchProfiles()
   }, [])
 
   const isAdmin = session?.role === 'admin'
@@ -150,11 +212,11 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
   }, [])
 
   const stats = useMemo(() => {
-    const all = [...MOCK_FEMALE_PROFILES, ...MOCK_MALE_PROFILES]
+    const all = [...femaleProfiles, ...maleProfiles]
     const active = all.filter(p => p.lockedAt !== null && lockRemainingMs(p.lockedAt) > 0).length
     const urgent = all.filter(p => computeStatus(p) === 'bright_red').length
-    return { totalF: MOCK_FEMALE_PROFILES.length, totalM: MOCK_MALE_PROFILES.length, active, urgent }
-  }, [])
+    return { totalF: femaleProfiles.length, totalM: maleProfiles.length, active, urgent }
+  }, [femaleProfiles, maleProfiles])
 
   const myLeaderboardEntry = useMemo(
     () => MOCK_LEADERBOARD.find(e => e.email === currentEmail) ?? null,
@@ -297,12 +359,18 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
             ))}
           </div>
 
-          <ProfilesTable
-            key={tab}
-            profiles={tab === 'bachurot' ? MOCK_FEMALE_PROFILES : MOCK_MALE_PROFILES}
-            gender={tab === 'bachurot' ? 'female' : 'male'}
-            locale={locale}
-          />
+          {loadingProfiles ? (
+            <div className="rounded-2xl border border-gray-200 bg-white py-16 text-center text-gray-400 text-sm shadow-card">
+              {isHe ? 'טוען מועמדים...' : 'Loading profiles...'}
+            </div>
+          ) : (
+            <ProfilesTable
+              key={tab}
+              profiles={tab === 'bachurot' ? femaleProfiles : maleProfiles}
+              gender={tab === 'bachurot' ? 'female' : 'male'}
+              locale={locale}
+            />
+          )}
         </section>
 
         {/* ── Status guide ── */}

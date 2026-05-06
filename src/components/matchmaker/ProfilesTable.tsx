@@ -11,6 +11,8 @@ import { computeStatus, formatLastOffer, lockRemainingMs } from '@/lib/matchmake
 import { useLockIdentity, canActOnLock } from '@/lib/matchmaker/lockContext'
 import { Button } from '@/components/ui/Button'
 import { FEMALE_STYLE_OPTIONS, MALE_STYLE_OPTIONS } from '@/constants/formOptions'
+import { createClient } from '@/lib/supabase/client'
+import { getSession } from '@/lib/auth/session'
 
 type AnyProfile = FemaleProfile | MaleProfile
 
@@ -161,23 +163,40 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
     setRowStates((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }))
   }, [])
 
-  const handleStartWork = useCallback((id: string) => {
-    updateRow(id, { lockedAt: new Date(), lockedBy: currentName })
+  const handleStartWork = useCallback(async (id: string) => {
+    const now = new Date()
+    updateRow(id, { lockedAt: now, lockedBy: currentName })
+    await createClient()
+      .from('profiles')
+      .update({ locked_at: now.toISOString(), locked_by: currentName })
+      .eq('id', id)
   }, [updateRow, currentName])
 
-  const handleUnlock = useCallback((id: string) => {
+  const handleUnlock = useCallback(async (id: string) => {
     const rs = rowStates[id]
     if (!rs) return
     if (!canActOnLock(rs.lockedBy, currentName, isAdmin)) return
     updateRow(id, { lockedAt: null, lockedBy: null })
+    await createClient()
+      .from('profiles')
+      .update({ locked_at: null, locked_by: null })
+      .eq('id', id)
   }, [updateRow, rowStates, currentName, isAdmin])
 
-  const handleAddNote = useCallback((id: string, text: string) => {
+  const handleAddNote = useCallback(async (id: string, text: string) => {
+    const session = getSession()
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('profile_notes')
+      .insert({ profile_id: id, matchmaker_id: session?.matchmakerId ?? null, content: text })
+      .select('id, created_at')
+      .single()
+
     const note: Note = {
-      id:        `${id}-${Date.now()}`,
+      id:        data?.id ?? `${id}-${Date.now()}`,
       author:    currentName,
       text,
-      createdAt: new Date(),
+      createdAt: data?.created_at ? new Date(data.created_at) : new Date(),
     }
     setRowStates((prev) => ({
       ...prev,

@@ -2,6 +2,7 @@ export interface MatchmakerSession {
   name: string
   email: string
   role: 'matchmaker' | 'admin'
+  matchmakerId?: string
 }
 
 const SESSION_KEY = 'matchmaker_session'

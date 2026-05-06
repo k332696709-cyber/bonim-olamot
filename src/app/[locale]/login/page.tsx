@@ -37,7 +37,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
       // Fetch matchmaker profile
       const { data: matchmaker, error: dbError } = await supabase
         .from('matchmakers')
-        .select('first_name, last_name, email, is_admin')
+        .select('id, first_name, last_name, email, is_admin')
         .eq('email', authData.user.email!)
         .single()
 
@@ -51,6 +51,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
         name: `${matchmaker.first_name} ${matchmaker.last_name}`,
         email: matchmaker.email,
         role: matchmaker.is_admin ? 'admin' : 'matchmaker',
+        matchmakerId: (matchmaker as any).id,
       })
 
       router.push(`/${locale}/matchmaker`)
