@@ -4,7 +4,6 @@ import { useState, useMemo, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  MOCK_ANNOUNCEMENT,
   MOCK_LEADERBOARD,
 } from '@/constants/mockHubData'
 import type { FemaleProfile, MaleProfile } from '@/types/registration'
@@ -117,7 +116,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
   const [tab, setTab] = useState<Tab>('bachurot')
   const [session, setSession] = useState<MatchmakerSession | null>(null)
   const [sessionChecked, setSessionChecked] = useState(false)
-  const [announcement, setAnnouncement] = useState<Announcement>(MOCK_ANNOUNCEMENT)
+  const [announcement, setAnnouncement] = useState<Announcement>({ id: '', text: '', createdBy: '', active: false })
   const [posts, setPosts] = useState<SocialPost[]>([])
   const [matchProgress, setMatchProgress] = useState<MatchProgress[]>([])
   const [femaleProfiles, setFemaleProfiles] = useState<FemaleProfile[]>([])
@@ -206,7 +205,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
         .limit(50)
 
       if (postsData) {
-        setPosts(postsData.map((row: any) => ({
+        const mapped = postsData.map((row: any) => ({
           id: row.id,
           author: row.matchmakers
             ? `${row.matchmakers.first_name} ${row.matchmakers.last_name}`
@@ -216,7 +215,17 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
           taggedProfiles: (row.tagged_profiles as TaggedProfile[]) ?? [],
           createdAt: new Date(row.created_at),
           isAnnouncement: row.is_announcement ?? false,
-        })))
+        }))
+        const latestAnnouncement = mapped.find(p => p.isAnnouncement)
+        if (latestAnnouncement) {
+          setAnnouncement({
+            id: latestAnnouncement.id,
+            text: latestAnnouncement.content,
+            createdBy: latestAnnouncement.authorEmail,
+            active: true,
+          })
+        }
+        setPosts(mapped.filter(p => !p.isAnnouncement))
       }
 
       // 3. Matches
@@ -257,9 +266,19 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
     router.push(`/${locale}/login`)
   }
 
-  const handleAnnouncementUpdate = useCallback((text: string) => {
+  const handleAnnouncementUpdate = useCallback(async (text: string) => {
     setAnnouncement(prev => ({ ...prev, text, active: text.trim().length > 0 }))
-  }, [])
+    const supabase = createClient()
+    await supabase.from('social_posts').delete().eq('is_announcement', true)
+    if (text.trim()) {
+      await supabase.from('social_posts').insert({
+        author_id: session?.matchmakerId || null,
+        content: text.trim(),
+        tagged_profiles: [] as any,
+        is_announcement: true,
+      })
+    }
+  }, [session?.matchmakerId])
 
   const handleNewPost = useCallback((post: SocialPost) => {
     setPosts(prev => [post, ...prev])
