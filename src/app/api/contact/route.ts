@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
-
-const TO = process.env.CONTACT_TO || 'b.w008833@gmail.com'
-// Resend's shared sender works without a verified domain, but then it can only
-// deliver to the email address the Resend account was created with.
-const FROM = process.env.CONTACT_FROM || 'בונים עולמות <onboarding@resend.dev>'
 
 const hits = new Map<string, number[]>()
 function limited(ip: string) {
@@ -19,6 +15,7 @@ function limited(ip: string) {
 
 const clean = (v: unknown, max: number) => String(v ?? '').replace(/\r/g, '').trim().slice(0, max)
 
+/** Stores a contact-form message in the administrator's inbox (contact_messages table). */
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
   if (limited(ip)) {
@@ -47,30 +44,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'מספר הטלפון אינו תקין.' }, { status: 422 })
   }
 
-  const apiKey = process.env.RESEND_API_KEY
-  if (!apiKey) {
-    console.error('contact: RESEND_API_KEY is not configured, message not sent')
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return NextResponse.json({ message: 'שליחת ההודעה אינה זמינה כרגע.' }, { status: 503 })
   }
 
   try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: FROM,
-        to: [TO],
-        subject: `פנייה מהאתר: ${subject}`,
-        text: `שם: ${name}\nטלפון: ${phone}\nנושא: ${subject}\n\n${message}\n`,
-      }),
-    })
-    if (!res.ok) {
-      console.error('contact: Resend error', res.status, await res.text().catch(() => ''))
+    const supabase = createClient()
+    // contact_messages is not in the generated Database types.
+    const { error } = await (supabase as any)
+      .from('contact_messages')
+      .insert({ name, phone, subject, message })
+    if (error) {
+      console.error('contact: insert failed', error.message)
       return NextResponse.json({ message: 'שליחת ההודעה נכשלה. נסו שוב.' }, { status: 502 })
     }
     return NextResponse.json({ ok: true })
   } catch (e) {
-    console.error('contact: send failed', e)
+    console.error('contact: error', e)
     return NextResponse.json({ message: 'שליחת ההודעה נכשלה. נסו שוב.' }, { status: 502 })
   }
 }

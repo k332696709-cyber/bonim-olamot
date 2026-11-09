@@ -13,6 +13,7 @@ import { getSession, clearSession, type MatchmakerSession } from '@/lib/auth/ses
 import { createClient } from '@/lib/supabase/client'
 import { getT } from '@/lib/i18n/translations'
 import { AnnouncementBar } from '@/components/hub/AnnouncementBar'
+import { InboxLink } from '@/components/matchmaker/InboxLink'
 import { SocialWall } from '@/components/hub/SocialWall'
 import { MatchProgressSection } from '@/components/hub/MatchProgressSection'
 import { PerformanceScorecard } from '@/components/hub/PerformanceScorecard'
@@ -364,6 +365,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
           </div>
 
           <div className="flex items-center gap-4 flex-wrap">
+            {isAdmin && <InboxLink locale={locale} />}
             {session && <UserBadge session={session} locale={locale} onLogout={handleLogout} />}
           </div>
 
