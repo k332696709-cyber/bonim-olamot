@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { MOCK_FEMALE_PROFILES, MOCK_MALE_PROFILES } from '@/constants/mockProfiles'
+import { getRegistration, REGISTERED_EVENT, type StoredRegistration } from '@/lib/auth/registration'
 import {
   MALE_STYLE_OPTIONS, FEMALE_STYLE_OPTIONS, TRAIT_OPTIONS_MALE, TRAIT_OPTIONS_FEMALE,
 } from '@/constants/formOptions'
@@ -21,11 +22,58 @@ const label = (opts: { value: string; he: string; en: string }[], v: string, he:
   return o ? (he ? o.he : o.en) : v
 }
 
+/**
+ * The Smart Assistant is only for registered candidates. Until someone has
+ * registered (men via the men's form, women via the women's form) this shows a
+ * registration prompt instead. Men are shown women's proposals and vice versa.
+ */
 export function SmartMatchClient({ locale }: { locale: string }) {
   const he = locale === 'he'
-  const [meId, setMeId] = useState(MOCK_FEMALE_PROFILES[0].id)
-  const me = ALL_PROFILES.find((p) => p.id === meId)!
+  const [reg, setReg] = useState<StoredRegistration | null>(null)
+  const [loaded, setLoaded] = useState(false)
 
+  useEffect(() => {
+    const update = () => { setReg(getRegistration()); setLoaded(true) }
+    update()
+    window.addEventListener(REGISTERED_EVENT, update)
+    return () => window.removeEventListener(REGISTERED_EVENT, update)
+  }, [])
+
+  if (!loaded) return <div className="min-h-[300px]" aria-busy="true" />
+
+  if (!reg) {
+    return (
+      <div className="max-w-xl mx-auto px-4 pb-24">
+        <div className="rounded-[32px] bg-white shadow-card px-6 py-12 sm:px-10 text-center">
+          <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-2xl mb-5">🔒</div>
+          <h2 className="text-2xl font-bold text-navy-800 mb-2">
+            {he ? 'העוזר החכם נפתח אחרי ההרשמה' : 'The Smart Assistant opens after registration'}
+          </h2>
+          <p className="text-navy-500 mb-8">
+            {he
+              ? 'אחרי שתמלאו את שאלון ההכרות תוכלו לראות הצעות התאמה מדורגות ולדייק אותן עם העוזר.'
+              : 'Once you complete the registration questionnaire you can see ranked match suggestions and refine them with the assistant.'}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href={`/${locale}/register/male`}
+              className="h-12 px-8 rounded-full bg-burgundy-500 hover:bg-burgundy-600 text-white font-bold text-sm inline-flex items-center justify-center transition-colors">
+              {he ? 'הרשמה למיועדים' : 'Register – men'}
+            </Link>
+            <Link href={`/${locale}/register/female`}
+              className="h-12 px-8 rounded-full bg-navy-800 hover:bg-navy-700 text-white font-bold text-sm inline-flex items-center justify-center transition-colors">
+              {he ? 'הרשמה למיועדות' : 'Register – women'}
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return <SmartMatchView locale={locale} me={reg.profile} />
+}
+
+function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
+  const he = locale === 'he'
   const [prefs, setPrefs] = useState<Prefs>({})
   const [status, setStatus] = useState<Record<string, Status>>({})
   const [chat, setChat] = useState<Turn[]>([])
@@ -44,13 +92,6 @@ export function SmartMatchClient({ locale }: { locale: string }) {
   const chips = he
     ? ['ירושלים', 'עד גיל 27', 'קצת יותר פתוח', 'נקה סינון']
     : ['Jerusalem', 'up to 27', 'a bit more open', 'clear filters']
-
-  const pickProfile = (id: string) => {
-    setMeId(id)
-    setPrefs({})
-    setStatus({})
-    setChat([])
-  }
 
   const send = async (text: string) => {
     const message = text.trim()
@@ -101,25 +142,11 @@ export function SmartMatchClient({ locale }: { locale: string }) {
 
   return (
     <div className="max-w-6xl mx-auto px-4 pb-24">
-      {/* Demo identity picker */}
-      <div className="mb-8 rounded-[28px] bg-white shadow-card p-5 sm:p-6">
-        <p className="text-xs font-semibold tracking-widest text-burgundy-500 mb-3">
-          {he ? 'הדגמה · בחרו פרופיל לצפייה' : 'DEMO · PICK A PROFILE TO VIEW AS'}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {ALL_PROFILES.slice(0, 12).map((p) => (
-            <button
-              key={p.id}
-              onClick={() => pickProfile(p.id)}
-              className={`h-10 px-4 rounded-full text-sm font-medium transition-colors ${
-                p.id === meId ? 'bg-navy-800 text-white' : 'bg-[#f1f1f1] text-navy-700 hover:bg-navy-50'
-              }`}
-            >
-              {p.firstName.charAt(0)}. · {p.age} · {p.city}
-            </button>
-          ))}
-        </div>
-      </div>
+      <p className="mb-6 text-sm text-navy-500 text-center">
+        {isMale(me)
+          ? (he ? `שלום ${me.firstName}, אלו הצעות של מיועדות` : `Hi ${me.firstName}, here are suggestions of women`)
+          : (he ? `שלום ${me.firstName}, אלו הצעות של מיועדים` : `Hi ${me.firstName}, here are suggestions of men`)}
+      </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
         {/* ── Assistant ───────────────────────────────────────────── */}

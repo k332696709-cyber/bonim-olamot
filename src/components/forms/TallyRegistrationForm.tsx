@@ -5,6 +5,7 @@ import {
   allFields, MAX_PHOTO_BYTES, validateField,
   type RegistrationForm, type TallyField,
 } from '@/constants/registrationForms'
+import { saveRegistration } from '@/lib/auth/registration'
 
 /**
  * Registration form rendered from a Tally-copy config
@@ -96,6 +97,8 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
         setServerError(data?.message ?? 'השליחה נכשלה. נסו שוב בעוד רגע.')
         return
       }
+      // Unlocks the Smart Assistant for this candidate (men see women, women see men).
+      saveRegistration(form.gender, Object.fromEntries(allFields(form).filter((f) => f.type !== 'file').map((f) => [f.id, (values[f.id] ?? '').trim()])))
       setDone(true)
       setTimeout(scrollTop, 30)
     } catch {

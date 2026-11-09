@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { SmartNavLink } from './SmartNavLink'
 import { getT } from '@/lib/i18n/translations'
 
 interface FooterProps {
@@ -12,7 +13,6 @@ export function Footer({ locale }: FooterProps) {
   const mainLinks = [
     { href: `/${locale}`,            label: isHe ? 'דף הבית'          : 'Home' },
     { href: `/${locale}/date-spots`, label: isHe ? 'מקומות לדייטים'  : 'Dating Spots' },
-    { href: `/${locale}/smart-match`, label: isHe ? 'עוזר חכם' : 'Smart Assistant' },
     { href: `/${locale}/donations`,  label: isHe ? 'תרומות'           : 'Donations' },
     { href: `/${locale}/about`,      label: isHe ? 'אודות'            : 'About Us' },
     { href: `/${locale}/terms`,      label: isHe ? 'תקנון'            : 'Terms of Service' },
@@ -57,6 +57,9 @@ export function Footer({ locale }: FooterProps) {
                   </Link>
                 </li>
               ))}
+              <li>
+                <SmartNavLink locale={locale} className={linkClass} />
+              </li>
             </ul>
           </div>
 

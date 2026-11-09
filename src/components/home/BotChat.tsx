@@ -26,7 +26,7 @@ export function BotChat({ locale }: { locale: string }) {
   const boxRef = useRef<HTMLDivElement>(null)
 
   const greeting = he
-    ? 'שלום! אני העוזר של בונים עולמות. אפשר לשאול אותי על התהליך והפרטיות, ואני יכול לשלוח לך ישר את טופס ההרשמה. מי מחפש/ת שידוך?'
+    ? 'שלום! אני העוזר/ת של בונים עולמות. אפשר לשאול אותי על התהליך והפרטיות, ואני יכול/ה לשלוח לך ישר את טופס ההרשמה. מי מחפש/ת שידוך?'
     : 'Hello! I’m the Bonim Olamot assistant. Ask me about the process and privacy, and I can send you the registration form right here. Who is looking for a match?'
 
   const chips = he
@@ -115,10 +115,10 @@ export function BotChat({ locale }: { locale: string }) {
             {he ? 'בע' : 'BO'}
           </span>
           <div className="leading-tight">
-            <p className="font-bold text-sm">{he ? 'העוזר של בונים עולמות' : 'Bonim Olamot assistant'}</p>
+            <p className="font-bold text-sm">{he ? 'העוזר/ת של בונים עולמות' : 'Bonim Olamot assistant'}</p>
             <p className="text-xs text-navy-200 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-              {typing ? (he ? 'מקליד/ה...' : 'typing…') : he ? 'זמין עכשיו' : 'online now'}
+              {typing ? (he ? 'מקליד/ה...' : 'typing…') : he ? 'מחובר/ת' : 'online now'}
             </p>
           </div>
         </div>

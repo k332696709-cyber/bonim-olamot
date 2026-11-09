@@ -3,6 +3,7 @@ import { Logo } from './Logo'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { MobileNav } from './MobileNav'
 import { cn } from '@/lib/utils'
+import { SmartNavLink } from './SmartNavLink'
 import { getT } from '@/lib/i18n/translations'
 import { NotificationBell } from './NotificationBell'
 
@@ -17,7 +18,6 @@ export function Header({ locale }: HeaderProps) {
   const navLinks = [
     { href: `/${locale}`,          label: isHe ? 'דף הבית'   : 'Home' },
     { href: `/${locale}/personal`, label: isHe ? 'אזור אישי' : 'Personal Area' },
-    { href: `/${locale}/smart-match`, label: isHe ? 'עוזר חכם' : 'Smart Assistant' },
     { href: `/${locale}/contact`,  label: isHe ? 'צור קשר'   : 'Contact Us' },
     { href: `/${locale}/about`,    label: isHe ? 'אודות'      : 'About Us' },
     { href: `/${locale}/terms`,    label: isHe ? 'תקנון'      : 'Terms of Use' },
@@ -51,6 +51,10 @@ export function Header({ locale }: HeaderProps) {
               {link.label}
             </Link>
           ))}
+          <SmartNavLink
+            locale={locale}
+            className={cn('px-3 lg:px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap text-white bg-burgundy-500 hover:bg-burgundy-600 transition-colors duration-150')}
+          />
         </nav>
 
         {/* Controls */}

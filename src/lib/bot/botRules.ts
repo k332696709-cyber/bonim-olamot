@@ -117,7 +117,7 @@ export function ruleReply(text: string, he: boolean): BotReply {
     return {
       action: null,
       reply: he
-        ? 'שלום! אני העוזר של בונים עולמות. אפשר לשאול אותי על התהליך והפרטיות, ואני יכול לשלוח לך את טופס ההרשמה. מי מחפש/ת שידוך?'
+        ? 'שלום! אני העוזר/ת של בונים עולמות. אפשר לשאול אותי על התהליך והפרטיות, ואני יכול/ה לשלוח לך את טופס ההרשמה. מי מחפש/ת שידוך?'
         : 'Hello! I’m the Bonim Olamot assistant. Ask me about the process and privacy, and I can send you the registration form. Who is looking for a match?',
     }
   }
@@ -125,7 +125,7 @@ export function ruleReply(text: string, he: boolean): BotReply {
   return {
     action: null,
     reply: he
-      ? 'לא בטוח שהבנתי. אפשר לשאול אותי איך התהליך עובד, על פרטיות, או לבחור הרשמה למיועד או למיועדת.'
+      ? 'לא בטוח/ה שהבנתי. אפשר לשאול אותי איך התהליך עובד, על פרטיות, או לבחור הרשמה למיועד או למיועדת.'
       : 'I’m not sure I got that. You can ask how the process works, about privacy, or choose registration for men or women.',
   }
 }

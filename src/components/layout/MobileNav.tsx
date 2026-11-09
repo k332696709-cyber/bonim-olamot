@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
+import { SmartNavLink } from './SmartNavLink'
 
 interface MobileNavProps {
   locale: string
@@ -27,7 +28,6 @@ export function MobileNav({ locale }: MobileNavProps) {
   const navLinks = [
     { href: `/${locale}`,          label: isHe ? 'דף הבית'   : 'Home' },
     { href: `/${locale}/personal`, label: isHe ? 'אזור אישי' : 'Personal Area' },
-    { href: `/${locale}/smart-match`, label: isHe ? 'עוזר חכם' : 'Smart Assistant' },
     { href: `/${locale}/contact`,  label: isHe ? 'צור קשר'   : 'Contact Us' },
     { href: `/${locale}/about`,    label: isHe ? 'אודות'      : 'About Us' },
     { href: `/${locale}/terms`,    label: isHe ? 'תקנון'      : 'Terms of Use' },
@@ -94,6 +94,11 @@ export function MobileNav({ locale }: MobileNavProps) {
               </svg>
             </Link>
           ))}
+          <SmartNavLink
+            locale={locale}
+            onClick={close}
+            className="flex items-center justify-between px-5 py-4 rounded-full text-[20px] font-medium text-white bg-burgundy-500"
+          />
         </nav>
 
         {/* Matchmaker login CTA */}
