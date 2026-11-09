@@ -27,6 +27,7 @@ export function MobileNav({ locale }: MobileNavProps) {
   const navLinks = [
     { href: `/${locale}`,          label: isHe ? 'דף הבית'   : 'Home' },
     { href: `/${locale}/personal`, label: isHe ? 'אזור אישי' : 'Personal Area' },
+    { href: `/${locale}/smart-match`, label: isHe ? 'עוזר חכם' : 'Smart Assistant' },
     { href: `/${locale}/contact`,  label: isHe ? 'צור קשר'   : 'Contact Us' },
     { href: `/${locale}/about`,    label: isHe ? 'אודות'      : 'About Us' },
     { href: `/${locale}/terms`,    label: isHe ? 'תקנון'      : 'Terms of Use' },

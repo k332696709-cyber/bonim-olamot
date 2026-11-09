@@ -12,6 +12,7 @@ export function Footer({ locale }: FooterProps) {
   const mainLinks = [
     { href: `/${locale}`,            label: isHe ? 'דף הבית'          : 'Home' },
     { href: `/${locale}/date-spots`, label: isHe ? 'מקומות לדייטים'  : 'Dating Spots' },
+    { href: `/${locale}/smart-match`, label: isHe ? 'עוזר חכם' : 'Smart Assistant' },
     { href: `/${locale}/donations`,  label: isHe ? 'תרומות'           : 'Donations' },
     { href: `/${locale}/about`,      label: isHe ? 'אודות'            : 'About Us' },
     { href: `/${locale}/terms`,      label: isHe ? 'תקנון'            : 'Terms of Service' },
