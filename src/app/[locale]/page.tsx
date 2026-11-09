@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ChatMockup } from '@/components/home/ChatMockup'
+import { BotChat } from '@/components/home/BotChat'
 import { DashboardMockup } from '@/components/home/DashboardMockup'
 import { getT } from '@/lib/i18n/translations'
 import { DATE_SPOTS_MOCK } from '@/constants/dateSpotsMockData'
@@ -73,7 +73,7 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
           </div>
          </div>
 
-         <ChatMockup locale={locale} />
+         <BotChat locale={locale} />
         </div>
       </section>
 
