@@ -11,11 +11,16 @@ export async function middleware(request: NextRequest) {
   // Run i18n middleware first to get the locale-aware response
   const response = intlMiddleware(request)
 
+  // Without Supabase env vars (e.g. a Vercel project that was never configured)
+  // createServerClient throws, which used to crash every request with a 500
+  // (MIDDLEWARE_INVOCATION_FAILED). Skip the session refresh instead.
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !anonKey) return response
+
   // Refresh Supabase session so it doesn't expire mid-session
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  try {
+    const supabase = createServerClient(url, anonKey, {
       cookies: {
         getAll() {
           return request.cookies.getAll()
@@ -27,14 +32,10 @@ export async function middleware(request: NextRequest) {
           )
         },
       },
-    }
-  )
-
-  // Silently refresh the session — ignore errors (env vars may be absent in dev)
-  try {
+    })
     await supabase.auth.getUser()
   } catch {
-    // Supabase env vars not yet configured — safe to ignore during development
+    // Never let a session-refresh failure take the whole site down
   }
 
   return response
