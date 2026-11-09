@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import { ContactForm } from './ContactForm'
 
-const WHATSAPP_NUMBER = '972501234567' // replace with real number
-const PHONE_NUMBER    = '+972-50-123-4567'
-const EMAIL_ADDRESS   = 'info@bonim-olamot.co.il'
+const WHATSAPP_NUMBER = '972533790008'
+const PHONE_NUMBER    = '053-379-0008'
+const EMAIL_ADDRESS   = 'b.w008833@gmail.com'
 
 interface ContactCardProps {
   icon: React.ReactNode

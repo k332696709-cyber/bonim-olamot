@@ -67,7 +67,7 @@ export default function DateSpotsPage({ params: { locale } }: { params: { locale
           {isHe ? 'יודע על מקום מעולה שלא מופיע כאן?' : 'Know a great spot not listed here?'}
         </p>
         <a
-          href="mailto:info@bonim-olamot.co.il?subject=הצעת מקום לדייט"
+          href="mailto:b.w008833@gmail.com?subject=הצעת מקום לדייט"
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-navy-800 hover:bg-navy-700
             text-white text-sm font-semibold transition-colors"
         >
