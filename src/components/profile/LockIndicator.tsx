@@ -92,7 +92,7 @@ export function LockIndicator({
       )}
 
       {isExpired && (
-        <div className="flex items-center gap-2.5 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+        <div className="flex items-center gap-2.5 bg-[#f1f1f1] border border-gray-200 rounded-xl px-4 py-3">
           <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />

@@ -33,7 +33,7 @@ export function RadioGroup({
                 'transition-all duration-150 select-none',
                 isSelected
                   ? 'border-navy-400 bg-navy-50 text-navy-700'
-                  : 'border-gray-200 bg-white hover:border-navy-200 hover:bg-gray-50',
+                  : 'border-gray-200 bg-white hover:border-navy-200 hover:bg-[#f1f1f1]',
               )}
             >
               <input

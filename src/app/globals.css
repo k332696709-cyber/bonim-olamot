@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Frank+Ruhl+Libre:wght@400;500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@200;300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,23 +6,85 @@
 
 @layer base {
   html {
-    font-family: 'Heebo', sans-serif;
-  }
-
-  /* RTL default body */
-  body {
-    @apply bg-gray-50 text-gray-900 antialiased;
-  }
-
-  /* Smooth scrolling */
-  * {
+    font-family: 'IBM Plex Sans Hebrew', system-ui, sans-serif;
     scroll-behavior: smooth;
+  }
+
+  body {
+    @apply text-navy-800 antialiased;
+    /* dark strip behind the floating pill header, light page below (Shmili look) */
+    background: linear-gradient(to bottom, #001529 0, #001529 5.25rem, #f1f1f1 5.25rem);
+    min-height: 100vh;
   }
 }
 
 @layer utilities {
-  /* Hebrew serif headings */
+  /* Single typeface across the site (Shmili look) */
   .font-serif {
-    font-family: 'Frank Ruhl Libre', serif;
+    font-family: 'IBM Plex Sans Hebrew', system-ui, sans-serif;
+  }
+
+  /* Faint blueprint grid used on dark sections */
+  .bg-grid-dark {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 75%);
+    mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 75%);
+  }
+
+  /* Glowing pill buttons */
+  .glow-burgundy {
+    box-shadow: 0 6px 28px rgba(203, 51, 83, 0.45);
+  }
+  .glow-burgundy:hover {
+    box-shadow: 0 8px 36px rgba(203, 51, 83, 0.65);
+  }
+}
+
+@layer components {
+  .hero-dark {
+    background-color: #001529;
+    background-image:
+      radial-gradient(ellipse at 15% 0%, rgba(51, 108, 175, 0.35), transparent 55%),
+      radial-gradient(ellipse at 90% 100%, rgba(203, 51, 83, 0.28), transparent 55%),
+      linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+    background-size: auto, auto, 56px 56px, 56px 56px;
+    border-radius: 0 0 40px 40px;
+  }
+  .hero-burgundy {
+    background-color: #4d0013;
+    background-image:
+      radial-gradient(ellipse at 85% 0%, rgba(203, 51, 83, 0.45), transparent 55%),
+      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: auto, 56px 56px, 56px 56px;
+    border-radius: 0 0 40px 40px;
+  }
+
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee 32s linear infinite;
+  }
+  [dir='rtl'] .marquee-track {
+    animation-direction: reverse;
+  }
+  @keyframes marquee {
+    to { transform: translateX(-50%); }
+  }
+
+  @keyframes float-y {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-14px); }
+  }
+  .animate-float {
+    animation: float-y 7s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track, .animate-float { animation: none; }
   }
 }

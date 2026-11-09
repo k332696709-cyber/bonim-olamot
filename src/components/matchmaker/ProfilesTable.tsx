@@ -279,7 +279,7 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                       ? 'bg-red-50/30 hover:bg-red-50/50'
                       : isEven
                         ? 'bg-white hover:bg-navy-50/30'
-                        : 'bg-gray-50/50 hover:bg-navy-50/30',
+                        : 'bg-[#f1f1f1]/50 hover:bg-navy-50/30',
                   )}
                 >
                   {/* Name */}

@@ -109,10 +109,10 @@ export default function TermsPage({ params: { locale } }: { params: { locale: st
   )
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gray-50" dir={isHe ? 'rtl' : 'ltr'}>
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f1f1f1]" dir={isHe ? 'rtl' : 'ltr'}>
 
       {/* ── Hero ──────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-b from-gray-800 to-gray-950 text-white text-center px-4 py-16 sm:py-20">
+      <div className="hero-dark text-white text-center px-4 py-16 sm:py-24">
         <div className="text-5xl mb-5">📜</div>
         <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-4 leading-tight">
           {isHe ? 'תקנון ותנאי שימוש' : 'Terms of Service & Code of Ethics'}
@@ -227,7 +227,7 @@ export default function TermsPage({ params: { locale } }: { params: { locale: st
               : 'For any questions regarding these terms, privacy, or the matchmakers\' charter, please contact the organization.'}
           </p>
           <Link href={`/${locale}/contact`}
-            className="mt-1 inline-block px-6 py-2.5 bg-white text-navy-800 rounded-xl
+            className="mt-1 inline-block px-6 py-2.5 bg-white text-navy-800 rounded-full
               text-sm font-semibold hover:bg-navy-50 transition-colors self-center">
             {isHe ? 'צור קשר' : 'Contact Us'}
           </Link>

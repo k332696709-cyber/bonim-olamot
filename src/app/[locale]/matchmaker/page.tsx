@@ -327,14 +327,14 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
 
   if (!sessionChecked) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f1f1f1] flex items-center justify-center">
         <p className="text-sm text-gray-400">{isHe ? 'טוען...' : 'Loading...'}</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" dir={isHe ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-[#f1f1f1]" dir={isHe ? 'rtl' : 'ltr'}>
 
       {/* ── Global Announcement Bar ── */}
       <AnnouncementBar

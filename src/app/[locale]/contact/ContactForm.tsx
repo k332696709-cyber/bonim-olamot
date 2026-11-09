@@ -23,7 +23,7 @@ export function ContactForm({ locale }: Props) {
   }
 
   const inputClass =
-    'w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 ' +
+    'w-full rounded-xl border border-gray-200 bg-[#f1f1f1] px-4 py-3 text-sm text-gray-800 ' +
     'placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-navy-400 focus:border-transparent ' +
     'transition-all duration-150'
 
@@ -111,8 +111,8 @@ export function ContactForm({ locale }: Props) {
       <button
         type="submit"
         disabled={status === 'sending'}
-        className="mt-1 w-full sm:w-auto sm:self-end px-8 py-3 rounded-xl bg-navy-600 text-white
-          text-sm font-semibold hover:bg-navy-700 active:bg-navy-800
+        className="mt-1 w-full sm:w-auto sm:self-end px-8 py-3 rounded-full bg-burgundy-500 text-white
+          text-sm font-semibold hover:bg-burgundy-600 active:bg-burgundy-700
           disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-150"
       >
         {status === 'sending'

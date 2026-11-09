@@ -50,7 +50,7 @@ export function PhotoUpload({ value, onChange, max = 5, locale = 'he' }: PhotoUp
           'border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-150',
           dragging
             ? 'border-navy-400 bg-navy-50'
-            : 'border-gray-300 hover:border-navy-300 hover:bg-gray-50',
+            : 'border-gray-300 hover:border-navy-300 hover:bg-[#f1f1f1]',
           value.length >= max && 'opacity-50 cursor-not-allowed pointer-events-none',
         )}
       >

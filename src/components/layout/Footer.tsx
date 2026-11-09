@@ -28,7 +28,7 @@ export function Footer({ locale }: FooterProps) {
     'text-navy-200 text-sm hover:text-white hover:underline underline-offset-2 transition-colors duration-150'
 
   return (
-    <footer className="bg-navy-900 text-white">
+    <footer className="bg-navy-800 text-white rounded-t-[40px]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-6">
 
         {/* ── Main grid ─────────────────────────────────────────── */}

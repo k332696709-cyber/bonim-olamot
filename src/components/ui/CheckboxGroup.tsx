@@ -47,7 +47,7 @@ export function CheckboxGroup({
                 isSelected
                   ? 'bg-navy-500 border-navy-500 text-white shadow-sm'
                   : isDisabled
-                  ? 'border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50'
+                  ? 'border-gray-200 text-gray-300 cursor-not-allowed bg-[#f1f1f1]'
                   : 'border-gray-300 text-gray-700 hover:border-navy-400 hover:text-navy-600 bg-white',
               )}
             >

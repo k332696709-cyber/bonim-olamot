@@ -148,7 +148,7 @@ export function NotificationBell({ locale }: NotificationBellProps) {
                 className={`flex items-start gap-3 px-4 py-4 text-sm transition-colors
                   active:bg-navy-100
                   ${n.read
-                    ? 'bg-white text-gray-400 hover:bg-gray-50'
+                    ? 'bg-white text-gray-400 hover:bg-[#f1f1f1]'
                     : 'bg-navy-50/40 text-gray-700 hover:bg-navy-50'
                   }`}
               >
@@ -166,7 +166,7 @@ export function NotificationBell({ locale }: NotificationBellProps) {
 
       {/* Footer — mark as read */}
       {notifications.length > 0 && (
-        <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 shrink-0">
+        <div className="px-4 py-3 border-t border-gray-100 bg-[#f1f1f1] shrink-0">
           {hasUnread ? (
             <button
               onClick={markAllRead}

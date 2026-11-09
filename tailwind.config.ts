@@ -33,12 +33,16 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans:  ['Heebo', 'sans-serif'],
-        serif: ['"Frank Ruhl Libre"', 'serif'],
+        sans:  ['"IBM Plex Sans Hebrew"', 'system-ui', 'sans-serif'],
+        serif: ['"IBM Plex Sans Hebrew"', 'system-ui', 'sans-serif'],
+      },
+      borderRadius: {
+        xl:    '1.25rem',
+        '2xl': '1.75rem',
       },
       boxShadow: {
-        luxury: '0 4px 24px 0 rgba(0,51,102,0.10)',
-        card:   '0 2px 12px 0 rgba(0,51,102,0.08)',
+        luxury: '0 30px 60px -12px rgba(0,21,41,0.18)',
+        card:   '0 20px 50px -10px rgba(0,21,41,0.10)',
       },
     },
   },

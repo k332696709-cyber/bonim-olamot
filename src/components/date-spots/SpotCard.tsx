@@ -165,7 +165,7 @@ export function SpotCard({ spot, locale = 'he' }: SpotCardProps) {
             type="button"
             onClick={() => setExpanded(!expanded)}
             className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200
-              text-gray-600 hover:bg-gray-50 text-xs font-medium transition-colors"
+              text-gray-600 hover:bg-[#f1f1f1] text-xs font-medium transition-colors"
           >
             {expanded
               ? (isHe ? 'סגור' : 'Close')
@@ -182,7 +182,7 @@ export function SpotCard({ spot, locale = 'he' }: SpotCardProps) {
 
       {/* ── Expandable reviews panel ── */}
       {expanded && (
-        <div className="border-t border-gray-100 px-5 py-4 flex flex-col gap-4 bg-gray-50/50">
+        <div className="border-t border-gray-100 px-5 py-4 flex flex-col gap-4 bg-[#f1f1f1]/50">
 
           {/* Existing reviews — keep review text in original language per spec */}
           {localReviews.length > 0 ? (

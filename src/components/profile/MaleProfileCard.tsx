@@ -93,7 +93,7 @@ export function MaleProfileCard({ profile, locale = 'he', femaleCandidates }: Ma
 
       {/* Header */}
       <div className="bg-white rounded-2xl shadow-luxury border border-gray-100 overflow-hidden">
-        <div className="bg-gradient-to-l from-navy-500 to-navy-700 px-6 py-5">
+        <div className="bg-navy-800 px-6 py-5">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="text-white text-xl font-serif font-bold">

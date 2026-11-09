@@ -58,10 +58,10 @@ export default function AboutPage({ params: { locale } }: { params: { locale: st
   ]
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gray-50" dir={isHe ? 'rtl' : 'ltr'}>
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f1f1f1]" dir={isHe ? 'rtl' : 'ltr'}>
 
       {/* ── Hero ──────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-b from-navy-900 to-navy-950 text-white text-center px-4 py-16 sm:py-20">
+      <div className="hero-dark text-white text-center px-4 py-16 sm:py-24">
         <div className="text-5xl mb-5">🏡</div>
         <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-4 leading-tight">
           {isHe ? 'אודות בונים עולמות' : 'About Bonim Olamot'}
@@ -142,7 +142,7 @@ export default function AboutPage({ params: { locale } }: { params: { locale: st
         </section>
 
         {/* ── CTA ───────────────────────────────────────────────── */}
-        <section className="bg-navy-700 text-white rounded-2xl p-8 sm:p-10 text-center flex flex-col gap-4">
+        <section className="bg-navy-800 text-white rounded-[32px] p-8 sm:p-12 text-center flex flex-col gap-4">
           <h2 className="text-xl sm:text-2xl font-serif font-bold">
             {isHe ? 'מוכנים להתחיל?' : 'Ready to Begin?'}
           </h2>
@@ -153,13 +153,13 @@ export default function AboutPage({ params: { locale } }: { params: { locale: st
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mt-2">
             <Link href={`/${locale}/register/female`}
-              className="px-6 py-3 bg-white text-navy-800 rounded-xl font-semibold text-sm
+              className="px-7 py-3.5 bg-white text-navy-800 rounded-full font-semibold text-sm
                 hover:bg-navy-50 transition-colors">
               {isHe ? 'הרשמה למיועדת' : 'Register – Female'}
             </Link>
             <Link href={`/${locale}/register/male`}
-              className="px-6 py-3 bg-navy-600 text-white rounded-xl font-semibold text-sm
-                border border-navy-500 hover:bg-navy-500 transition-colors">
+              className="px-7 py-3.5 bg-burgundy-500 text-white rounded-full font-semibold text-sm
+                hover:bg-burgundy-400 transition-colors">
               {isHe ? 'הרשמה למיועד' : 'Register – Male'}
             </Link>
           </div>

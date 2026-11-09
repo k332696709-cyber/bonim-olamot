@@ -28,7 +28,7 @@ const STAGE_TRACK_COLOR: Record<MatchStage, string> = {
 }
 
 const STAGE_BADGE: Record<MatchStage, string> = {
-  checking:      'bg-gray-50  border-gray-200  text-gray-600',
+  checking:      'bg-[#f1f1f1]  border-gray-200  text-gray-600',
   proposal_sent: 'bg-blue-50  border-blue-200  text-blue-700',
   meeting_1:     'bg-orange-50 border-orange-200 text-orange-700',
   meeting_2:     'bg-navy-50  border-navy-200  text-navy-700',
@@ -164,7 +164,7 @@ export function MatchProgressSection({
             key={s}
             className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-opacity ${
               stageCounts[s] > 0 ? 'opacity-100' : 'opacity-40'
-            } bg-gray-50 border-gray-200`}
+            } bg-[#f1f1f1] border-gray-200`}
           >
             <span className={`w-2 h-2 rounded-full shrink-0 ${STAGE_TRACK_COLOR[s]}`} />
             <span className="text-gray-600 font-medium">{labels[s]}</span>

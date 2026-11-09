@@ -28,10 +28,10 @@ export default function DonationsPage({ params: { locale } }: { params: { locale
   ]
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gray-50" dir={isHe ? 'rtl' : 'ltr'}>
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f1f1f1]" dir={isHe ? 'rtl' : 'ltr'}>
 
       {/* Hero */}
-      <div className="bg-gradient-to-b from-burgundy-700 to-burgundy-900 text-white text-center px-4 py-14">
+      <div className="hero-burgundy text-white text-center px-4 py-16 sm:py-20">
         <div className="text-5xl mb-4">❤️</div>
         <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-3">
           {isHe ? 'תרומה לארגון בונים עולמות' : 'Donate to Bonim Olamot'}

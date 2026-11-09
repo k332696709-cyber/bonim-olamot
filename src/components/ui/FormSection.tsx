@@ -11,10 +11,10 @@ interface FormSectionProps {
 
 export function FormSection({ title, subtitle, children, className }: FormSectionProps) {
   return (
-    <div className={cn('bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden', className)}>
+    <div className={cn('bg-white rounded-[28px] shadow-card overflow-hidden', className)}>
       {/* Section Header */}
-      <div className="bg-gradient-to-l from-navy-500 to-navy-600 px-6 py-4">
-        <h2 className="text-white font-semibold text-base tracking-wide">{title}</h2>
+      <div className="bg-navy-800 px-6 py-4">
+        <h2 className="text-white font-bold text-lg">{title}</h2>
         {subtitle && (
           <p className="text-navy-200 text-xs mt-0.5">{subtitle}</p>
         )}

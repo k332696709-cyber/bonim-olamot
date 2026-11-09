@@ -61,12 +61,14 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center px-4 py-12 bg-gray-50">
+    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center px-4 py-12 bg-[#f1f1f1]">
       <div className="w-full max-w-md">
 
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <Logo size="lg" />
+          <div className="rounded-[28px] overflow-hidden shadow-card bg-white">
+            <Logo size="lg" />
+          </div>
         </div>
 
         {/* Card */}
@@ -121,7 +123,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-navy-600 hover:bg-navy-700 disabled:opacity-60
+              className="w-full py-3.5 rounded-full bg-burgundy-500 hover:bg-burgundy-600 disabled:opacity-60
                 text-white text-sm font-bold shadow-md hover:shadow-lg transition-all duration-150"
             >
               {loading

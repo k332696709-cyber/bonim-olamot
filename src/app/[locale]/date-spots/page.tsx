@@ -9,10 +9,10 @@ export default function DateSpotsPage({ params: { locale } }: { params: { locale
   const isHe = locale === 'he'
 
   return (
-    <div className="min-h-screen bg-gray-50" dir={isHe ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-[#f1f1f1]" dir={isHe ? 'rtl' : 'ltr'}>
 
       {/* ── Hero header ── */}
-      <div className="bg-gradient-to-b from-navy-800 to-navy-900 text-white px-4 py-14 text-center">
+      <div className="hero-dark text-white px-4 py-16 sm:py-20 text-center">
         <div className="max-w-2xl mx-auto">
           <div className="text-5xl mb-4">💑</div>
           <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-3">
@@ -68,7 +68,7 @@ export default function DateSpotsPage({ params: { locale } }: { params: { locale
         </p>
         <a
           href="mailto:info@bonim-olamot.co.il?subject=הצעת מקום לדייט"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-navy-600 hover:bg-navy-700
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-navy-800 hover:bg-navy-700
             text-white text-sm font-semibold transition-colors"
         >
           📬 {isHe ? 'שלח הצעה' : 'Suggest a spot'}

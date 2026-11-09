@@ -30,7 +30,7 @@ function ContactCard({ icon, title, subtitle, href, label, color }: ContactCardP
         <h3 className="text-base font-bold text-navy-800">{title}</h3>
         <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
       </div>
-      <span className="mt-auto inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-navy-600 text-white
+      <span className="mt-auto inline-flex items-center gap-1.5 px-6 py-3 rounded-full bg-navy-600 text-white
         text-sm font-semibold group-hover:bg-navy-700 transition-colors duration-150">
         {label}
       </span>
@@ -82,10 +82,10 @@ export default function ContactPage({ params: { locale } }: { params: { locale: 
   ]
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gray-50" dir={isHe ? 'rtl' : 'ltr'}>
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f1f1f1]" dir={isHe ? 'rtl' : 'ltr'}>
 
       {/* ── Hero ───────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-b from-navy-900 to-navy-950 text-white text-center px-4 py-16 sm:py-20">
+      <div className="hero-dark text-white text-center px-4 py-16 sm:py-24">
         <div className="text-5xl mb-5">💬</div>
         <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-4 leading-tight">
           {isHe ? 'אנחנו כאן בשבילך' : 'We Are Here for You'}

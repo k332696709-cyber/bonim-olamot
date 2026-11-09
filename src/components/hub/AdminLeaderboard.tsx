@@ -44,7 +44,7 @@ export function AdminLeaderboard({ entries, locale }: AdminLeaderboardProps) {
           </thead>
           <tbody>
             {sorted.map((entry, i) => (
-              <tr key={entry.email} className="border-b border-gray-50 hover:bg-gray-50/60 transition-colors">
+              <tr key={entry.email} className="border-b border-gray-50 hover:bg-[#f1f1f1]/60 transition-colors">
                 <td className="py-3 pe-3">
                   {i < 3
                     ? <span className="text-base leading-none">{MEDALS[i]}</span>
@@ -73,7 +73,7 @@ export function AdminLeaderboard({ entries, locale }: AdminLeaderboardProps) {
                       ? 'bg-green-50  text-green-700  border-green-200'
                       : entry.successfulMatchesCount >= 1
                         ? 'bg-orange-50 text-orange-700 border-orange-200'
-                        : 'bg-gray-50   text-gray-500   border-gray-200'
+                        : 'bg-[#f1f1f1]   text-gray-500   border-gray-200'
                   }`}>
                     {entry.successfulMatchesCount}
                   </span>

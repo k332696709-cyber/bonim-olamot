@@ -34,7 +34,7 @@ export function Button({
     <button
       disabled={disabled || loading}
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-lg font-semibold',
+        'inline-flex items-center justify-center gap-2 rounded-full font-semibold',
         'transition-all duration-150 cursor-pointer select-none',
         'disabled:opacity-60 disabled:cursor-not-allowed',
         variantClasses[variant],

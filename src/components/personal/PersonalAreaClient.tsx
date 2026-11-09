@@ -176,7 +176,7 @@ function WelcomeView({
 }) {
   const isHe = locale === 'he'
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-16 bg-gray-50"
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-16 bg-[#f1f1f1]"
       dir={isHe ? 'rtl' : 'ltr'}>
       <div className="max-w-lg w-full text-center">
         <span className="text-5xl">👤</span>
@@ -361,7 +361,7 @@ function SuggestionsTab({ session, locale }: { session: CandidateSession; locale
                 <button className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-semibold hover:bg-green-700 transition-colors">
                   {isHe ? 'מעוניינת/מעוניין' : 'Interested'}
                 </button>
-                <button className="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-semibold hover:bg-gray-50 transition-colors">
+                <button className="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-semibold hover:bg-[#f1f1f1] transition-colors">
                   {isHe ? 'לא מתאים/ה' : 'Not suitable'}
                 </button>
               </div>
@@ -405,7 +405,7 @@ function DashboardView({
     .filter(s => s.responseStatus === 'pending').length
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gray-50" dir={isHe ? 'rtl' : 'ltr'}>
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f1f1f1]" dir={isHe ? 'rtl' : 'ltr'}>
 
       {/* ── Top welcome banner ── */}
       <div className={`${isMale ? 'bg-navy-700' : 'bg-burgundy-700'} text-white px-4 py-5`}>
@@ -442,7 +442,7 @@ function DashboardView({
               className={`py-2.5 rounded-xl text-sm font-semibold transition-colors border-2
                 ${status === 'active'
                   ? `${accentBg} ${accentHover} text-white border-transparent`
-                  : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'
+                  : 'bg-[#f1f1f1] text-gray-500 border-gray-200 hover:bg-gray-100'
                 }`}
             >
               {isHe ? `✓ ${t.active}` : `✓ Active`}
@@ -452,7 +452,7 @@ function DashboardView({
               className={`py-2.5 rounded-xl text-sm font-semibold transition-colors border-2
                 ${status === 'paused'
                   ? 'bg-orange-500 hover:bg-orange-600 text-white border-transparent'
-                  : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'
+                  : 'bg-[#f1f1f1] text-gray-500 border-gray-200 hover:bg-gray-100'
                 }`}
             >
               {isHe ? `⏸ ${t.paused}` : `⏸ On Hold`}
@@ -473,8 +473,8 @@ function DashboardView({
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`flex-1 py-3 text-sm font-semibold transition-colors relative
                 ${activeTab === tab.id
-                  ? `${accentText} bg-gray-50`
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  ? `${accentText} bg-[#f1f1f1]`
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-[#f1f1f1]'
                 }`}
             >
               {tab.label}

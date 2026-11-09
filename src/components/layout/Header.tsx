@@ -23,11 +23,16 @@ export function Header({ locale }: HeaderProps) {
   ]
 
   return (
-    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+    // Floating pill header (Shmili style). Sticky wrapper is transparent so the
+    // dark hero can slide up behind it on the home page.
+    <header className="sticky top-3 z-30 px-3 sm:px-6 pointer-events-none">
+      <div
+        className="pointer-events-auto max-w-6xl mx-auto h-16 ps-5 pe-3 flex items-center justify-between gap-3
+          rounded-full bg-white/95 backdrop-blur-md shadow-[0_12px_40px_rgba(0,21,41,0.18)] ring-1 ring-navy-900/5"
+      >
 
         {/* Logo */}
-        <Link href={`/${locale}`} className="shrink-0">
+        <Link href={`/${locale}`} className="shrink-0 block h-12 w-24 overflow-hidden rounded-2xl [&_div]:h-full [&_img]:h-full [&_img]:w-full">
           <Logo size="sm" />
         </Link>
 
@@ -38,8 +43,8 @@ export function Header({ locale }: HeaderProps) {
               key={link.href}
               href={link.href}
               className={cn(
-                'px-3 py-2 rounded-lg text-sm font-medium text-gray-600',
-                'hover:text-navy-600 hover:bg-navy-50 transition-colors duration-150',
+                'px-3 lg:px-4 py-2 rounded-full text-sm font-medium text-navy-700 whitespace-nowrap',
+                'hover:text-white hover:bg-navy-700 transition-colors duration-150',
               )}
             >
               {link.label}
@@ -47,7 +52,7 @@ export function Header({ locale }: HeaderProps) {
           ))}
         </nav>
 
-        {/* Right controls */}
+        {/* Controls */}
         <div className="flex items-center gap-2">
           <NotificationBell locale={locale} />
           <LanguageSwitcher locale={locale} />
@@ -55,13 +60,13 @@ export function Header({ locale }: HeaderProps) {
           {/* Matchmaker login — desktop only */}
           <Link
             href={`/${locale}/login`}
-            className="hidden md:flex px-4 py-2 rounded-lg bg-navy-500 text-white
-              text-sm font-semibold hover:bg-navy-600 transition-colors duration-150"
+            className="hidden md:flex h-11 items-center whitespace-nowrap px-5 lg:px-6 rounded-full bg-burgundy-500 text-white
+              text-sm font-bold hover:bg-burgundy-600 transition-colors duration-150"
           >
             {T.nav.login}
           </Link>
 
-          {/* Hamburger — mobile only (rendered by MobileNav client component) */}
+          {/* Hamburger — mobile only */}
           <MobileNav locale={locale} />
         </div>
 
