@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { DonationsForm } from '@/components/ui/DonationsForm'
+import { ChatMockup } from '@/components/home/ChatMockup'
+import { DashboardMockup } from '@/components/home/DashboardMockup'
 import { getT } from '@/lib/i18n/translations'
 import { DATE_SPOTS_MOCK } from '@/constants/dateSpotsMockData'
 import { CATEGORY_LABELS } from '@/types/dateSpots'
@@ -28,7 +29,8 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
         <div className="absolute -top-24 start-[-8rem] w-[28rem] h-[28rem] rounded-full bg-navy-400/30 blur-3xl animate-float" aria-hidden="true" />
         <div className="absolute bottom-[-10rem] end-[-6rem] w-[26rem] h-[26rem] rounded-full bg-burgundy-400/30 blur-3xl animate-float" aria-hidden="true" />
 
-        <div className="relative max-w-4xl mx-auto text-center">
+        <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-8 items-center">
+         <div className="text-center lg:text-start">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/15 px-4 py-2 text-sm text-burgundy-100 mb-8">
             <span className="w-2 h-2 rounded-full bg-burgundy-300" />
             {isHe ? 'אתר שידוכים מתקדם לקהילה החרדית' : 'Advanced matchmaking for the Haredi community'}
@@ -43,13 +45,13 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
             </span>
           </h1>
 
-          <p className="text-lg sm:text-xl text-navy-100 max-w-2xl mx-auto mb-10">
+          <p className="text-lg sm:text-xl text-navy-100 max-w-xl mx-auto lg:mx-0 mb-10">
             {isHe
               ? 'ארגון בונים עולמות: הרשמה פשוטה, שדכנים מקצועיים והתאמה חכמה. הכל במקום אחד.'
               : 'Bonim Olamot: simple registration, professional matchmakers and smart matching, all in one place.'}
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
             <Link
               href={`/${locale}/register/male`}
               className={`${pill} h-14 px-8 text-lg bg-burgundy-400 text-white hover:bg-burgundy-300 glow-burgundy`}
@@ -69,6 +71,9 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
               {isHe ? 'לשדכנים' : 'For matchmakers'}
             </Link>
           </div>
+         </div>
+
+         <ChatMockup locale={locale} />
         </div>
       </section>
 
@@ -80,13 +85,29 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
               {marqueeWords.map((w) => (
                 <span key={`${n}-${w}`} className="flex items-center text-lg font-medium">
                   <span className="px-6">{w}</span>
-                  <span className="text-burgundy-200">✳</span>
+                  <span className="text-white/60">✳</span>
                 </span>
               ))}
             </div>
           ))}
         </div>
       </div>
+
+      {/* ══ Dashboard preview (light) ══════════════════════════════════════════ */}
+      <section className="px-4 pt-20 sm:pt-28 pb-4 bg-[#f1f1f1]">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl sm:text-5xl text-navy-800 leading-tight">
+            <span className="font-light">{isHe ? 'מבחוץ אתר. ' : 'Outside, a website. '}</span>
+            <span className="font-bold text-burgundy-500">{isHe ? 'מבפנים מערכת.' : 'Inside, a system.'}</span>
+          </h2>
+          <p className="text-navy-500 text-base sm:text-lg mt-3 max-w-xl mx-auto">
+            {isHe
+              ? 'כל מועמד, כל הצעה וכל שלב בדרך לשידוך, מסודרים בלוח אחד עבור השדכנים.'
+              : 'Every candidate, proposal and step on the way to a match, organized in one dashboard for matchmakers.'}
+          </p>
+        </div>
+        <DashboardMockup locale={locale} />
+      </section>
 
       {/* ══ 2. Candidates (light) ══════════════════════════════════════════════ */}
       <section className="px-4 py-20 sm:py-28 bg-[#f1f1f1]">
@@ -243,53 +264,6 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
             >
               {isHe ? 'לכל המקומות' : 'View All Spots'} <span aria-hidden>{arrow}</span>
             </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ══ 5. Donations (brand accent band) ═══════════════════════════════════ */}
-      <section id="donations" className="bg-burgundy-500 text-white px-4 py-20 sm:py-28 rounded-t-[40px]">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-5xl leading-tight mb-3">
-              <span className="font-light">{isHe ? 'תמוך בארגון ' : 'Support '}</span>
-              <span className="font-bold">{isHe ? 'בונים עולמות' : 'Bonim Olamot'}</span>
-            </h2>
-            <p className="text-burgundy-100 text-base sm:text-lg max-w-lg mx-auto">
-              {isHe
-                ? 'תרומתך עוזרת לנו לבנות עולמות, לשמח חתנים וכלות, ולתמוך בזוגות בדרכם'
-                : 'Your donation helps us build worlds, bring joy to couples, and support families'}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            <div className="flex flex-col gap-3">
-              {[
-                { icon: '💍', label: isHe ? 'סיוע לחתן וכלה' : 'Support for Chatan & Kallah' },
-                { icon: '🕍', label: isHe ? 'פעילות הקהילה' : 'Community Activities' },
-                { icon: '📚', label: isHe ? 'הכשרת שדכנים' : 'Matchmaker Training' },
-                { icon: '🤝', label: isHe ? 'ייעוץ זוגי' : 'Couples Counseling' },
-              ].map(({ icon, label }) => (
-                <div key={label} className="flex items-center gap-4 bg-white/10 ring-1 ring-white/15 rounded-full ps-3 pe-6 py-3">
-                  <span className="w-11 h-11 rounded-full bg-white/15 flex items-center justify-center text-xl">{icon}</span>
-                  <span className="text-base font-medium">{label}</span>
-                </div>
-              ))}
-
-              <Link
-                href={`/${locale}/donations`}
-                className={`${pill} mt-3 h-14 border border-white/40 text-white hover:bg-white/10`}
-              >
-                {isHe ? 'לדף התרומות המלא' : 'Full donation page'} <span aria-hidden>{arrow}</span>
-              </Link>
-            </div>
-
-            <div className="bg-white text-navy-800 rounded-[28px] shadow-[0_30px_60px_rgba(0,0,0,0.25)] px-6 py-8">
-              <h3 className="text-lg font-bold text-center text-navy-700 mb-5">
-                {isHe ? '⚡ תרומה מהירה' : '⚡ Quick Donate'}
-              </h3>
-              <DonationsForm locale={locale} compact />
-            </div>
           </div>
         </div>
       </section>

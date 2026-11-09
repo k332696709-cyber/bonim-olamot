@@ -27,7 +27,7 @@ export function Header({ locale }: HeaderProps) {
     // dark hero can slide up behind it on the home page.
     <header className="sticky top-3 z-30 px-3 sm:px-6 pointer-events-none">
       <div
-        className="pointer-events-auto max-w-6xl mx-auto h-16 ps-5 pe-3 flex items-center justify-between gap-3
+        className="pointer-events-auto max-w-6xl mx-auto h-16 ps-3 pe-2 sm:ps-5 sm:pe-3 flex items-center justify-between gap-1.5 sm:gap-3
           rounded-full bg-white/95 backdrop-blur-md shadow-[0_12px_40px_rgba(0,21,41,0.18)] ring-1 ring-navy-900/5"
       >
 
@@ -53,7 +53,7 @@ export function Header({ locale }: HeaderProps) {
         </nav>
 
         {/* Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <NotificationBell locale={locale} />
           <LanguageSwitcher locale={locale} />
 

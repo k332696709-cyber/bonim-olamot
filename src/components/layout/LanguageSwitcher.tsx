@@ -24,7 +24,7 @@ export function LanguageSwitcher({ locale }: LanguageSwitcherProps) {
         href={hePath}
         aria-current={isHe ? 'true' : undefined}
         className={cn(
-          'px-3.5 py-1.5 transition-colors duration-150 select-none',
+          'px-2.5 sm:px-3.5 py-1.5 transition-colors duration-150 select-none',
           isHe
             ? 'bg-navy-600 text-white'
             : 'text-navy-500 hover:bg-navy-50',
@@ -37,7 +37,7 @@ export function LanguageSwitcher({ locale }: LanguageSwitcherProps) {
         href={enPath}
         aria-current={!isHe ? 'true' : undefined}
         className={cn(
-          'px-3.5 py-1.5 transition-colors duration-150 select-none',
+          'px-2.5 sm:px-3.5 py-1.5 transition-colors duration-150 select-none',
           !isHe
             ? 'bg-navy-600 text-white'
             : 'text-navy-500 hover:bg-navy-50',

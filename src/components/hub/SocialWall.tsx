@@ -43,7 +43,7 @@ function PostCard({ post, locale }: { post: SocialPost; locale: string }) {
                   key={p.id}
                   className={`text-xs px-2 py-0.5 rounded-full font-medium border ${
                     p.gender === 'female'
-                      ? 'bg-pink-50 border-pink-200 text-pink-700'
+                      ? 'bg-red-50 border-red-200 text-red-700'
                       : 'bg-blue-50 border-blue-200 text-blue-700'
                   }`}
                 >
@@ -161,7 +161,7 @@ export function SocialWall({ posts, currentUserName, currentUserEmail, currentMa
                 key={p.id}
                 className={`text-xs px-2 py-0.5 rounded-full font-medium border flex items-center gap-1 ${
                   p.gender === 'female'
-                    ? 'bg-pink-50 border-pink-200 text-pink-700'
+                    ? 'bg-red-50 border-red-200 text-red-700'
                     : 'bg-blue-50 border-blue-200 text-blue-700'
                 }`}
               >
@@ -241,14 +241,14 @@ export function SocialWall({ posts, currentUserName, currentUserEmail, currentMa
                       >
                         {/* Gender dot */}
                         <span className={`w-2 h-2 rounded-full shrink-0
-                          ${p.gender === 'female' ? 'bg-pink-400' : 'bg-blue-400'}`}
+                          ${p.gender === 'female' ? 'bg-red-400' : 'bg-blue-400'}`}
                         />
                         {/* Name */}
                         <span className="font-medium text-gray-800 flex-1">{p.name}</span>
                         {/* Gender label badge */}
                         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0
                           ${p.gender === 'female'
-                            ? 'bg-pink-50 text-pink-600 border border-pink-200'
+                            ? 'bg-red-50 text-red-600 border border-red-200'
                             : 'bg-blue-50 text-blue-600 border border-blue-200'
                           }`}
                         >

@@ -89,7 +89,7 @@ function MatchCard({
       <div className="flex items-start justify-between gap-2 mb-3" dir={isHe ? 'rtl' : 'ltr'}>
         <div>
           <div className="flex items-center gap-1.5 text-sm font-semibold text-navy-700 flex-wrap">
-            <span className="text-pink-500 text-xs">♀</span>
+            <span className="text-red-500 text-xs">♀</span>
             <span>{match.femaleName}</span>
             <span className="text-gray-300">×</span>
             <span className="text-blue-500 text-xs">♂</span>

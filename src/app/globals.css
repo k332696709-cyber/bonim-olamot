@@ -36,10 +36,10 @@
 
   /* Glowing pill buttons */
   .glow-burgundy {
-    box-shadow: 0 6px 28px rgba(203, 51, 83, 0.45);
+    box-shadow: 0 6px 28px rgba(220, 38, 38, 0.45);
   }
   .glow-burgundy:hover {
-    box-shadow: 0 8px 36px rgba(203, 51, 83, 0.65);
+    box-shadow: 0 8px 36px rgba(220, 38, 38, 0.65);
   }
 }
 
@@ -48,7 +48,7 @@
     background-color: #001529;
     background-image:
       radial-gradient(ellipse at 15% 0%, rgba(51, 108, 175, 0.35), transparent 55%),
-      radial-gradient(ellipse at 90% 100%, rgba(203, 51, 83, 0.28), transparent 55%),
+      radial-gradient(ellipse at 90% 100%, rgba(220, 38, 38, 0.28), transparent 55%),
       linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
     background-size: auto, auto, 56px 56px, 56px 56px;
@@ -57,7 +57,7 @@
   .hero-burgundy {
     background-color: #4d0013;
     background-image:
-      radial-gradient(ellipse at 85% 0%, rgba(203, 51, 83, 0.45), transparent 55%),
+      radial-gradient(ellipse at 85% 0%, rgba(220, 38, 38, 0.45), transparent 55%),
       linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
     background-size: auto, 56px 56px, 56px 56px;
