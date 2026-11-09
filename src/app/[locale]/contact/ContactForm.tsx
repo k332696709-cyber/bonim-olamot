@@ -9,7 +9,8 @@ interface Props {
 export function ContactForm({ locale }: Props) {
   const isHe = locale === 'he'
 
-  const [form, setForm] = useState({ name: '', phone: '', subject: '', message: '' })
+  const [form, setForm] = useState({ name: '', phone: '', subject: '', message: '', website: '' })
+  const [errorMsg, setErrorMsg] = useState('')
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
   const labels = {
@@ -30,10 +31,24 @@ export function ContactForm({ locale }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setStatus('sending')
-    // Simulate async send — replace with real API call
-    await new Promise((r) => setTimeout(r, 900))
-    setStatus('sent')
-    setForm({ name: '', phone: '', subject: '', message: '' })
+    setErrorMsg('')
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setErrorMsg(data?.message ?? '')
+        setStatus('error')
+        return
+      }
+      setStatus('sent')
+      setForm({ name: '', phone: '', subject: '', message: '', website: '' })
+    } catch {
+      setStatus('error')
+    }
   }
 
   if (status === 'sent') {
@@ -47,6 +62,12 @@ export function ContactForm({ locale }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {/* Honeypot: hidden from people, filled by bots */}
+      <input
+        type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true"
+        className="hidden" value={form.website}
+        onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))}
+      />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -105,7 +126,10 @@ export function ContactForm({ locale }: Props) {
       </div>
 
       {status === 'error' && (
-        <p className="text-sm text-red-600 text-center">{labels.error}</p>
+        <p className="text-sm text-red-600 text-center" role="alert">
+          {errorMsg || labels.error}{' '}
+          {isHe ? 'אפשר גם לפנות בוואטסאפ או בטלפון: 053-379-0008' : 'You can also reach us on WhatsApp or by phone: 053-379-0008'}
+        </p>
       )}
 
       <button
