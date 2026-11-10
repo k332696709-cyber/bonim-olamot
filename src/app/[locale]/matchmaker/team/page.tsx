@@ -83,6 +83,26 @@ export default function TeamPage({ params: { locale } }: { params: { locale: str
     if (s?.role === 'admin') load()
   }, [load])
 
+  const removeMember = async (m: Member) => {
+    const ask = he
+      ? `למחוק את ${m.first_name} ${m.last_name} (${m.email}) מהצוות? הגישה שלו/ה למערכת תוסר, וההתחברות תימחק. אי אפשר לשחזר.`
+      : `Remove ${m.first_name} ${m.last_name} (${m.email}) from the team? Their access is removed and their login deleted. This cannot be undone.`
+    if (!window.confirm(ask)) return
+    setError('')
+    const { data: sess } = await createClient().auth.getSession()
+    const res = await fetch('/api/admin/matchmaker', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sess.session?.access_token ?? ''}` },
+      body: JSON.stringify({ matchmakerId: m.id }),
+    })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setError(json?.message ?? (he ? 'המחיקה נכשלה.' : 'Delete failed.'))
+      return
+    }
+    setMembers((list) => list.filter((x) => x.id !== m.id))
+  }
+
   const setAdmin = async (m: Member, value: boolean) => {
     const verb = value ? (he ? 'להפוך למנהל' : 'make an admin') : he ? 'להסיר הרשאת מנהל מ' : 'remove admin rights from'
     if (!window.confirm(`${verb} ${m.first_name} ${m.last_name} (${m.email})?`)) return
@@ -208,10 +228,18 @@ export default function TeamPage({ params: { locale } }: { params: { locale: str
               {self ? (
                 <span className="text-xs text-navy-400">{he ? 'זה אתה' : 'You'}</span>
               ) : (
-                <button onClick={() => setAdmin(m, !m.is_admin)}
-                  className="h-10 px-5 rounded-full border border-navy-200 text-sm text-navy-700 hover:bg-navy-50">
-                  {m.is_admin ? (he ? 'הסר הרשאת מנהל' : 'Remove admin') : he ? 'הפוך למנהל' : 'Make admin'}
-                </button>
+<>
+                  <button onClick={() => setAdmin(m, !m.is_admin)}
+                    className="h-10 px-5 rounded-full border border-navy-200 text-sm text-navy-700 hover:bg-navy-50">
+                    {m.is_admin ? (he ? 'הסר הרשאת מנהל' : 'Remove admin') : he ? 'הפוך למנהל' : 'Make admin'}
+                  </button>
+                  {!m.is_admin && (
+                    <button onClick={() => removeMember(m)}
+                      className="h-10 px-5 rounded-full text-sm text-burgundy-500 hover:bg-burgundy-50">
+                      {he ? 'מחיקה' : 'Remove'}
+                    </button>
+                  )}
+                </>
               )}
             </article>
           )

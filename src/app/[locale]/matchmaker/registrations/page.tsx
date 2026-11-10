@@ -5,12 +5,14 @@ import Link from 'next/link'
 import { getSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
 import { FEMALE_FORM, MALE_FORM, allFields, type RegistrationForm } from '@/constants/registrationForms'
+import { registrationToProfileRow } from '@/lib/registration/toProfile'
 
 interface Row {
   id: string
   created_at: string
   answers: Record<string, string>
   photo_path: string
+  profile_id: string | null
 }
 
 type Gender = 'male' | 'female'
@@ -27,6 +29,8 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
   const [error, setError] = useState('')
   const [open, setOpen] = useState<string | null>(null)
   const [photos, setPhotos] = useState<Record<string, string>>({})
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [notice, setNotice] = useState('')
 
   const load = useCallback(async (g: Gender) => {
     setLoading(true)
@@ -58,6 +62,62 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
       const { data } = await createClient().storage.from('registration-photos').createSignedUrl(r.photo_path, 3600)
       if (data?.signedUrl) setPhotos((p) => ({ ...p, [r.id]: data.signedUrl }))
     }
+  }
+
+  const addToProfiles = async (r: Row) => {
+    if (r.profile_id) return
+    const name = `${r.answers.fullName ?? ''} ${r.answers.lastName ?? ''}`.trim()
+    const ask = he
+      ? `להוסיף את ${name} לפרופילים של השדכנים? הם יראו את הפרטים והטלפון.`
+      : `Add ${name} to the matchmakers' profiles? They will see the details and phone.`
+    if (!window.confirm(ask)) return
+    setBusyId(r.id)
+    setError('')
+    setNotice('')
+    const db = createClient() as any
+    const row = { ...registrationToProfileRow(gender, r.answers, r.photo_path), matchmaker_status: 'bright_red' }
+    const { data, error: insErr } = await db.from('profiles').insert(row).select('id').single()
+    if (insErr || !data) {
+      setError((he ? 'ההוספה נכשלה: ' : 'Adding failed: ') + (insErr?.message ?? ''))
+      setBusyId(null)
+      return
+    }
+    const { error: updErr } = await db.from(`${gender}_registrations`).update({ profile_id: data.id }).eq('id', r.id)
+    if (updErr) setError(he ? 'הפרופיל נוצר, אבל לא הצלחנו לסמן את ההרשמה.' : 'Profile created, but the registration could not be marked.')
+    else setNotice(he ? 'נוסף לפרופילים של השדכנים.' : 'Added to the matchmakers’ profiles.')
+    setRows((list) => list.map((x) => (x.id === r.id ? { ...x, profile_id: data.id } : x)))
+    setBusyId(null)
+  }
+
+  const removeRegistration = async (r: Row) => {
+    const name = `${r.answers.fullName ?? ''} ${r.answers.lastName ?? ''}`.trim()
+    const extra = r.profile_id ? (he ? ' גם הפרופיל שנוצר ממנה יימחק.' : ' The profile created from it is deleted too.') : ''
+    const ask = (he ? `למחוק את ההרשמה של ${name} לצמיתות, כולל התמונה?` : `Permanently delete ${name}'s registration, including the photo?`)
+      + extra + (he ? ' אי אפשר לשחזר.' : ' This cannot be undone.')
+    if (!window.confirm(ask)) return
+    setBusyId(r.id)
+    setError('')
+    setNotice('')
+    const db = createClient() as any
+    if (r.profile_id) {
+      const { error: pErr } = await db.from('profiles').delete().eq('id', r.profile_id)
+      if (pErr) {
+        setError(he ? 'מחיקת הפרופיל נכשלה.' : 'Deleting the profile failed.')
+        setBusyId(null)
+        return
+      }
+    }
+    const { error: dErr } = await db.from(`${gender}_registrations`).delete().eq('id', r.id)
+    if (dErr) {
+      setError(he ? 'המחיקה נכשלה.' : 'Delete failed.')
+      setBusyId(null)
+      return
+    }
+    await createClient().storage.from('registration-photos').remove([r.photo_path])
+    setRows((list) => list.filter((x) => x.id !== r.id))
+    setOpen(null)
+    setBusyId(null)
+    setNotice(he ? 'ההרשמה נמחקה.' : 'Registration deleted.')
   }
 
   if (isAdmin === null) return <div className="min-h-[50vh]" />
@@ -106,6 +166,7 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
 
       <main className="max-w-4xl mx-auto px-6 py-8 flex flex-col gap-3">
         {loading && <p className="text-center text-gray-400 py-10">{he ? 'טוען...' : 'Loading…'}</p>}
+        {notice && <p className="rounded-2xl bg-white shadow-card text-navy-700 text-sm px-5 py-3" role="status">{notice}</p>}
         {error && <p className="rounded-2xl bg-burgundy-50 border border-burgundy-200 text-burgundy-600 text-sm px-5 py-4" role="alert">{error}</p>}
         {!loading && !error && rows.length === 0 && <p className="text-center text-gray-400 py-16">{he ? 'עדיין אין הרשמות' : 'No registrations yet'}</p>}
 
@@ -113,7 +174,12 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
           <article key={r.id} className="rounded-[24px] bg-white shadow-card overflow-hidden">
             <button onClick={() => toggle(r)} className="w-full text-start px-6 py-4 flex items-center gap-3">
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-navy-800 truncate">{r.answers.fullName} {r.answers.lastName}</p>
+                <p className="font-bold text-navy-800 truncate">
+                  {r.answers.fullName} {r.answers.lastName}
+                  {r.profile_id && (
+                    <span className="ms-2 text-[10px] bg-navy-800 text-white px-2 py-0.5 rounded-full align-middle">{he ? 'בפרופילים' : 'In profiles'}</span>
+                  )}
+                </p>
                 <p className="text-xs text-navy-400 truncate">{r.answers.age} · {r.answers.city} · {r.answers.community} · {r.answers.phone}</p>
               </div>
               <span className="text-xs text-navy-400 shrink-0">{fmt(r.created_at)}</span>
@@ -124,6 +190,29 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
                 <div className="flex gap-2 flex-wrap">
                   <a href={`tel:${(r.answers.phone ?? '').replace(/[^+\d]/g, '')}`} className="h-10 px-5 rounded-full bg-navy-800 text-white text-sm font-semibold inline-flex items-center hover:bg-navy-700">{he ? 'התקשרות' : 'Call'}</a>
                   <a href={`mailto:${r.answers.email}`} className="h-10 px-5 rounded-full border border-navy-200 text-sm text-navy-700 inline-flex items-center hover:bg-navy-50">{he ? 'מייל' : 'Email'}</a>
+                  {r.profile_id ? (
+                    <Link
+                      href={`/${locale}/matchmaker/profiles/${r.profile_id}`}
+                      className="h-10 px-5 rounded-full bg-navy-50 text-navy-800 text-sm font-semibold inline-flex items-center hover:bg-navy-100"
+                    >
+                      ✓ {he ? 'נוסף לפרופילים · לפתיחה' : 'In profiles · open'}
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => addToProfiles(r)}
+                      disabled={busyId === r.id}
+                      className="h-10 px-5 rounded-full bg-burgundy-500 hover:bg-burgundy-600 disabled:opacity-60 text-white text-sm font-semibold"
+                    >
+                      {he ? 'הוסף לפרופילים' : 'Add to profiles'}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => removeRegistration(r)}
+                    disabled={busyId === r.id}
+                    className="h-10 px-5 rounded-full text-sm text-burgundy-500 hover:bg-burgundy-50 ms-auto disabled:opacity-60"
+                  >
+                    {he ? 'מחיקה' : 'Delete'}
+                  </button>
                 </div>
                 {photos[r.id] && (
                   // Signed URL from private storage; next/image would need the host allow-listed.
