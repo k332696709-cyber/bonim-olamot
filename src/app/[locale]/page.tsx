@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { BotChat } from '@/components/home/BotChat'
 import { DashboardMockup } from '@/components/home/DashboardMockup'
+import { SmartAssistantMockup } from '@/components/home/SmartAssistantMockup'
+import { Reveal } from '@/components/home/Reveal'
 import { getT } from '@/lib/i18n/translations'
 import { DATE_SPOTS_MOCK } from '@/constants/dateSpotsMockData'
 import { CATEGORY_LABELS } from '@/types/dateSpots'
@@ -109,6 +111,44 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
         <DashboardMockup locale={locale} />
       </section>
 
+      {/* ══ Smart assistant (dark) ═════════════════════════════════════════════ */}
+      <section className="relative overflow-hidden bg-navy-800 text-[#f1f1f1] px-4 py-20 sm:py-28 mt-16 sm:mt-24 rounded-[40px] mx-2 sm:mx-4">
+        <div className="absolute inset-0 bg-grid-dark" aria-hidden="true" />
+        <div className="absolute -top-24 end-[-6rem] w-[26rem] h-[26rem] rounded-full bg-navy-400/30 blur-3xl animate-float" aria-hidden="true" />
+        <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
+          <Reveal className="text-center lg:text-start">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/15 px-4 py-2 text-sm text-burgundy-100 mb-6">
+              <span className="w-2 h-2 rounded-full bg-burgundy-300" />
+              {isHe ? 'חדש · העוזר החכם' : 'New · Smart assistant'}
+            </span>
+            <h2 className="text-3xl sm:text-5xl leading-tight mb-5">
+              <span className="font-light">{isHe ? 'ספרו מה אתם מחפשים. ' : 'Tell us what you look for. '}</span>
+              <span className="font-bold text-burgundy-300">{isHe ? 'העוזר החכם ימצא.' : 'The assistant finds.'}</span>
+            </h2>
+            <p className="text-navy-100 text-base sm:text-lg max-w-lg mx-auto lg:mx-0 mb-8">
+              {isHe
+                ? 'אחרי ההרשמה, העוזר החכם מציע לכם הצעות שמתאימות לבקשות שלכם: מיועדים רואים מיועדות, ומיועדות רואות מיועדים. הפרטים אנונימיים עד שהשדכנים מחברים.'
+                : 'After registering, the smart assistant suggests matches for what you describe: men see women and women see men. Details stay anonymous until a matchmaker connects you.'}
+            </p>
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
+              <Link
+                href={`/${locale}/smart-match`}
+                className={`${pill} h-14 px-8 text-lg bg-burgundy-400 text-white hover:bg-burgundy-300 glow-burgundy`}
+              >
+                {isHe ? 'לעוזר החכם' : 'Open the assistant'} <span aria-hidden>{arrow}</span>
+              </Link>
+              <Link
+                href={`/${locale}/register/male`}
+                className={`${pill} h-14 px-7 text-base font-medium border border-white/30 text-white hover:bg-white/10`}
+              >
+                {isHe ? 'עוד לא נרשמתם? להרשמה' : 'Not registered yet? Sign up'}
+              </Link>
+            </div>
+          </Reveal>
+          <SmartAssistantMockup locale={locale} />
+        </div>
+      </section>
+
       {/* ══ 2. Candidates (light) ══════════════════════════════════════════════ */}
       <section className="px-4 py-20 sm:py-28 bg-[#f1f1f1]">
         <div className="max-w-5xl mx-auto">
@@ -122,7 +162,7 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          <Reveal delay={150} className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {/* Male */}
             <Link
               href={`/${locale}/register/male`}
@@ -162,14 +202,14 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
                 {T.home.femaleCta} <span aria-hidden>{arrow}</span>
               </span>
             </Link>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ══ 3. Matchmaker Corner (dark) ════════════════════════════════════════ */}
       <section className="relative overflow-hidden bg-navy-800 text-[#f1f1f1] px-4 py-20 sm:py-28">
         <div className="absolute inset-0 bg-grid-dark opacity-70" aria-hidden="true" />
-        <div className="relative max-w-3xl mx-auto text-center">
+        <Reveal className="relative max-w-3xl mx-auto text-center">
           <h2 className="text-3xl sm:text-5xl leading-tight mb-4">
             <span className="font-light">{isHe ? 'קורנר ' : 'Matchmaker '}</span>
             <span className="font-bold text-burgundy-300">{isHe ? 'השדכנים' : 'Corner'}</span>
@@ -194,7 +234,7 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
               {isHe ? 'כניסת שדכנים' : 'Matchmaker Login'}
             </Link>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* ══ 4. Dating Spots (light) ════════════════════════════════════════════ */}
@@ -212,7 +252,7 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
+          <Reveal className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
             {previewSpots.map((spot) => {
               const cat = CATEGORY_LABELS[spot.category]
               return (
@@ -255,7 +295,7 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
                 </div>
               )
             })}
-          </div>
+          </Reveal>
 
           <div className="text-center">
             <Link
