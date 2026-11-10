@@ -43,7 +43,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
 
       if (dbError || !matchmaker) {
         await supabase.auth.signOut()
-        setError(isHe ? 'משתמש זה אינו רשום כשדכן.' : 'This user is not registered as a matchmaker.')
+        setError(isHe ? 'החשבון עדיין לא אושר. אם נרשמת כשדכן, הבקשה ממתינה לאישור מנהל המערכת.' : 'This account is not approved yet. If you applied as a matchmaker, your request is waiting for the administrator.')
         return
       }
 
