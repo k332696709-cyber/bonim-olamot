@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { SmartNavLink } from './SmartNavLink'
+import { AuthButton } from './AuthButton'
 
 interface MobileNavProps {
   locale: string
@@ -101,16 +102,15 @@ export function MobileNav({ locale }: MobileNavProps) {
           />
         </nav>
 
-        {/* Matchmaker login CTA */}
+        {/* Sign in / "My area" */}
         <div className="p-4 shrink-0">
-          <Link
-            href={`/${locale}/login`}
+          <AuthButton
+            locale={locale}
             onClick={close}
+            fallbackLabel={isHe ? 'כניסה' : 'Sign in'}
             className="flex h-14 items-center justify-center rounded-full bg-burgundy-400 text-white
               text-lg font-bold glow-burgundy"
-          >
-            {isHe ? 'כניסת שדכנים' : 'Matchmaker Login'}
-          </Link>
+          />
         </div>
       </div>
     </>

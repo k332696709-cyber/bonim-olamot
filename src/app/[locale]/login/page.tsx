@@ -1,15 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Logo } from '@/components/layout/Logo'
-import { setSession } from '@/lib/auth/session'
+import { restoreSession, setSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
+import { loadCandidate } from '@/lib/auth/candidate'
 
 export default function LoginPage({ params: { locale } }: { params: { locale: string } }) {
   const router = useRouter()
   const isHe = locale === 'he'
+
+  // Already signed in (saved sign-in): go straight to the area, no password again.
+  useEffect(() => {
+    restoreSession().then(async (s) => {
+      if (s) return router.replace(`/${locale}/matchmaker`)
+      const c = await loadCandidate()
+      if (c.status === 'pending' || c.status === 'approved') router.replace(`/${locale}/personal`)
+    })
+  }, [locale, router])
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -34,27 +44,37 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
         return
       }
 
-      // Fetch matchmaker profile
-      const { data: matchmaker, error: dbError } = await supabase
+      // Matchmaker / admin?
+      const { data: matchmaker } = await supabase
         .from('matchmakers')
         .select('id, first_name, last_name, email, is_admin')
-        .eq('email', authData.user.email!)
-        .single()
+        .eq('user_id', authData.user.id)
+        .maybeSingle()
 
-      if (dbError || !matchmaker) {
-        await supabase.auth.signOut()
-        setError(isHe ? 'החשבון עדיין לא אושר. אם נרשמת כשדכן, הבקשה ממתינה לאישור מנהל המערכת.' : 'This account is not approved yet. If you applied as a matchmaker, your request is waiting for the administrator.')
+      if (matchmaker) {
+        setSession({
+          name: `${matchmaker.first_name} ${matchmaker.last_name}`,
+          email: matchmaker.email,
+          role: matchmaker.is_admin ? 'admin' : 'matchmaker',
+          matchmakerId: (matchmaker as any).id,
+        })
+        router.push(`/${locale}/matchmaker`)
         return
       }
 
-      setSession({
-        name: `${matchmaker.first_name} ${matchmaker.last_name}`,
-        email: matchmaker.email,
-        role: matchmaker.is_admin ? 'admin' : 'matchmaker',
-        matchmakerId: (matchmaker as any).id,
-      })
+      // Candidate (registered man / woman)?
+      const candidate = await loadCandidate()
+      if (candidate.status === 'pending' || candidate.status === 'approved') {
+        router.push(`/${locale}/personal`)
+        return
+      }
 
-      router.push(`/${locale}/matchmaker`)
+      await supabase.auth.signOut()
+      setError(isHe
+        ? 'החשבון עדיין לא אושר. אם נרשמת כשדכן/ית, הבקשה ממתינה לאישור מנהל המערכת.'
+        : 'This account is not approved yet. If you applied as a matchmaker, your request is waiting for the administrator.')
+      return
+
     } finally {
       setLoading(false)
     }
@@ -74,10 +94,10 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
         {/* Card */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-luxury px-8 py-10">
           <h1 className="text-2xl font-bold font-serif text-navy-700 text-center mb-1">
-            {isHe ? 'כניסה למערכת שדכנים' : 'Matchmaker Login'}
+            {isHe ? 'כניסה' : 'Sign in'}
           </h1>
           <p className="text-sm text-gray-400 text-center mb-8">
-            {isHe ? 'גישה לממשק הניהול – בונים עולמות' : 'Access the management dashboard'}
+            {isHe ? 'מועמדים, שדכנים ומנהל: היכנסו עם המייל והסיסמה שלכם' : 'Candidates, matchmakers and admins: sign in with your email and password'}
           </p>
 
           <form onSubmit={handleLogin} className="flex flex-col gap-4" dir={isHe ? 'rtl' : 'ltr'}>

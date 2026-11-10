@@ -9,6 +9,7 @@ export const PROFILE_SELECT =
 export function mapProfileRow(row: any): FemaleProfile | MaleProfile {
   return {
     id: row.id,
+    gender: row.gender,
     firstName: row.first_name,
     lastName: row.last_name,
     age: row.age,

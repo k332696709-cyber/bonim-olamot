@@ -4,6 +4,7 @@ import { LanguageSwitcher } from './LanguageSwitcher'
 import { MobileNav } from './MobileNav'
 import { cn } from '@/lib/utils'
 import { SmartNavLink } from './SmartNavLink'
+import { AuthButton } from './AuthButton'
 import { getT } from '@/lib/i18n/translations'
 import { NotificationBell } from './NotificationBell'
 
@@ -62,14 +63,13 @@ export function Header({ locale }: HeaderProps) {
           <NotificationBell locale={locale} />
           <LanguageSwitcher locale={locale} />
 
-          {/* Matchmaker login — desktop only */}
-          <Link
-            href={`/${locale}/login`}
+          {/* Sign in / "My area" — desktop only */}
+          <AuthButton
+            locale={locale}
+            fallbackLabel={isHe ? 'כניסה' : 'Sign in'}
             className="hidden md:flex h-11 items-center whitespace-nowrap px-5 lg:px-6 rounded-full bg-burgundy-500 text-white
               text-sm font-bold hover:bg-burgundy-600 transition-colors duration-150"
-          >
-            {T.nav.login}
-          </Link>
+          />
 
           {/* Hamburger — mobile only */}
           <MobileNav locale={locale} />

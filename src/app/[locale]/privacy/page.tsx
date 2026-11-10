@@ -18,7 +18,7 @@ const HE: Section[] = [
   {
     title: '2. איזה מידע אנחנו אוספים',
     body: [
-      'מועמדים (מיועדים ומיועדות): שם, כינוי, גיל, תאריך לידה, מצב משפחתי ומספר ילדים, עדה והשתייכות, עיר מגורים, עיסוק, לימודים, סוג טלפון, מספר טלפון, אימייל ותמונת שידוכים.',
+      'מועמדים (מיועדים ומיועדות): כתובת מייל וסיסמה לכניסה (הסיסמה נשמרת מוצפנת אצל ספק ההתחברות ואיננה גלויה לאיש), שם, כינוי, גיל, תאריך לידה, מצב משפחתי ומספר ילדים, עדה והשתייכות, עיר מגורים, עיסוק, לימודים, סוג טלפון, מספר טלפון, אימייל ותמונת שידוכים.',
       'העדפות ואופי: סגנון חיים ולבוש, גישה לטכנולוגיה, מה אתם מחפשים, מאפיינים, מה אתם מביאים לנישואים ומה לא מתאים לכם.',
       'מידע רגיש: מצב רפואי או נפשי (אם מסרתם), מצב ההורים, והערות חופשיות שכתבתם על עצמכם. מידע זה נמסר מרצונכם ובהסכמתכם המפורשת, ורק לצורך השידוך.',
       'מידע על אחרים: שמות ומספרי טלפון של אנשים למסירת הפניות ובירורים. בעת הרשמה אתם מצהירים שיש לכם הסכמה שלהם למסור את הפרטים.',
@@ -64,7 +64,7 @@ const HE: Section[] = [
   {
     title: '8. אחסון בדפדפן',
     body: [
-      'האתר שומר בדפדפן שלכם מידע טכני הנדרש לפעולתו (למשל כניסה של שדכנים, וסימון שנרשמתם כדי לפתוח את העוזר החכם). איננו משתמשים בעוגיות פרסום.',
+      'האתר שומר בדפדפן שלכם מידע טכני הנדרש לפעולתו, בעיקר את הכניסה שלכם (מועמדים, שדכנים ומנהל) כדי שלא תצטרכו להקליד סיסמה בכל ביקור. איננו משתמשים בעוגיות פרסום.',
     ],
   },
   {
@@ -84,7 +84,7 @@ const EN: Section[] = [
   {
     title: '2. What we collect',
     body: [
-      'Candidates: name, nickname, age, date of birth, marital status and number of children, community, city, occupation, education, phone type, phone number, email and a matchmaking photo.',
+      'Candidates: email and a sign-in password (stored hashed by the authentication provider and not visible to anyone), name, nickname, age, date of birth, marital status and number of children, community, city, occupation, education, phone type, phone number, email and a matchmaking photo.',
       'Preferences and character: lifestyle and dress style, technology approach, what you are looking for, your traits, what you bring to marriage and what does not suit you.',
       'Sensitive information: medical or psychological condition (if you provide it), your parents’ status, and free-text notes about yourself. You provide this voluntarily and with your explicit consent, only for matchmaking.',
       'Information about others: names and phone numbers of people to contact for references. By registering you confirm you have their consent to share them.',
@@ -123,7 +123,7 @@ const EN: Section[] = [
   },
   {
     title: '8. Browser storage',
-    body: ['The site stores technical information in your browser that it needs to work (for example matchmaker sign-in, and a marker that you registered so the smart assistant can open). We do not use advertising cookies.'],
+    body: ['The site stores technical information in your browser that it needs to work, mainly your sign-in (candidates, matchmakers and admin) so you do not have to type your password on every visit. We do not use advertising cookies.'],
   },
   {
     title: '9. Changes',

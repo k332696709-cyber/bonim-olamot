@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { MOCK_FEMALE_PROFILES, MOCK_MALE_PROFILES } from '@/constants/mockProfiles'
-import { getRegistration, REGISTERED_EVENT, type StoredRegistration } from '@/lib/auth/registration'
+import { loadCandidate, type CandidateState } from '@/lib/auth/candidate'
 import {
   MALE_STYLE_OPTIONS, FEMALE_STYLE_OPTIONS, TRAIT_OPTIONS_MALE, TRAIT_OPTIONS_FEMALE,
 } from '@/constants/formOptions'
@@ -23,53 +23,66 @@ const label = (opts: { value: string; he: string; en: string }[], v: string, he:
 }
 
 /**
- * The Smart Assistant is only for registered candidates. Until someone has
- * registered (men via the men's form, women via the women's form) this shows a
- * registration prompt instead. Men are shown women's proposals and vice versa.
+ * The Smart Assistant is only for approved candidates. A signed-in candidate whose registration
+ * the administrator approved sees proposals; men are shown women's proposals and vice versa.
  */
 export function SmartMatchClient({ locale }: { locale: string }) {
   const he = locale === 'he'
-  const [reg, setReg] = useState<StoredRegistration | null>(null)
-  const [loaded, setLoaded] = useState(false)
+  const [cand, setCand] = useState<CandidateState | null>(null)
 
   useEffect(() => {
-    const update = () => { setReg(getRegistration()); setLoaded(true) }
-    update()
-    window.addEventListener(REGISTERED_EVENT, update)
-    return () => window.removeEventListener(REGISTERED_EVENT, update)
+    let alive = true
+    loadCandidate().then((c) => { if (alive) setCand(c) })
+    return () => { alive = false }
   }, [])
 
-  if (!loaded) return <div className="min-h-[300px]" aria-busy="true" />
+  if (!cand) return <div className="min-h-[300px]" aria-busy="true" />
 
-  if (!reg) {
+  if (cand.status !== 'approved' || !cand.profile) {
+    const pending = cand.status === 'pending'
     return (
       <div className="max-w-xl mx-auto px-4 pb-24">
         <div className="rounded-[32px] bg-white shadow-card px-6 py-12 sm:px-10 text-center">
-          <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-2xl mb-5">🔒</div>
+          <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-2xl mb-5">{pending ? '⏳' : '🔒'}</div>
           <h2 className="text-2xl font-bold text-navy-800 mb-2">
-            {he ? 'העוזר החכם נפתח אחרי ההרשמה' : 'The Smart Assistant opens after registration'}
+            {pending
+              ? (he ? 'ההרשמה שלך ממתינה לאישור' : 'Your registration is waiting for approval')
+              : (he ? 'העוזר החכם נפתח אחרי הרשמה ואישור' : 'The Smart Assistant opens after registration and approval')}
           </h2>
           <p className="text-navy-500 mb-8">
-            {he
-              ? 'אחרי שתמלאו את שאלון ההכרות תוכלו לראות הצעות התאמה מדורגות ולדייק אותן עם העוזר.'
-              : 'Once you complete the registration questionnaire you can see ranked match suggestions and refine them with the assistant.'}
+            {pending
+              ? (he ? 'אחרי שהמנהל יאשר את ההרשמה תוכלו לראות הצעות התאמה מדורגות ולדייק אותן עם העוזר.' : 'Once the administrator approves it you can see ranked match suggestions and refine them with the assistant.')
+              : (he ? 'אחרי שתמלאו את שאלון ההכרות והמנהל יאשר, תוכלו לראות הצעות התאמה מדורגות ולדייק אותן עם העוזר.' : 'Once you complete the registration questionnaire and the administrator approves it, you can see ranked match suggestions and refine them with the assistant.')}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href={`/${locale}/register/male`}
-              className="h-12 px-8 rounded-full bg-burgundy-500 hover:bg-burgundy-600 text-white font-bold text-sm inline-flex items-center justify-center transition-colors">
-              {he ? 'הרשמה למיועדים' : 'Register – men'}
-            </Link>
-            <Link href={`/${locale}/register/female`}
-              className="h-12 px-8 rounded-full bg-navy-800 hover:bg-navy-700 text-white font-bold text-sm inline-flex items-center justify-center transition-colors">
-              {he ? 'הרשמה למיועדות' : 'Register – women'}
-            </Link>
+            {pending ? (
+              <Link href={`/${locale}/personal`}
+                className="h-12 px-8 rounded-full bg-burgundy-500 hover:bg-burgundy-600 text-white font-bold text-sm inline-flex items-center justify-center transition-colors">
+                {he ? 'לאזור האישי' : 'My area'}
+              </Link>
+            ) : (
+              <>
+                <Link href={`/${locale}/login`}
+                  className="h-12 px-8 rounded-full bg-burgundy-500 hover:bg-burgundy-600 text-white font-bold text-sm inline-flex items-center justify-center transition-colors">
+                  {he ? 'כניסה' : 'Sign in'}
+                </Link>
+                <Link href={`/${locale}/register/male`}
+                  className="h-12 px-8 rounded-full bg-navy-800 hover:bg-navy-700 text-white font-bold text-sm inline-flex items-center justify-center transition-colors">
+                  {he ? 'הרשמה למיועדים' : 'Register – men'}
+                </Link>
+                <Link href={`/${locale}/register/female`}
+                  className="h-12 px-8 rounded-full bg-navy-800 hover:bg-navy-700 text-white font-bold text-sm inline-flex items-center justify-center transition-colors">
+                  {he ? 'הרשמה למיועדות' : 'Register – women'}
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
     )
   }
 
-  return <SmartMatchView locale={locale} me={reg.profile} />
+  return <SmartMatchView locale={locale} me={cand.profile as AnyProfile} />
 }
 
 function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {

@@ -31,7 +31,8 @@ export interface Prefs {
   styleShift?: StyleShift
 }
 
-export const isMale = (p: AnyProfile): p is MaleProfile => !('headcovering' in p)
+export const isMale = (p: AnyProfile): p is MaleProfile =>
+  (p as any).gender ? (p as any).gender === 'male' : !('headcovering' in p)
 
 const STYLE_RANK: Record<string, number> = {
   yeshivish: 1, shmura: 1, open_ish: 2, open: 3, modern: 4, very_modern: 5,

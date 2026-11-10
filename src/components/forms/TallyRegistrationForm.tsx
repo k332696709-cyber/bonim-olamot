@@ -6,7 +6,6 @@ import {
   allFields, MAX_PHOTO_BYTES, validateField,
   type RegistrationForm, type TallyField,
 } from '@/constants/registrationForms'
-import { saveRegistration } from '@/lib/auth/registration'
 
 /**
  * Registration form rendered from a Tally-copy config
@@ -21,6 +20,8 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
   const [serverError, setServerError] = useState('')
   const [done, setDone] = useState(false)
   const [consent, setConsent] = useState(false)
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const topRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -75,8 +76,12 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!last) return goNext()
-    if (!consent) {
-      setErrors((e) => ({ ...e, consent: 'יש לאשר את ההסכמה כדי להמשיך' }))
+    const acct: Record<string, string> = {}
+    if (password.length < 10) acct.password = 'הסיסמה חייבת להכיל לפחות 10 תווים'
+    if (confirmPassword !== password) acct.confirmPassword = 'הסיסמאות אינן תואמות'
+    if (!consent) acct.consent = 'יש לאשר את ההסכמה כדי להמשיך'
+    if (Object.keys(acct).length > 0) {
+      setErrors((e) => ({ ...e, ...acct }))
       return
     }
     for (let i = 0; i < pages.length; i++) {
@@ -93,6 +98,7 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
       for (const f of allFields(form)) if (f.type !== 'file') fd.append(f.id, (values[f.id] ?? '').trim())
       if (photo) fd.append('photo', photo)
       fd.append('consent', '1')
+      fd.append('password', password)
       const res = await fetch(endpoint, { method: 'POST', body: fd })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
@@ -104,8 +110,6 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
         setServerError(data?.message ?? 'השליחה נכשלה. נסו שוב בעוד רגע.')
         return
       }
-      // Unlocks the Smart Assistant for this candidate (men see women, women see men).
-      saveRegistration(form.gender, Object.fromEntries(allFields(form).filter((f) => f.type !== 'file').map((f) => [f.id, (values[f.id] ?? '').trim()])))
       setDone(true)
       setTimeout(scrollTop, 30)
     } catch {
@@ -120,7 +124,12 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
       <div ref={topRef} dir="rtl" className="rounded-[32px] bg-white shadow-card px-6 py-16 text-center">
         <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-3xl mb-5">✓</div>
         <h2 className="text-2xl font-bold text-navy-800 mb-2">תודה, השאלון נשלח!</h2>
-        <p className="text-navy-500">נחזור אליך בהקדם.</p>
+        <p className="text-navy-500 max-w-md mx-auto">
+          ההרשמה ממתינה לאישור. אפשר להיכנס עם המייל והסיסמה שבחרת כדי לראות את הסטטוס, ואחרי האישור תראה את הפרופיל שלך. נחזור אליך בהקדם.
+        </p>
+        <Link href="/he/login" className="inline-flex mt-6 h-12 items-center px-8 rounded-full bg-burgundy-500 hover:bg-burgundy-600 text-white text-sm font-bold">
+          כניסה
+        </Link>
       </div>
     )
   }
@@ -236,6 +245,37 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
       <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-9 flex flex-col gap-6">
         {pages[page].fields.map(renderField)}
       </div>
+
+      {last && (
+        <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-9 flex flex-col gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-navy-800">סיסמה לכניסה</h2>
+            <p className="text-sm text-navy-400">
+              הכניסה היא עם המייל שמילאת בטופס והסיסמה שתבחר כאן. בעזרתם תראה את סטטוס ההרשמה, ואחרי האישור את הפרופיל שלך.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="f-password" className="text-[15px] font-semibold text-navy-800">סיסמה (לפחות 10 תווים)<span className="text-burgundy-500 ms-1" aria-hidden>*</span></label>
+              <input
+                id="f-password" type="password" dir="ltr" autoComplete="new-password" maxLength={72} value={password}
+                onChange={(e) => { setPassword(e.target.value); if (errors.password) setErrors((er) => ({ ...er, password: '' })) }}
+                className={`w-full rounded-2xl border bg-white px-4 py-3 text-[15px] text-navy-800 focus:outline-none focus:ring-2 focus:ring-navy-400 ${errors.password ? 'border-burgundy-400' : 'border-navy-100 hover:border-navy-300'}`}
+              />
+              {errors.password && <p className="text-sm text-burgundy-500" role="alert">{errors.password}</p>}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="f-confirm" className="text-[15px] font-semibold text-navy-800">אימות סיסמה<span className="text-burgundy-500 ms-1" aria-hidden>*</span></label>
+              <input
+                id="f-confirm" type="password" dir="ltr" autoComplete="new-password" maxLength={72} value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); if (errors.confirmPassword) setErrors((er) => ({ ...er, confirmPassword: '' })) }}
+                className={`w-full rounded-2xl border bg-white px-4 py-3 text-[15px] text-navy-800 focus:outline-none focus:ring-2 focus:ring-navy-400 ${errors.confirmPassword ? 'border-burgundy-400' : 'border-navy-100 hover:border-navy-300'}`}
+              />
+              {errors.confirmPassword && <p className="text-sm text-burgundy-500" role="alert">{errors.confirmPassword}</p>}
+            </div>
+          </div>
+        </div>
+      )}
 
       {last && (
         <div className="rounded-2xl bg-white shadow-card px-5 py-4">

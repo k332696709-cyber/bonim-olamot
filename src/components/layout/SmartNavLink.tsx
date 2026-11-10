@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getRegistration, REGISTERED_EVENT } from '@/lib/auth/registration'
+import { loadCandidate } from '@/lib/auth/candidate'
 
 /** "Smart Assistant" link, shown only to candidates who have registered in this browser. */
 export function SmartNavLink({
@@ -11,14 +11,10 @@ export function SmartNavLink({
   const [registered, setRegistered] = useState(false)
 
   useEffect(() => {
-    const update = () => setRegistered(!!getRegistration())
-    update()
-    window.addEventListener(REGISTERED_EVENT, update)
-    window.addEventListener('storage', update)
-    return () => {
-      window.removeEventListener(REGISTERED_EVENT, update)
-      window.removeEventListener('storage', update)
-    }
+    let alive = true
+    // Shown only to a signed-in candidate whose registration was approved.
+    loadCandidate().then((c) => { if (alive) setRegistered(c.status === 'approved') })
+    return () => { alive = false }
   }, [])
 
   if (!registered) return null

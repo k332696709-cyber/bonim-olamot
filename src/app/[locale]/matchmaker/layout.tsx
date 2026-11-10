@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { LockProvider } from '@/lib/matchmaker/lockContext'
-import { getSession } from '@/lib/auth/session'
+import { restoreSession } from '@/lib/auth/session'
 
 export default function MatchmakerLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -12,12 +12,14 @@ export default function MatchmakerLayout({ children }: { children: React.ReactNo
   const [authorized, setAuthorized] = useState(false)
 
   useEffect(() => {
-    const session = getSession()
-    if (!session) {
-      router.replace(`/${locale}/login`)
-    } else {
-      setAuthorized(true)
-    }
+    let alive = true
+    // Uses the saved sign-in, so a returning matchmaker/admin is not asked for the password again.
+    restoreSession().then((session) => {
+      if (!alive) return
+      if (!session) router.replace(`/${locale}/login`)
+      else setAuthorized(true)
+    })
+    return () => { alive = false }
   }, [locale, router])
 
   if (!authorized) {

@@ -13,6 +13,7 @@ interface Row {
   answers: Record<string, string>
   photo_path: string
   profile_id: string | null
+  user_id: string | null
 }
 
 type Gender = 'male' | 'female'
@@ -114,6 +115,16 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
       return
     }
     await createClient().storage.from('registration-photos').remove([r.photo_path])
+    if (r.user_id) {
+      // Also remove the candidate's login so the email can register again.
+      const { data: sess } = await createClient().auth.getSession()
+      const res = await fetch('/api/admin/candidate', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sess.session?.access_token ?? ''}` },
+        body: JSON.stringify({ userId: r.user_id }),
+      })
+      if (!res.ok) setError(he ? 'ההרשמה נמחקה, אבל ההתחברות של המועמד לא נמחקה.' : 'Registration deleted, but the candidate login was not removed.')
+    }
     setRows((list) => list.filter((x) => x.id !== r.id))
     setOpen(null)
     setBusyId(null)
