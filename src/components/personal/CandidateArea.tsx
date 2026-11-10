@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -25,6 +25,9 @@ export function CandidateArea({ locale }: { locale: string }) {
   const router = useRouter()
   const [state, setState] = useState<CandidateState | null>(null)
   const [isStaff, setIsStaff] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [photoMsg, setPhotoMsg] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     let alive = true
@@ -36,6 +39,36 @@ export function CandidateArea({ locale }: { locale: string }) {
     })()
     return () => { alive = false }
   }, [])
+
+  const replacePhoto = async (file: File | null) => {
+    if (!file) return
+    setPhotoMsg('')
+    if (!file.type.startsWith('image/')) return setPhotoMsg(he ? 'יש לבחור קובץ תמונה.' : 'Please choose an image file.')
+    if (file.size > 10 * 1024 * 1024) return setPhotoMsg(he ? 'הקובץ גדול מדי (עד 10 מגה-בייט).' : 'File too large (max 10 MB).')
+    setUploading(true)
+    try {
+      const { data: sess } = await createClient().auth.getSession()
+      const fd = new FormData()
+      fd.append('photo', file)
+      const res = await fetch('/api/candidate/photo', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${sess.session?.access_token ?? ''}` },
+        body: fd,
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setPhotoMsg(json?.message ?? (he ? 'ההעלאה נכשלה.' : 'Upload failed.'))
+      } else {
+        setPhotoMsg(he ? 'התמונה הועלתה וממתינה לאישור.' : 'Photo uploaded and waiting for approval.')
+        setState(await loadCandidate())
+      }
+    } catch {
+      setPhotoMsg(he ? 'ההעלאה נכשלה. בדקו את החיבור.' : 'Upload failed. Check your connection.')
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
 
   const signOut = async () => {
     await createClient().auth.signOut()
@@ -135,15 +168,34 @@ export function CandidateArea({ locale }: { locale: string }) {
   return shell(
     <div className="flex flex-col gap-5">
       <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-8">
-        <div className="flex items-center gap-4 mb-5">
+        <div className="flex items-center gap-4 mb-3">
           {state.photoUrl && (
             // Signed URL from private storage, so next/image is not used.
             // eslint-disable-next-line @next/next/no-img-element
             <img src={state.photoUrl} alt="" className="w-24 h-24 rounded-3xl object-cover bg-[#f1f1f1]" />
           )}
           <div>
-            <p className="text-xs font-semibold tracking-widest text-burgundy-500">{he ? 'מאושר' : 'APPROVED'}</p>
+            <p className="text-xs font-semibold tracking-widest text-burgundy-500">{he ? 'הפרופיל שלי' : 'MY PROFILE'}</p>
             <h2 className="text-2xl font-bold text-navy-800">{p?.firstName} {p?.lastName}</h2>
+          </div>
+        </div>
+
+        {/* Photo review status */}
+        <div className="rounded-2xl bg-[#f1f1f1] px-4 py-3 mb-5 text-sm flex flex-col gap-2">
+          <p className="text-navy-700">
+            {state.photoStatus === 'approved' && (he ? '✓ התמונה אושרה ומוצגת למשתמשים.' : '✓ Your photo was approved and is shown to users.')}
+            {state.photoStatus === 'pending' && (he ? '⏳ התמונה ממתינה לבדיקה. עד האישור רק את/ה רואה אותה.' : '⏳ Your photo is waiting for review. Until then only you can see it.')}
+            {state.photoStatus === 'rejected' && (he ? '✗ התמונה לא אושרה. נא להעלות תמונה אחרת, ברורה ומתאימה.' : '✗ Your photo was not approved. Please upload another clear, suitable photo.')}
+          </p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <input ref={fileRef} type="file" accept="image/*" className="sr-only" onChange={(e) => replacePhoto(e.target.files?.[0] ?? null)} />
+            <button
+              type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+              className={`h-10 px-5 rounded-full text-sm font-semibold disabled:opacity-60 ${state.photoStatus === 'rejected' ? 'bg-burgundy-500 hover:bg-burgundy-600 text-white' : 'border border-navy-200 text-navy-700 hover:bg-white'}`}
+            >
+              {uploading ? (he ? 'מעלה...' : 'Uploading…') : he ? 'החלפת תמונה' : 'Change photo'}
+            </button>
+            {photoMsg && <span className="text-xs text-navy-600" role="status">{photoMsg}</span>}
           </div>
         </div>
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">

@@ -39,6 +39,7 @@ const HE: Section[] = [
       'שדכנים שאושרו על ידי מנהל המערכת רואים פרטי מועמדים במידה הנדרשת לשידוך.',
       'מועמדים אחרים רואים בהצעות רק פרטים בסיסיים (אות ראשונה של השם, גיל, עיר, קהילה, עיסוק וסגנון), בלי שם משפחה ובלי טלפון. פרטי קשר נחשפים רק לאחר עניין הדדי ובליווי שדכן/ית.',
       'תמונת שדכן/ית עשויה להיות מוצגת למשתמשי האתר.',
+      'תמונות המועמדים נבדקות על ידי מנהל המערכת. עד שהתמונה אושרה רק המועמד/ת ומנהל המערכת רואים אותה.',
     ],
   },
   {
@@ -103,6 +104,7 @@ const EN: Section[] = [
       'Matchmakers approved by the administrator see candidate details as needed for matchmaking.',
       'Other candidates see only basic details in proposals (first initial, age, city, community, occupation and style), without surname or phone. Contact details are revealed only after mutual interest, with a matchmaker’s involvement.',
       'A matchmaker’s photo may be shown to users of the site.',
+      'Candidates’ photos are reviewed by the system administrator. Until a photo is approved only the candidate and the administrator can see it.',
     ],
   },
   {

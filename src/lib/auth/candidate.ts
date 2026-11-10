@@ -12,6 +12,8 @@ export interface CandidateState {
   submittedAt?: string
   answers?: Record<string, string>
   photoUrl?: string
+  /** pending = waiting for the administrator, approved = visible to others, rejected = upload a new one. */
+  photoStatus?: 'pending' | 'approved' | 'rejected'
   /** Own profile, only once the administrator approved the registration. */
   profile?: FemaleProfile | MaleProfile
 }
@@ -41,6 +43,7 @@ export async function loadCandidate(): Promise<CandidateState> {
       email: user.email,
       submittedAt: reg.created_at,
       answers: reg.answers,
+      photoStatus: reg.photo_status,
     }
 
     if (reg.photo_path) {

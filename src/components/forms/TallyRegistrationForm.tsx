@@ -123,9 +123,9 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
     return (
       <div ref={topRef} dir="rtl" className="rounded-[32px] bg-white shadow-card px-6 py-16 text-center">
         <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-3xl mb-5">✓</div>
-        <h2 className="text-2xl font-bold text-navy-800 mb-2">תודה, השאלון נשלח!</h2>
+        <h2 className="text-2xl font-bold text-navy-800 mb-2">תודה, ההרשמה התקבלה!</h2>
         <p className="text-navy-500 max-w-md mx-auto">
-          ההרשמה ממתינה לאישור. אפשר להיכנס עם המייל והסיסמה שבחרת כדי לראות את הסטטוס, ואחרי האישור תראה את הפרופיל שלך. נחזור אליך בהקדם.
+          אפשר להיכנס עכשיו עם המייל והסיסמה שבחרת ולראות את הפרופיל שלך. התמונה תיבדק ותופיע למשתמשים אחרי שתאושר, ועד אז רק אתה רואה אותה.
         </p>
         <Link href="/he/login" className="inline-flex mt-6 h-12 items-center px-8 rounded-full bg-burgundy-500 hover:bg-burgundy-600 text-white text-sm font-bold">
           כניסה
