@@ -107,7 +107,8 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
 
     // These tables are not in the generated Database types.
     const stored = { ...answers, consentAt: new Date().toISOString(), consentVersion: '2026-11' }
-    const { data: reg, error } = await (supabase as any)
+    // Service role: the public (anon) role has no SELECT policy, so INSERT ... RETURNING fails under RLS.
+    const { data: reg, error } = await (admin as any)
       .from(table)
       .insert({ answers: stored, photo_path: path, user_id: userId })
       .select('id')
