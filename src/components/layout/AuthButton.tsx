@@ -1,12 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { restoreSession, type MatchmakerSession } from '@/lib/auth/session'
+import { restoreSession } from '@/lib/auth/session'
+import { createClient } from '@/lib/supabase/client'
+
+type Who = { kind: 'none' } | { kind: 'staff'; admin: boolean } | { kind: 'candidate' }
 
 /**
- * Header button: "My area" for a signed-in matchmaker/admin, otherwise the sign-in link.
- * The sign-in is restored from the saved session, so it shows up on every visit.
+ * Header button: "My area" for a signed-in matchmaker/admin or candidate, otherwise the
+ * sign-in link. It follows sign-in / sign-out immediately (no page reload needed).
  */
 export function AuthButton({ locale, className, onClick, fallbackLabel }: {
   locale: string
@@ -14,19 +17,33 @@ export function AuthButton({ locale, className, onClick, fallbackLabel }: {
   onClick?: () => void
   fallbackLabel: string
 }) {
-  const [session, setSession] = useState<MatchmakerSession | null>(null)
+  const [who, setWho] = useState<Who>({ kind: 'none' })
   const he = locale === 'he'
 
-  useEffect(() => {
-    let alive = true
-    restoreSession().then((s) => { if (alive) setSession(s) })
-    return () => { alive = false }
+  const refresh = useCallback(async () => {
+    const staff = await restoreSession()
+    if (staff) return setWho({ kind: 'staff', admin: staff.role === 'admin' })
+    const { data } = await createClient().auth.getSession()
+    setWho(data.session?.user ? { kind: 'candidate' } : { kind: 'none' })
   }, [])
 
-  if (session) {
+  useEffect(() => {
+    refresh()
+    const { data } = createClient().auth.onAuthStateChange(() => { refresh() })
+    return () => data.subscription.unsubscribe()
+  }, [refresh])
+
+  if (who.kind === 'staff') {
     return (
       <Link href={`/${locale}/matchmaker`} onClick={onClick} className={className}>
-        {session.role === 'admin' ? (he ? 'האזור שלי · מנהל' : 'My area · Admin') : he ? 'האזור שלי' : 'My area'}
+        {who.admin ? (he ? 'האזור שלי · מנהל' : 'My area · Admin') : he ? 'האזור שלי' : 'My area'}
+      </Link>
+    )
+  }
+  if (who.kind === 'candidate') {
+    return (
+      <Link href={`/${locale}/personal`} onClick={onClick} className={className}>
+        {he ? 'האזור שלי' : 'My area'}
       </Link>
     )
   }

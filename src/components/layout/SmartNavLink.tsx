@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { loadCandidate } from '@/lib/auth/candidate'
+import { createClient } from '@/lib/supabase/client'
 
 /** "Smart Assistant" link, shown only to candidates who have registered in this browser. */
 export function SmartNavLink({
@@ -12,9 +13,11 @@ export function SmartNavLink({
 
   useEffect(() => {
     let alive = true
-    // Shown only to a signed-in candidate whose registration was approved.
-    loadCandidate().then((c) => { if (alive) setRegistered(c.status === 'approved') })
-    return () => { alive = false }
+    // Shown only to a signed-in candidate whose registration was approved; follows sign-in/out.
+    const check = () => loadCandidate().then((c) => { if (alive) setRegistered(c.status === 'approved') })
+    check()
+    const { data } = createClient().auth.onAuthStateChange(() => { check() })
+    return () => { alive = false; data.subscription.unsubscribe() }
   }, [])
 
   if (!registered) return null
