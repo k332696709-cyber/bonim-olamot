@@ -18,8 +18,8 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
   const previewSpots = DATE_SPOTS_MOCK.slice(0, 3)
 
   const marqueeWords = isHe
-    ? ['שידוכים', 'שדכנים', 'מועמדים', 'התאמה', 'קהילה', 'דייטים', 'תרומות', 'בונים עולמות']
-    : ['Matchmaking', 'Matchmakers', 'Candidates', 'Compatibility', 'Community', 'Dating Spots', 'Donations', 'Bonim Olamot']
+    ? ['שידוכים', 'ייעוץ', 'גיבוש', 'טיפים', 'ועוד']
+    : ['Matchmaking', 'Counseling', 'Group events', 'Tips', 'And more']
 
   return (
     <div className="flex flex-col -mt-[5.25rem]" dir={isHe ? 'rtl' : 'ltr'}>
@@ -84,8 +84,8 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
         <div className="marquee-track">
           {[0, 1].map((n) => (
             <div key={n} className="flex items-center shrink-0">
-              {marqueeWords.map((w) => (
-                <span key={`${n}-${w}`} className="flex items-center text-lg font-medium">
+              {[...marqueeWords, ...marqueeWords, ...marqueeWords].map((w, i) => (
+                <span key={`${n}-${i}`} className="flex items-center text-lg font-medium">
                   <span className="px-6">{w}</span>
                   <span className="text-white/60">✳</span>
                 </span>
