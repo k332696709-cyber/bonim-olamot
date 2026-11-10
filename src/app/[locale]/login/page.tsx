@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Logo } from '@/components/layout/Logo'
+import { PageHero } from '@/components/layout/PageHero'
 import { restoreSession, setSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
 import { loadCandidate } from '@/lib/auth/candidate'
@@ -81,25 +81,14 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center px-4 py-12 bg-[#f1f1f1]">
-      <div className="w-full max-w-md">
-
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <div className="rounded-[28px] overflow-hidden shadow-card bg-white">
-            <Logo size="lg" />
-          </div>
-        </div>
-
-        {/* Card */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-luxury px-8 py-10">
-          <h1 className="text-2xl font-bold font-serif text-navy-700 text-center mb-1">
-            {isHe ? 'כניסה' : 'Sign in'}
-          </h1>
-          <p className="text-sm text-gray-400 text-center mb-8">
-            {isHe ? 'מועמדים, שדכנים ומנהל: היכנסו עם המייל והסיסמה שלכם' : 'Candidates, matchmakers and admins: sign in with your email and password'}
-          </p>
-
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f1f1f1]">
+      <PageHero
+        badge={isHe ? 'כניסה למערכת' : 'Sign in'}
+        title={isHe ? 'ברוכים השבים' : 'Welcome back'}
+        subtitle={isHe ? 'מועמדים, שדכנים ומנהל: היכנסו עם המייל והסיסמה שלכם' : 'Candidates, matchmakers and admins: sign in with your email and password'}
+      />
+      <div className="w-full max-w-md mx-auto px-4 pb-16 -mt-12 relative">
+        <div className="bg-white rounded-[28px] shadow-card px-8 py-10">
           <form onSubmit={handleLogin} className="flex flex-col gap-4" dir={isHe ? 'rtl' : 'ltr'}>
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-gray-700">

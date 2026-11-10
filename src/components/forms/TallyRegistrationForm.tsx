@@ -230,10 +230,7 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
     <form onSubmit={submit} noValidate dir="rtl" className="flex flex-col gap-6 pb-10">
       <div ref={topRef} className="scroll-mt-28" />
 
-      <div className="text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold text-navy-800 leading-snug">{form.title}</h1>
-        <p className="text-sm text-navy-400 mt-2">שדות המסומנים ב-* הם חובה</p>
-      </div>
+      <p className="self-center rounded-full bg-white shadow-card px-4 py-1.5 text-xs text-navy-500">שדות המסומנים ב-* הם חובה</p>
 
       <div aria-label={`עמוד ${page + 1} מתוך ${pages.length}`}>
         <div className="h-2 rounded-full bg-white overflow-hidden shadow-inner">

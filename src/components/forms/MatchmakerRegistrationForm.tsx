@@ -144,10 +144,7 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
     <form onSubmit={submit} noValidate dir={he ? 'rtl' : 'ltr'} className="flex flex-col gap-6 pb-10">
       <div ref={topRef} className="scroll-mt-28" />
 
-      <div className="text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold text-navy-800">{t('הרשמת שדכן/שדכנית', 'Matchmaker registration')}</h1>
-        <p className="text-sm text-navy-400 mt-2">{t('שדות המסומנים ב-* הם חובה', 'Fields marked * are required')}</p>
-      </div>
+      <p className="self-center rounded-full bg-white shadow-card px-4 py-1.5 text-xs text-navy-500">{t('שדות המסומנים ב-* הם חובה', 'Fields marked * are required')}</p>
 
       <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-9 flex flex-col gap-6">
         {/* Gender */}

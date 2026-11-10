@@ -94,18 +94,18 @@ export default function PhotosPage({ params: { locale } }: { params: { locale: s
 
   return (
     <div className="min-h-screen bg-[#f1f1f1]" dir={he ? 'rtl' : 'ltr'}>
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
+      <header className="hero-dark text-white pt-6 pb-4">
+        <div className="max-w-4xl mx-auto px-6 py-10 flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <Link href={`/${locale}/matchmaker`} className="text-xs text-navy-400 hover:text-navy-600">{he ? '← לוח הבקרה' : '← Dashboard'}</Link>
-            <h1 className="text-xl font-bold text-navy-700 mt-1">{he ? 'תמונות לאישור' : 'Photos to review'}</h1>
-            <p className="text-sm text-gray-500">
+            <Link href={`/${locale}/matchmaker`} className="text-sm text-navy-100 hover:text-white">{he ? '← לוח הבקרה' : '← Dashboard'}</Link>
+            <h1 className="text-3xl sm:text-4xl font-bold text-white mt-3">{he ? 'תמונות לאישור' : 'Photos to review'}</h1>
+            <p className="text-sm text-navy-100 mt-2">
               {he
                 ? 'בדקו שהתמונה ברורה ומתאימה. עד האישור רק המועמד/ת רואה אותה.'
                 : 'Check the photo is clear and suitable. Until approved only the candidate sees it.'}
             </p>
           </div>
-          <button onClick={load} className="h-10 px-5 rounded-full border border-navy-200 text-sm text-navy-700 hover:bg-navy-50">
+          <button onClick={load} className="h-10 px-5 rounded-full border border-white/30 text-sm text-white hover:bg-white/10">
             {he ? 'רענון' : 'Refresh'} ({items.length})
           </button>
         </div>

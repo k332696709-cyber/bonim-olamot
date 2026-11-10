@@ -308,34 +308,34 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
       />
 
       {/* ── Page header ── */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Link href={`/${locale}`} className="text-xs text-navy-400 hover:text-navy-600 transition-colors">
+      <header>
+        <div className="hero-dark text-white pt-6 pb-20">
+          <div className="max-w-7xl mx-auto px-6 py-10">
+            <div className="flex items-center gap-2 mb-3 text-sm">
+              <Link href={`/${locale}`} className="text-navy-100 hover:text-white transition-colors">
                 {d.breadcrumb}
               </Link>
-              <span className="text-gray-300 text-xs">/</span>
-              <span className="text-xs text-gray-500">
-                {isHe ? 'מרכז תקשורת וביצועים' : 'Communication & Performance Hub'}
-              </span>
+              <span className="text-navy-300">/</span>
+              <span className="text-navy-200">{isHe ? 'מרכז תקשורת וביצועים' : 'Communication & Performance Hub'}</span>
             </div>
-            <h1 className="text-xl font-bold text-navy-700 font-serif">
+            <h1 className="text-3xl sm:text-5xl font-bold leading-tight">
               {isHe ? 'מרכז תקשורת וביצועים' : 'Communication & Performance Hub'}
             </h1>
-            <p className="text-sm text-gray-500 mt-0.5">{d.subtitle}</p>
+            <p className="text-navy-100 text-base sm:text-lg mt-3">{d.subtitle}</p>
           </div>
-
-          <div className="flex items-center gap-4 flex-wrap">
-            {isAdmin && <AdminLinks locale={locale} />}
-            {session && <UserBadge session={session} locale={locale} onLogout={handleLogout} />}
-          </div>
-
-          <div className="flex items-center gap-4 flex-wrap">
-            <LegendItem color="#22c55e" label={d.legend.green} />
-            <LegendItem color="#f97316" label={d.legend.orange} />
-            <LegendItem color="#f87171" label={d.legend.lightRed} />
-            <LegendItem color="#dc2626" label={d.legend.brightRed} />
+        </div>
+        <div className="max-w-7xl mx-auto px-6 -mt-10 relative">
+          <div className="rounded-[28px] bg-white shadow-card px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-4 flex-wrap">
+              {isAdmin && <AdminLinks locale={locale} />}
+              {session && <UserBadge session={session} locale={locale} onLogout={handleLogout} />}
+            </div>
+            <div className="flex items-center gap-4 flex-wrap">
+              <LegendItem color="#22c55e" label={d.legend.green} />
+              <LegendItem color="#f97316" label={d.legend.orange} />
+              <LegendItem color="#f87171" label={d.legend.lightRed} />
+              <LegendItem color="#dc2626" label={d.legend.brightRed} />
+            </div>
           </div>
         </div>
       </header>

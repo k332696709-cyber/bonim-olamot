@@ -159,11 +159,11 @@ export default function TeamPage({ params: { locale } }: { params: { locale: str
   return (
     <div className="min-h-screen bg-[#f1f1f1]" dir={he ? 'rtl' : 'ltr'}>
       {dialog}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 py-5">
-          <Link href={`/${locale}/matchmaker`} className="text-xs text-navy-400 hover:text-navy-600">{he ? '← לוח הבקרה' : '← Dashboard'}</Link>
-          <h1 className="text-xl font-bold text-navy-700 mt-1">{he ? 'צוות השדכנים' : 'Matchmaker team'}</h1>
-          <p className="text-sm text-gray-500">
+      <header className="hero-dark text-white pt-6 pb-4">
+        <div className="max-w-4xl mx-auto px-6 py-10">
+          <Link href={`/${locale}/matchmaker`} className="text-sm text-navy-100 hover:text-white">{he ? '← לוח הבקרה' : '← Dashboard'}</Link>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mt-3">{he ? 'צוות השדכנים' : 'Matchmaker team'}</h1>
+          <p className="text-sm text-navy-100 mt-2">
             {he
               ? 'שדכנים חדשים נרשמים באתר, והבקשה מגיעה לכאן. לוחצים אישור והם נכנסים למערכת.'
               : 'New matchmakers register on the site and their request shows up here. Approve it and they can sign in.'}

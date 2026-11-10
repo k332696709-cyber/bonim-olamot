@@ -1,13 +1,17 @@
+import { PageHero } from '@/components/layout/PageHero'
 import { FemaleRegistrationForm } from '@/components/forms/FemaleRegistrationForm'
 
-interface PageProps {
-  params: { locale: string }
-}
-
-export default function FemaleRegisterPage({ params: { locale } }: PageProps) {
+export default function Page({ params: { locale } }: { params: { locale: string } }) {
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10">
-      <FemaleRegistrationForm locale={locale} />
+    <div>
+      <PageHero
+        badge="הרשמה"
+        title={"שאלון הכרות 'בונים עולמות' מיועדות"}
+        subtitle="ממלאים פעם אחת, והשדכנים והעוזר החכם עושים את השאר."
+      />
+      <div className="max-w-2xl mx-auto px-4 -mt-12 relative">
+        <FemaleRegistrationForm locale={locale} />
+      </div>
     </div>
   )
 }

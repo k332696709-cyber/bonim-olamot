@@ -101,14 +101,14 @@ export default function InboxPage({ params: { locale } }: { params: { locale: st
   return (
     <div className="min-h-screen bg-[#f1f1f1]" dir={he ? 'rtl' : 'ltr'}>
       {dialog}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
+      <header className="hero-dark text-white pt-6 pb-4">
+        <div className="max-w-4xl mx-auto px-6 py-10 flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <Link href={`/${locale}/matchmaker`} className="text-xs text-navy-400 hover:text-navy-600">
+            <Link href={`/${locale}/matchmaker`} className="text-sm text-navy-100 hover:text-white">
               {he ? '← לוח הבקרה' : '← Dashboard'}
             </Link>
-            <h1 className="text-xl font-bold text-navy-700 mt-1">{he ? 'תיבת פניות מהאתר' : 'Website inbox'}</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-3xl sm:text-4xl font-bold text-white mt-3">{he ? 'תיבת פניות מהאתר' : 'Website inbox'}</h1>
+            <p className="text-sm text-navy-100 mt-2">
               {he ? `${unreadCount} לא נקראו מתוך ${msgs.length}` : `${unreadCount} unread of ${msgs.length}`}
             </p>
           </div>
@@ -118,13 +118,13 @@ export default function InboxPage({ params: { locale } }: { params: { locale: st
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`h-10 px-5 rounded-full text-sm font-medium transition-colors ${
-                  filter === f ? 'bg-navy-800 text-white' : 'bg-[#f1f1f1] text-navy-700 hover:bg-navy-50'
+                  filter === f ? 'bg-white text-navy-800' : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
               >
                 {f === 'all' ? (he ? 'הכל' : 'All') : he ? 'לא נקראו' : 'Unread'}
               </button>
             ))}
-            <button onClick={load} className="h-10 px-5 rounded-full border border-navy-200 text-sm text-navy-700 hover:bg-navy-50">
+            <button onClick={load} className="h-10 px-5 rounded-full border border-white/30 text-sm text-white hover:bg-white/10">
               {he ? 'רענון' : 'Refresh'}
             </button>
           </div>
