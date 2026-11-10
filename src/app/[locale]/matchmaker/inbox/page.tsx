@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getSession } from '@/lib/auth/session'
+import { restoreSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
 import { useConfirm } from '@/components/ui/useConfirm'
 
@@ -47,9 +47,11 @@ export default function InboxPage({ params: { locale } }: { params: { locale: st
   }, [he])
 
   useEffect(() => {
-    const admin = getSession()?.role === 'admin'
-    setIsAdmin(admin)
-    if (admin) load()
+    restoreSession().then((s) => {
+      const admin = s?.role === 'admin'
+      setIsAdmin(admin)
+      if (admin) load()
+    })
   }, [load])
 
   const setRead = async (id: string, is_read: boolean) => {

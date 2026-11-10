@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getSession } from '@/lib/auth/session'
+import { restoreSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
 import { useConfirm } from '@/components/ui/useConfirm'
 import { specialtyLabel } from '@/constants/matchmakerForm'
@@ -79,10 +79,11 @@ export default function TeamPage({ params: { locale } }: { params: { locale: str
   }, [he])
 
   useEffect(() => {
-    const s = getSession()
-    setIsAdmin(s?.role === 'admin')
-    setMe(s?.email ?? '')
-    if (s?.role === 'admin') load()
+    restoreSession().then((s) => {
+      setIsAdmin(s?.role === 'admin')
+      setMe(s?.email ?? '')
+      if (s?.role === 'admin') load()
+    })
   }, [load])
 
   const removeMember = async (m: Member) => {

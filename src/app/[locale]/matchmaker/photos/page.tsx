@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getSession } from '@/lib/auth/session'
+import { restoreSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
 
 interface Item {
@@ -57,9 +57,11 @@ export default function PhotosPage({ params: { locale } }: { params: { locale: s
   }, [he])
 
   useEffect(() => {
-    const admin = getSession()?.role === 'admin'
-    setIsAdmin(admin)
-    if (admin) load()
+    restoreSession().then((s) => {
+      const admin = s?.role === 'admin'
+      setIsAdmin(admin)
+      if (admin) load()
+    })
   }, [load])
 
   const review = async (it: Item, approve: boolean) => {

@@ -33,14 +33,19 @@ export function clearSession(): void {
  */
 export async function restoreSession(): Promise<MatchmakerSession | null> {
   const existing = getSession()
-  if (existing) return existing
-  if (typeof window === 'undefined') return null
+  if (typeof window === 'undefined') return existing
   try {
     const { createClient } = await import('@/lib/supabase/client')
     const supabase = createClient()
     const { data } = await supabase.auth.getSession()
     const user = data.session?.user
-    if (!user) return null
+    if (!user) {
+      // The local copy outlived the real sign-in: queries would run as anonymous and return
+      // nothing, so treat the person as signed out.
+      if (existing) clearSession()
+      return null
+    }
+    if (existing) return existing
     const { data: row } = await supabase
       .from('matchmakers')
       .select('id, first_name, last_name, email, is_admin')

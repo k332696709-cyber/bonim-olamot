@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getSession } from '@/lib/auth/session'
+import { restoreSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
 import { useConfirm } from '@/components/ui/useConfirm'
 import { FEMALE_FORM, MALE_FORM, allFields, type RegistrationForm } from '@/constants/registrationForms'
@@ -53,9 +53,11 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
   }, [he])
 
   useEffect(() => {
-    const admin = getSession()?.role === 'admin'
-    setIsAdmin(admin)
-    if (admin) load(gender)
+    restoreSession().then((s) => {
+      const admin = s?.role === 'admin'
+      setIsAdmin(admin)
+      if (admin) load(gender)
+    })
   }, [gender, load])
 
   const toggle = async (r: Row) => {

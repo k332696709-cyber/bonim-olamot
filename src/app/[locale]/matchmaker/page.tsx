@@ -9,7 +9,7 @@ import {
 import type { FemaleProfile, MaleProfile } from '@/types/registration'
 import { ProfilesTable } from '@/components/matchmaker/ProfilesTable'
 import { computeStatus, lockRemainingMs } from '@/lib/matchmaker/statusUtils'
-import { getSession, clearSession, type MatchmakerSession } from '@/lib/auth/session'
+import { restoreSession, clearSession, type MatchmakerSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
 import { mapProfileRow } from '@/lib/supabase/mapProfile'
 import { getT } from '@/lib/i18n/translations'
@@ -126,12 +126,14 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
   const [loadingProfiles, setLoadingProfiles] = useState(true)
 
   useEffect(() => {
-    const s = getSession()
-    setSession(s)
-    setSessionChecked(true)
-    if (!s) {
-      router.replace(`/${locale}/login`)
-    }
+    let alive = true
+    restoreSession().then((s) => {
+      if (!alive) return
+      setSession(s)
+      setSessionChecked(true)
+      if (!s) router.replace(`/${locale}/login`)
+    })
+    return () => { alive = false }
   }, [locale, router])
 
   useEffect(() => {
