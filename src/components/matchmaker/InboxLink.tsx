@@ -39,3 +39,16 @@ export function InboxLink({ locale }: { locale: string }) {
     </Link>
   )
 }
+
+/** Admin shortcuts: inbox, website registrations, team. */
+export function AdminLinks({ locale }: { locale: string }) {
+  const he = locale === 'he'
+  const cls = 'inline-flex items-center gap-2 rounded-full border border-navy-200 text-navy-700 hover:bg-navy-50 text-sm font-semibold px-5 h-10 transition-colors'
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      <InboxLink locale={locale} />
+      <Link href={`/${locale}/matchmaker/registrations`} className={cls}>{he ? 'הרשמות' : 'Registrations'}</Link>
+      <Link href={`/${locale}/matchmaker/team`} className={cls}>{he ? 'צוות' : 'Team'}</Link>
+    </div>
+  )
+}

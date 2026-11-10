@@ -15,6 +15,6 @@ DROP POLICY IF EXISTS "anyone can register" ON female_registrations;
 CREATE POLICY "anyone can register" ON female_registrations
   FOR INSERT TO anon, authenticated WITH CHECK (true);
 
-DROP POLICY IF EXISTS "matchmakers read registrations" ON female_registrations;
-CREATE POLICY "matchmakers read registrations" ON female_registrations
-  FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "admins read registrations" ON female_registrations;
+CREATE POLICY "admins read registrations" ON female_registrations
+  FOR SELECT TO authenticated USING (is_admin());
