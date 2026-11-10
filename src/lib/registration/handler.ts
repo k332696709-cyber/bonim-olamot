@@ -21,6 +21,7 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
     if (err) fields[f.id] = err
   }
 
+  if (String(fd.get('consent') ?? '') !== '1') fields.consent = 'יש לאשר את ההסכמה'
   const photo = fd.get('photo')
   if (!(photo instanceof File) || photo.size === 0) fields.photo = 'שדה חובה'
   else if (!photo.type.startsWith('image/')) fields.photo = 'יש לבחור קובץ תמונה'
@@ -50,7 +51,8 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
     }
 
     // These tables are not in the generated Database types.
-    const { error } = await (supabase as any).from(table).insert({ answers, photo_path: path })
+    const stored = { ...answers, consentAt: new Date().toISOString(), consentVersion: '2026-11' }
+    const { error } = await (supabase as any).from(table).insert({ answers: stored, photo_path: path })
     if (error) {
       console.error(`${table} insert failed:`, error.message)
       await supabase.storage.from('registration-photos').remove([path])

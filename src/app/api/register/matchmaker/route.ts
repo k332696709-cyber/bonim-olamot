@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
   const password = String(fd.get('password') ?? '')
   const specialties = fd.getAll('specialties').map(String).filter((s) => SPECIALTY_VALUES.includes(s))
   const photo = fd.get('photo')
+  const consent = clean(fd.get('consent'), 2) === '1'
 
   const fields: Record<string, string> = {}
   if (gender !== 'male' && gender !== 'female') fields.gender = 'יש לבחור שדכן או שדכנית'
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest) {
   if (city.length < 2) fields.city = 'שדה חובה'
   if (specialties.length === 0) fields.specialties = 'יש לבחור לפחות תחום אחד'
   if (languages.length < 2) fields.languages = 'שדה חובה'
+  if (!consent) fields.consent = 'יש לאשר את ההסכמה'
   if (password.length < 10 || password.length > 72) fields.password = 'הסיסמה חייבת להכיל לפחות 10 תווים'
 
   let photoFile: File | null = null

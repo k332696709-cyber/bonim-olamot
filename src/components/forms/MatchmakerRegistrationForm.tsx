@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import Link from 'next/link'
 import { MAX_PHOTO_BYTES, MIN_AGE, SPECIALTIES } from '@/constants/matchmakerForm'
 
 type Gender = 'male' | 'female' | ''
@@ -21,6 +22,7 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
   const [serverError, setServerError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
+  const [consent, setConsent] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const topRef = useRef<HTMLDivElement>(null)
 
@@ -71,6 +73,7 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
     if (specialties.length === 0) err.specialties = t('יש לבחור לפחות תחום אחד', 'Pick at least one')
     if (v.languages.trim().length < 2) err.languages = req
     if (v.password.length < 10) err.password = t('לפחות 10 תווים', 'At least 10 characters')
+    if (!consent) err.consent = t('יש לאשר את ההסכמה', 'Please accept to continue')
     if (v.confirmPassword !== v.password) err.confirmPassword = t('הסיסמאות אינן תואמות', 'Passwords do not match')
     setErrors(err)
     return Object.keys(err).length === 0
@@ -92,6 +95,7 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
       }
       specialties.forEach((s) => fd.append('specialties', s))
       if (photo) fd.append('photo', photo)
+      fd.append('consent', '1')
       fd.append('website', (document.getElementById('mm-website') as HTMLInputElement | null)?.value ?? '')
       const res = await fetch('/api/register/matchmaker', { method: 'POST', body: fd })
       const json = await res.json().catch(() => ({}))
@@ -319,6 +323,24 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
             <Err k="confirmPassword" />
           </div>
         </div>
+      </div>
+
+      <div className="rounded-2xl bg-white shadow-card px-5 py-4">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox" checked={consent} className="mt-1 w-5 h-5 accent-burgundy-500 shrink-0"
+            onChange={(e) => { setConsent(e.target.checked); if (e.target.checked) setErrors((er) => ({ ...er, consent: '' })) }}
+          />
+          <span className="text-sm text-navy-700 leading-relaxed">
+            {he ? (
+              <>קראתי ואני מסכים/ה ל<Link href="/he/privacy" target="_blank" className="underline text-navy-800">מדיניות הפרטיות</Link> ול<Link href="/he/terms" target="_blank" className="underline text-navy-800">תקנון</Link>, ומאשר/ת שהפרטים שמסרתי (כולל התמונה, אם העליתי) ישמשו לבדיקת הבקשה, ולהצגתי למשתמשי האתר אם אאושר. </>
+            ) : (
+              <>I have read and accept the <Link href="/en/privacy" target="_blank" className="underline text-navy-800">Privacy Policy</Link> and <Link href="/en/terms" target="_blank" className="underline text-navy-800">Terms</Link>, and agree that the details I provided (including the photo, if uploaded) are used to review my request and shown to site users if I am approved. </>
+            )}
+            <span className="text-burgundy-500">*</span>
+          </span>
+        </label>
+        {errors.consent && <p className="text-sm text-burgundy-500 mt-2" role="alert">{errors.consent}</p>}
       </div>
 
       {/* Honeypot: hidden from people, filled by bots */}

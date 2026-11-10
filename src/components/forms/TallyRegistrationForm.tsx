@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import Link from 'next/link'
 import {
   allFields, MAX_PHOTO_BYTES, validateField,
   type RegistrationForm, type TallyField,
@@ -19,6 +20,7 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState('')
   const [done, setDone] = useState(false)
+  const [consent, setConsent] = useState(false)
   const topRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -73,6 +75,10 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!last) return goNext()
+    if (!consent) {
+      setErrors((e) => ({ ...e, consent: 'יש לאשר את ההסכמה כדי להמשיך' }))
+      return
+    }
     for (let i = 0; i < pages.length; i++) {
       if (!validatePage(i)) {
         setPage(i)
@@ -86,6 +92,7 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
       const fd = new FormData()
       for (const f of allFields(form)) if (f.type !== 'file') fd.append(f.id, (values[f.id] ?? '').trim())
       if (photo) fd.append('photo', photo)
+      fd.append('consent', '1')
       const res = await fetch(endpoint, { method: 'POST', body: fd })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
@@ -229,6 +236,22 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
       <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-9 flex flex-col gap-6">
         {pages[page].fields.map(renderField)}
       </div>
+
+      {last && (
+        <div className="rounded-2xl bg-white shadow-card px-5 py-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox" checked={consent} className="mt-1 w-5 h-5 accent-burgundy-500 shrink-0"
+              onChange={(e) => { setConsent(e.target.checked); if (e.target.checked) setErrors((er) => ({ ...er, consent: '' })) }}
+            />
+            <span className="text-sm text-navy-700 leading-relaxed">
+              קראתי ואני מסכים/ה ל<Link href="/he/privacy" target="_blank" className="underline text-navy-800">מדיניות הפרטיות</Link> ול<Link href="/he/terms" target="_blank" className="underline text-navy-800">תקנון</Link>,
+              ומאשר/ת מסירת המידע שמילאתי, כולל מידע רגיש (מצב רפואי/נפשי ומצב ההורים) ותמונה, לצורך שידוך בלבד. אישרתי שיש לי הסכמה של האנשים שפרטיהם מסרתי לבירורים. <span className="text-burgundy-500">*</span>
+            </span>
+          </label>
+          {errors.consent && <p className="text-sm text-burgundy-500 mt-2" role="alert">{errors.consent}</p>}
+        </div>
+      )}
 
       {serverError && (
         <div className="rounded-2xl bg-burgundy-50 border border-burgundy-200 px-5 py-4 text-sm font-medium text-burgundy-600" role="alert">
