@@ -1,6 +1,16 @@
 -- Messages left through the website's "leave details" contact form.
 -- They land in the system administrator's inbox (/matchmaker/inbox).
--- Requires is_admin() from 001_remaining_schema.sql. Run once in the Supabase SQL editor.
+-- Requires is_site_admin() defined below. Run once in the Supabase SQL editor.
+
+
+-- Self-contained admin check (works regardless of how earlier migrations named theirs):
+-- true when the signed-in user is a matchmaker row with is_admin = true.
+CREATE OR REPLACE FUNCTION public.is_site_admin()
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$
+  SELECT COALESCE((SELECT is_admin FROM public.matchmakers WHERE user_id = auth.uid() LIMIT 1), false);
+$$;
 
 CREATE TABLE IF NOT EXISTS contact_messages (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -23,12 +33,12 @@ CREATE POLICY "anyone can send a message" ON contact_messages
 
 DROP POLICY IF EXISTS "admins read messages" ON contact_messages;
 CREATE POLICY "admins read messages" ON contact_messages
-  FOR SELECT TO authenticated USING (is_admin());
+  FOR SELECT TO authenticated USING (is_site_admin());
 
 DROP POLICY IF EXISTS "admins update messages" ON contact_messages;
 CREATE POLICY "admins update messages" ON contact_messages
-  FOR UPDATE TO authenticated USING (is_admin()) WITH CHECK (is_admin());
+  FOR UPDATE TO authenticated USING (is_site_admin()) WITH CHECK (is_site_admin());
 
 DROP POLICY IF EXISTS "admins delete messages" ON contact_messages;
 CREATE POLICY "admins delete messages" ON contact_messages
-  FOR DELETE TO authenticated USING (is_admin());
+  FOR DELETE TO authenticated USING (is_site_admin());

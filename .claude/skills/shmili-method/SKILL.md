@@ -32,6 +32,8 @@ description: שיטת העבודה והעיצוב של בונים עולמות �
 
 ## Supabase - סדר הרצת SQL (פעם אחת, ב-SQL Editor)
 `003_male_registrations` → `004_female_registrations` → `005_contact_messages` → יצירת המשתמש ב-Authentication → `006_owner_admin`. הקבצים ב-`supabase/migrations`.
+**סטטוס (10.11.2026):** 003-005 הורצו בפרויקט `Bonim-olamot` (pnkgyvfqyobugqkmwnay) ואומתו. נשאר: יצירת המשתמש b.w008833@gmail.com ב-Authentication והרצת 006.
+**הערה:** בבסיס הנתונים החי פונקציית המנהל מהמיגרציה הראשונה נקראת `is_admin_user`, ולא `is_admin`. המיגרציות החדשות מגדירות פונקציה משלהן, `is_site_admin()`, ולא תלויות בשם הישן. כבר קיים שם מנהל אחד (חשבון הבונה).
 
 ## כללים קשיחים
 - **סודות:** סיסמאות, מפתחות API וטוקנים לא נכתבים בקוד, בקבצי SQL או ב-git. הם נשמרים ב-Supabase/Vercel בלבד.

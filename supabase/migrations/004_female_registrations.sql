@@ -2,6 +2,16 @@
 -- Run after 003_male_registrations.sql (it shares the registration-photos bucket).
 -- Run once in the Supabase SQL editor.
 
+
+-- Self-contained admin check (works regardless of how earlier migrations named theirs):
+-- true when the signed-in user is a matchmaker row with is_admin = true.
+CREATE OR REPLACE FUNCTION public.is_site_admin()
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$
+  SELECT COALESCE((SELECT is_admin FROM public.matchmakers WHERE user_id = auth.uid() LIMIT 1), false);
+$$;
+
 CREATE TABLE IF NOT EXISTS female_registrations (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at  timestamptz NOT NULL DEFAULT now(),
@@ -17,4 +27,4 @@ CREATE POLICY "anyone can register" ON female_registrations
 
 DROP POLICY IF EXISTS "admins read registrations" ON female_registrations;
 CREATE POLICY "admins read registrations" ON female_registrations
-  FOR SELECT TO authenticated USING (is_admin());
+  FOR SELECT TO authenticated USING (is_site_admin());
