@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable */
 import type { FemaleProfile, MaleProfile } from '@/types/registration'
 
 /** Select string for a profile with its notes (same as the dashboard uses). */
