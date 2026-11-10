@@ -32,6 +32,7 @@ export interface RegistrationForm {
 }
 
 export const MAX_PHOTO_BYTES = 10 * 1024 * 1024
+export const MAX_PHOTOS = 5
 
 const FAMILY_MALE = ['רווק', 'גרוש ללא', 'גרוש עם ילדים', 'אלמן ללא', 'אלמן עם ילדים']
 const FAMILY_FEMALE = ['רווקה', 'גרושה ללא', 'גרושה עם ילדים', 'אלמנה']
@@ -89,7 +90,7 @@ export const MALE_FORM: RegistrationForm = {
         { id: 'phoneType', label: 'סוג טלפון שלך', type: 'select', required: true, options: PHONE_TYPES },
         { id: 'phone',     label: 'מספר טלפון', type: 'tel', required: true },
         { id: 'email',     label: 'אימייל', type: 'email', required: true },
-        { id: 'photo',     label: 'תמונת שידוכים', type: 'file', required: true },
+        { id: 'photo',     label: 'תמונות שידוכים (עד 5)', type: 'file', required: true, hint: 'אפשר להעלות עד 5 תמונות. התמונה הראשונה היא הראשית.' },
         {
           id: 'styleSelf', label: 'איך אתה מגדיר את הסגנון שלך?', type: 'select', required: true, sectionBefore: 'פרטים ממוקדים',
           options: ['שמור ישיבתי', 'שמור עובד', 'פתוח', 'פתוח במידה', 'מודרני', 'מודרני מאוד'],
@@ -146,7 +147,7 @@ export const FEMALE_FORM: RegistrationForm = {
         { id: 'phoneType', label: 'סוג טלפון שלך', type: 'select', required: true, options: PHONE_TYPES },
         { id: 'phone',     label: 'מספר טלפון', type: 'tel', required: true },
         { id: 'email',     label: 'אימייל', type: 'email', required: true },
-        { id: 'photo',     label: 'תמונת שידוכים', type: 'file', required: true },
+        { id: 'photo',     label: 'תמונות שידוכים (עד 5)', type: 'file', required: true, hint: 'אפשר להעלות עד 5 תמונות. התמונה הראשונה היא הראשית.' },
         {
           id: 'styleSelf', label: 'איך את מגדירה את הסגנון שלך?', type: 'select', required: true,
           options: ['שמורה', 'פתוחה', 'פתוחה במידה', 'מודרנית', 'מודרנית מאוד'],

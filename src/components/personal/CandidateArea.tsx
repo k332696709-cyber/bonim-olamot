@@ -40,16 +40,18 @@ export function CandidateArea({ locale }: { locale: string }) {
     return () => { alive = false }
   }, [])
 
-  const replacePhoto = async (file: File | null) => {
-    if (!file) return
+  const replacePhoto = async (list: FileList | null) => {
+    const files = Array.from(list ?? [])
+    if (files.length === 0) return
     setPhotoMsg('')
-    if (!file.type.startsWith('image/')) return setPhotoMsg(he ? 'יש לבחור קובץ תמונה.' : 'Please choose an image file.')
-    if (file.size > 10 * 1024 * 1024) return setPhotoMsg(he ? 'הקובץ גדול מדי (עד 10 מגה-בייט).' : 'File too large (max 10 MB).')
+    if (files.length > 5) return setPhotoMsg(he ? 'אפשר להעלות עד 5 תמונות.' : 'You can upload up to 5 photos.')
+    if (files.some((f) => !f.type.startsWith('image/'))) return setPhotoMsg(he ? 'יש לבחור קבצי תמונה.' : 'Please choose image files.')
+    if (files.some((f) => f.size > 10 * 1024 * 1024)) return setPhotoMsg(he ? 'קובץ גדול מדי (עד 10 מגה-בייט לתמונה).' : 'File too large (max 10 MB each).')
     setUploading(true)
     try {
       const { data: sess } = await createClient().auth.getSession()
       const fd = new FormData()
-      fd.append('photo', file)
+      for (const f of files) fd.append('photo', f)
       const res = await fetch('/api/candidate/photo', {
         method: 'POST',
         headers: { Authorization: `Bearer ${sess.session?.access_token ?? ''}` },
@@ -59,7 +61,7 @@ export function CandidateArea({ locale }: { locale: string }) {
       if (!res.ok) {
         setPhotoMsg(json?.message ?? (he ? 'ההעלאה נכשלה.' : 'Upload failed.'))
       } else {
-        setPhotoMsg(he ? 'התמונה הועלתה וממתינה לאישור.' : 'Photo uploaded and waiting for approval.')
+        setPhotoMsg(he ? 'התמונות הועלו וממתינות לאישור.' : 'Photos uploaded and waiting for approval.')
         setState(await loadCandidate())
       }
     } catch {
@@ -183,21 +185,29 @@ export function CandidateArea({ locale }: { locale: string }) {
         {/* Photo review status */}
         <div className="rounded-2xl bg-[#f1f1f1] px-4 py-3 mb-5 text-sm flex flex-col gap-2">
           <p className="text-navy-700">
-            {state.photoStatus === 'approved' && (he ? '✓ התמונה אושרה ומוצגת למשתמשים.' : '✓ Your photo was approved and is shown to users.')}
-            {state.photoStatus === 'pending' && (he ? '⏳ התמונה ממתינה לבדיקה. עד האישור רק את/ה רואה אותה.' : '⏳ Your photo is waiting for review. Until then only you can see it.')}
-            {state.photoStatus === 'rejected' && (he ? '✗ התמונה לא אושרה. נא להעלות תמונה אחרת, ברורה ומתאימה.' : '✗ Your photo was not approved. Please upload another clear, suitable photo.')}
+            {state.photoStatus === 'approved' && (he ? '✓ התמונות אושרו ומוצגות למשתמשים.' : '✓ Your photos were approved and are shown to users.')}
+            {state.photoStatus === 'pending' && (he ? '⏳ התמונות ממתינות לבדיקה. עד האישור רק את/ה רואה אותן.' : '⏳ Your photos are waiting for review. Until then only you can see them.')}
+            {state.photoStatus === 'rejected' && (he ? '✗ התמונות לא אושרו. נא להעלות תמונות אחרות, ברורות ומתאימות.' : '✗ Your photos were not approved. Please upload other clear, suitable photos.')}
           </p>
           <div className="flex items-center gap-3 flex-wrap">
-            <input ref={fileRef} type="file" accept="image/*" className="sr-only" onChange={(e) => replacePhoto(e.target.files?.[0] ?? null)} />
+            <input ref={fileRef} type="file" accept="image/*" multiple className="sr-only" onChange={(e) => replacePhoto(e.target.files)} />
             <button
               type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
               className={`h-10 px-5 rounded-full text-sm font-semibold disabled:opacity-60 ${state.photoStatus === 'rejected' ? 'bg-burgundy-500 hover:bg-burgundy-600 text-white' : 'border border-navy-200 text-navy-700 hover:bg-white'}`}
             >
-              {uploading ? (he ? 'מעלה...' : 'Uploading…') : he ? 'החלפת תמונה' : 'Change photo'}
+              {uploading ? (he ? 'מעלה...' : 'Uploading…') : he ? 'החלפת תמונות (עד 5)' : 'Replace photos (up to 5)'}
             </button>
             {photoMsg && <span className="text-xs text-navy-600" role="status">{photoMsg}</span>}
           </div>
         </div>
+        {(state.photoUrls?.length ?? 0) > 1 && (
+          <div className="flex flex-wrap gap-2 mb-5">
+            {state.photoUrls!.slice(1).map((u, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={i} src={u} alt="" className="w-20 h-20 rounded-2xl object-cover bg-[#f1f1f1]" />
+            ))}
+          </div>
+        )}
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
           {rows.filter(([, v]) => v).map(([k, v]) => (
             <div key={k}>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
-import { allFields, MAX_PHOTO_BYTES, validateField, type RegistrationForm } from '@/constants/registrationForms'
+import { allFields, MAX_PHOTO_BYTES, MAX_PHOTOS, validateField, type RegistrationForm } from '@/constants/registrationForms'
 import { registrationToProfileRow } from '@/lib/registration/toProfile'
 
 const hits = new Map<string, number[]>()
@@ -47,10 +47,11 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
   const password = String(fd.get('password') ?? '')
   if (password.length < 10 || password.length > 72) fields.password = 'הסיסמה חייבת להכיל לפחות 10 תווים'
 
-  const photo = fd.get('photo')
-  if (!(photo instanceof File) || photo.size === 0) fields.photo = 'שדה חובה'
-  else if (!photo.type.startsWith('image/')) fields.photo = 'יש לבחור קובץ תמונה'
-  else if (photo.size > MAX_PHOTO_BYTES) fields.photo = 'הקובץ גדול מדי (עד 10 מגה-בייט)'
+  const photos = fd.getAll('photo').filter((x): x is File => x instanceof File && x.size > 0)
+  if (photos.length === 0) fields.photo = 'שדה חובה'
+  else if (photos.length > MAX_PHOTOS) fields.photo = `אפשר להעלות עד ${MAX_PHOTOS} תמונות`
+  else if (photos.some((x) => !x.type.startsWith('image/'))) fields.photo = 'יש לבחור קבצי תמונה'
+  else if (photos.some((x) => x.size > MAX_PHOTO_BYTES)) fields.photo = 'קובץ גדול מדי (עד 10 מגה-בייט לתמונה)'
 
   if (Object.keys(fields).length > 0) {
     return NextResponse.json({ message: 'יש שדות שדורשים תיקון.', fields }, { status: 422 })
@@ -67,7 +68,6 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
   const admin = createAdminClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } })
   const email = answers.email.toLowerCase()
   let userId: string | null = null
-  let path: string | null = null
 
   try {
     // 1. The candidate's login.
@@ -89,20 +89,22 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
     }
     userId = created.user.id
 
-    // 2. Photo + registration row.
+    // 2. Photos + registration row.
     const supabase = createClient()
-    const file = photo as File
-    const ext = (file.name.split('.').pop() ?? 'jpg').replace(/[^a-z0-9]/gi, '').slice(0, 5) || 'jpg'
-    path = `${form.gender}/${Date.now()}-${crypto.randomUUID()}.${ext}`
-
-    const { error: upErr } = await supabase.storage
-      .from('registration-photos')
-      .upload(path, Buffer.from(await file.arrayBuffer()), { contentType: file.type, upsert: false })
-    if (upErr) {
-      console.error('registration photo upload failed:', upErr.message)
-      path = null
-      await admin.auth.admin.deleteUser(userId)
-      return NextResponse.json({ message: 'העלאת התמונה נכשלה. נסו שוב.' }, { status: 502 })
+    const paths: string[] = []
+    for (const file of photos) {
+      const ext = (file.name.split('.').pop() ?? 'jpg').replace(/[^a-z0-9]/gi, '').slice(0, 5) || 'jpg'
+      const p = `${form.gender}/${Date.now()}-${crypto.randomUUID()}.${ext}`
+      const { error: upErr } = await supabase.storage
+        .from('registration-photos')
+        .upload(p, Buffer.from(await file.arrayBuffer()), { contentType: file.type, upsert: false })
+      if (upErr) {
+        console.error('registration photo upload failed:', upErr.message)
+        if (paths.length) await supabase.storage.from('registration-photos').remove(paths)
+        await admin.auth.admin.deleteUser(userId)
+        return NextResponse.json({ message: 'העלאת התמונה נכשלה. נסו שוב.' }, { status: 502 })
+      }
+      paths.push(p)
     }
 
     // These tables are not in the generated Database types.
@@ -110,24 +112,24 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
     // Service role: the public (anon) role has no SELECT policy, so INSERT ... RETURNING fails under RLS.
     const { data: reg, error } = await (admin as any)
       .from(table)
-      .insert({ answers: stored, photo_path: path, user_id: userId })
+      .insert({ answers: stored, photo_path: paths[0], extra_photo_paths: paths.slice(1), user_id: userId })
       .select('id')
       .single()
     if (error || !reg) {
       console.error(`${table} insert failed:`, error?.message)
-      await supabase.storage.from('registration-photos').remove([path])
+      await supabase.storage.from('registration-photos').remove(paths)
       await admin.auth.admin.deleteUser(userId)
       return NextResponse.json({ message: 'שמירת השאלון נכשלה. נסו שוב.' }, { status: 502 })
     }
 
     // The profile is created right away: the candidate sees it at once and matchmakers can
     // work with it. Only the photo waits for the administrator's review.
-    const profileRow = { ...registrationToProfileRow(form.gender, answers, path), matchmaker_status: 'bright_red' }
+    const profileRow = { ...registrationToProfileRow(form.gender, answers, paths), matchmaker_status: 'bright_red' }
     const { data: profile, error: profErr } = await (admin as any).from('profiles').insert(profileRow).select('id').single()
     if (profErr || !profile) {
       console.error('registration: profile creation failed', profErr?.message)
       await (admin as any).from(table).delete().eq('id', reg.id)
-      await admin.storage.from('registration-photos').remove([path])
+      await admin.storage.from('registration-photos').remove(paths)
       await admin.auth.admin.deleteUser(userId)
       return NextResponse.json({ message: 'שמירת הפרופיל נכשלה. נסו שוב.' }, { status: 502 })
     }

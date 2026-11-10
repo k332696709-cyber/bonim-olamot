@@ -11,7 +11,7 @@ import { buildProfile } from '@/lib/auth/registration'
 export function registrationToProfileRow(
   gender: 'male' | 'female',
   a: Record<string, string>,
-  photoPath: string | null,
+  photoPaths: string[],
 ) {
   const p = buildProfile(gender, a, 'import') as any
 
@@ -95,6 +95,6 @@ export function registrationToProfileRow(
     flexibility: 'important',
     about_me: aboutMe,
     about_partner: aboutPartner,
-    photos: photoPath ? [photoPath] : [],
+    photos: photoPaths,
   }
 }

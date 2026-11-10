@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { restoreSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
+import { allPhotoPaths } from '@/lib/registration/photos'
 
 interface Item {
   key: string
@@ -12,7 +13,7 @@ interface Item {
   name: string
   meta: string
   photoPath: string
-  url: string
+  urls: string[]
 }
 
 /** Administrator review queue: approve or reject each candidate's photo. */
@@ -32,7 +33,7 @@ export default function PhotosPage({ params: { locale } }: { params: { locale: s
     for (const g of ['male', 'female'] as const) {
       const { data, error: err } = await db
         .from(`${g}_registrations`)
-        .select('id, answers, photo_path, created_at')
+        .select('id, answers, photo_path, extra_photo_paths, created_at')
         .eq('photo_status', 'pending')
         .order('created_at', { ascending: true })
       if (err) {
@@ -40,7 +41,11 @@ export default function PhotosPage({ params: { locale } }: { params: { locale: s
         continue
       }
       for (const r of data ?? []) {
-        const { data: signed } = await createClient().storage.from('registration-photos').createSignedUrl(r.photo_path, 3600)
+        const urls: string[] = []
+        for (const path of allPhotoPaths(r)) {
+          const { data: signed } = await createClient().storage.from('registration-photos').createSignedUrl(path, 3600)
+          if (signed?.signedUrl) urls.push(signed.signedUrl)
+        }
         out.push({
           key: `${g}-${r.id}`,
           id: r.id,
@@ -48,7 +53,7 @@ export default function PhotosPage({ params: { locale } }: { params: { locale: s
           name: `${r.answers?.fullName ?? ''} ${r.answers?.lastName ?? ''}`.trim(),
           meta: [r.answers?.age, r.answers?.city].filter(Boolean).join(' · '),
           photoPath: r.photo_path,
-          url: signed?.signedUrl ?? '',
+          urls,
         })
       }
     }
@@ -101,8 +106,8 @@ export default function PhotosPage({ params: { locale } }: { params: { locale: s
             <h1 className="text-3xl sm:text-4xl font-bold text-white mt-3">{he ? 'תמונות לאישור' : 'Photos to review'}</h1>
             <p className="text-sm text-navy-100 mt-2">
               {he
-                ? 'בדקו שהתמונה ברורה ומתאימה. עד האישור רק המועמד/ת רואה אותה.'
-                : 'Check the photo is clear and suitable. Until approved only the candidate sees it.'}
+                ? 'בדקו שהתמונות ברורות ומתאימות. האישור או הדחייה חלים על כל התמונות.'
+                : 'Check the photos are clear and suitable. Approve or reject applies to all of them.'}
             </p>
           </div>
           <button onClick={load} className="h-10 px-5 rounded-full border border-white/30 text-sm text-white hover:bg-white/10">
@@ -120,13 +125,17 @@ export default function PhotosPage({ params: { locale } }: { params: { locale: s
 
         {items.map((it) => (
           <article key={it.key} className="rounded-[28px] bg-white shadow-card overflow-hidden flex flex-col">
-            <div className="bg-[#f1f1f1] flex items-center justify-center h-72">
-              {it.url ? (
-                // Signed URL from private storage, so next/image is not used.
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={it.url} alt="" className="max-h-72 w-full object-contain" />
+            <div className="bg-[#f1f1f1] p-3">
+              {it.urls.length > 0 ? (
+                <div className={`grid gap-2 ${it.urls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                  {it.urls.map((u, i) => (
+                    // Signed URL from private storage, so next/image is not used.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={i} src={u} alt="" className={`w-full object-contain rounded-xl bg-white ${it.urls.length === 1 ? 'max-h-72' : 'h-40'}`} />
+                  ))}
+                </div>
               ) : (
-                <span className="text-sm text-navy-400">{he ? 'התמונה לא נטענה' : 'Photo failed to load'}</span>
+                <span className="block text-center py-16 text-sm text-navy-400">{he ? 'התמונה לא נטענה' : 'Photo failed to load'}</span>
               )}
             </div>
             <div className="p-5 flex flex-col gap-3">

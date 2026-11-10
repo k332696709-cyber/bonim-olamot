@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import {
-  allFields, MAX_PHOTO_BYTES, validateField,
+  allFields, MAX_PHOTO_BYTES, MAX_PHOTOS, validateField,
   type RegistrationForm, type TallyField,
 } from '@/constants/registrationForms'
 
@@ -14,7 +14,8 @@ import {
 export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationForm; endpoint: string }) {
   const [page, setPage] = useState(0)
   const [values, setValues] = useState<Record<string, string>>({})
-  const [photo, setPhoto] = useState<File | null>(null)
+  const [photos, setPhotos] = useState<File[]>([])
+  const [previews, setPreviews] = useState<string[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState('')
@@ -37,7 +38,7 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
     const next: Record<string, string> = {}
     for (const f of pages[index].fields) {
       if (f.type === 'file') {
-        if (f.required && !photo) next[f.id] = 'שדה חובה'
+        if (f.required && photos.length === 0) next[f.id] = 'שדה חובה'
         continue
       }
       const err = validateField(f, values[f.id] ?? '')
@@ -59,18 +60,34 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
     setTimeout(scrollTop, 30)
   }
 
-  const pickPhoto = (file: File | null) => {
-    if (!file) return
-    if (!file.type.startsWith('image/')) {
-      setErrors((e) => ({ ...e, photo: 'יש לבחור קובץ תמונה' }))
+  const addPhotos = (list: FileList | File[] | null) => {
+    if (!list) return
+    const incoming = Array.from(list)
+    if (incoming.length === 0) return
+    if (incoming.some((f) => !f.type.startsWith('image/'))) {
+      setErrors((e) => ({ ...e, photo: 'יש לבחור קבצי תמונה' }))
       return
     }
-    if (file.size > MAX_PHOTO_BYTES) {
-      setErrors((e) => ({ ...e, photo: 'הקובץ גדול מדי (עד 10 מגה-בייט)' }))
+    if (incoming.some((f) => f.size > MAX_PHOTO_BYTES)) {
+      setErrors((e) => ({ ...e, photo: 'קובץ גדול מדי (עד 10 מגה-בייט לתמונה)' }))
       return
     }
-    setPhoto(file)
-    setErrors((e) => ({ ...e, photo: '' }))
+    const merged = [...photos, ...incoming]
+    if (merged.length > MAX_PHOTOS) {
+      setErrors((e) => ({ ...e, photo: `אפשר להעלות עד ${MAX_PHOTOS} תמונות` }))
+    } else {
+      setErrors((e) => ({ ...e, photo: '' }))
+    }
+    const next = merged.slice(0, MAX_PHOTOS)
+    setPhotos(next)
+    setPreviews((old) => { old.forEach(URL.revokeObjectURL); return next.map((f) => URL.createObjectURL(f)) })
+    if (fileRef.current) fileRef.current.value = ''
+  }
+
+  const removePhoto = (i: number) => {
+    const next = photos.filter((_, idx) => idx !== i)
+    setPhotos(next)
+    setPreviews((old) => { old.forEach(URL.revokeObjectURL); return next.map((f) => URL.createObjectURL(f)) })
   }
 
   const submit = async (e: React.FormEvent) => {
@@ -96,7 +113,7 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
     try {
       const fd = new FormData()
       for (const f of allFields(form)) if (f.type !== 'file') fd.append(f.id, (values[f.id] ?? '').trim())
-      if (photo) fd.append('photo', photo)
+      for (const f of photos) fd.append('photo', f)
       fd.append('consent', '1')
       fd.append('password', password)
       const res = await fetch(endpoint, { method: 'POST', body: fd })
@@ -191,29 +208,44 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
           {f.type === 'file' && (
             <>
               <input
-                ref={fileRef} id={id} type="file" accept="image/*" className="sr-only"
-                onChange={(e) => pickPhoto(e.target.files?.[0] ?? null)}
+                ref={fileRef} id={id} type="file" accept="image/*" multiple className="sr-only"
+                onChange={(e) => addPhotos(e.target.files)}
               />
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => { e.preventDefault(); pickPhoto(e.dataTransfer.files?.[0] ?? null) }}
-                className={`rounded-2xl border-2 border-dashed ${err ? 'border-burgundy-400' : 'border-navy-200 hover:border-navy-400'}
-                  bg-[#f7f8fa] px-4 py-8 text-center transition-colors`}
-              >
-                {photo ? (
-                  <span className="block text-navy-800 font-medium">✓ {photo.name}</span>
-                ) : (
-                  <span className="block text-navy-600 font-medium">לחץ כדי לבחור קובץ או גרור לכאן</span>
-                )}
-                <span className="block text-sm text-navy-400 mt-1">מגבלת גודל: 10 מגה-בייט</span>
-              </button>
-              {photo && (
-                <button type="button" onClick={() => { setPhoto(null); if (fileRef.current) fileRef.current.value = '' }}
-                  className="self-start text-sm text-navy-500 underline">
-                  הסרת הקובץ
+              {photos.length < MAX_PHOTOS && (
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => { e.preventDefault(); addPhotos(e.dataTransfer.files) }}
+                  className={`rounded-2xl border-2 border-dashed ${err ? 'border-burgundy-400' : 'border-navy-200 hover:border-navy-400'}
+                    bg-[#f7f8fa] px-4 py-8 text-center transition-colors`}
+                >
+                  <span className="block text-navy-600 font-medium">
+                    {photos.length === 0 ? 'לחץ כדי לבחור תמונות או גרור לכאן' : 'הוספת תמונה נוספת'}
+                  </span>
+                  <span className="block text-sm text-navy-400 mt-1">
+                    {photos.length} מתוך {MAX_PHOTOS} · עד 10 מגה-בייט לתמונה
+                  </span>
                 </button>
+              )}
+              {photos.length > 0 && (
+                <ul className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-1">
+                  {photos.map((f, i) => (
+                    <li key={`${f.name}-${i}`} className="relative aspect-square rounded-2xl overflow-hidden bg-[#f1f1f1] ring-1 ring-navy-100">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={previews[i]} alt="" className="w-full h-full object-cover" />
+                      {i === 0 && (
+                        <span className="absolute bottom-1 start-1 text-[10px] font-bold bg-navy-800 text-white rounded-full px-2 py-0.5">ראשית</span>
+                      )}
+                      <button
+                        type="button" onClick={() => removePhoto(i)} aria-label="הסרת תמונה"
+                        className="absolute top-1 end-1 w-6 h-6 rounded-full bg-white/90 text-navy-800 text-sm font-bold shadow flex items-center justify-center"
+                      >
+                        ×
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
             </>
           )}

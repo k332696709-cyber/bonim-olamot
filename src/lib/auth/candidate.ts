@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { createClient } from '@/lib/supabase/client'
 import { mapProfileRow, PROFILE_SELECT } from '@/lib/supabase/mapProfile'
+import { allPhotoPaths } from '@/lib/registration/photos'
 import type { FemaleProfile, MaleProfile } from '@/types/registration'
 
 export type CandidateStatus = 'signed_out' | 'not_candidate' | 'pending' | 'approved'
@@ -12,6 +13,8 @@ export interface CandidateState {
   submittedAt?: string
   answers?: Record<string, string>
   photoUrl?: string
+  /** All photos, main first. */
+  photoUrls?: string[]
   /** pending = waiting for the administrator, approved = visible to others, rejected = upload a new one. */
   photoStatus?: 'pending' | 'approved' | 'rejected'
   /** Own profile, only once the administrator approved the registration. */
@@ -46,10 +49,12 @@ export async function loadCandidate(): Promise<CandidateState> {
       photoStatus: reg.photo_status,
     }
 
-    if (reg.photo_path) {
-      const { data: signed } = await db.storage.from('registration-photos').createSignedUrl(reg.photo_path, 3600)
-      if (signed?.signedUrl) base.photoUrl = signed.signedUrl
+    const urls: string[] = []
+    for (const path of allPhotoPaths(reg)) {
+      const { data: signed } = await db.storage.from('registration-photos').createSignedUrl(path, 3600)
+      if (signed?.signedUrl) urls.push(signed.signedUrl)
     }
+    if (urls.length) { base.photoUrl = urls[0]; base.photoUrls = urls }
 
     if (reg.profile_id) {
       const { data: row } = await db.from('profiles').select(PROFILE_SELECT).eq('id', reg.profile_id).maybeSingle()

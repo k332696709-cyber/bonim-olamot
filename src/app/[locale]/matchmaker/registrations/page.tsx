@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { restoreSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
+import { allPhotoPaths } from '@/lib/registration/photos'
 import { useConfirm } from '@/components/ui/useConfirm'
 import { FEMALE_FORM, MALE_FORM, allFields, type RegistrationForm } from '@/constants/registrationForms'
 import { registrationToProfileRow } from '@/lib/registration/toProfile'
@@ -13,6 +14,7 @@ interface Row {
   created_at: string
   answers: Record<string, string>
   photo_path: string
+  extra_photo_paths?: string[]
   profile_id: string | null
   user_id: string | null
 }
@@ -31,7 +33,7 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [open, setOpen] = useState<string | null>(null)
-  const [photos, setPhotos] = useState<Record<string, string>>({})
+  const [photos, setPhotos] = useState<Record<string, string[]>>({})
   const [busyId, setBusyId] = useState<string | null>(null)
   const [notice, setNotice] = useState('')
 
@@ -64,8 +66,12 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
     const next = open === r.id ? null : r.id
     setOpen(next)
     if (next && !photos[r.id]) {
-      const { data } = await createClient().storage.from('registration-photos').createSignedUrl(r.photo_path, 3600)
-      if (data?.signedUrl) setPhotos((p) => ({ ...p, [r.id]: data.signedUrl }))
+      const urls: string[] = []
+      for (const path of allPhotoPaths(r)) {
+        const { data } = await createClient().storage.from('registration-photos').createSignedUrl(path, 3600)
+        if (data?.signedUrl) urls.push(data.signedUrl)
+      }
+      setPhotos((p) => ({ ...p, [r.id]: urls }))
     }
   }
 
@@ -80,7 +86,7 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
     setError('')
     setNotice('')
     const db = createClient() as any
-    const row = { ...registrationToProfileRow(gender, r.answers, r.photo_path), matchmaker_status: 'bright_red' }
+    const row = { ...registrationToProfileRow(gender, r.answers, allPhotoPaths(r)), matchmaker_status: 'bright_red' }
     const { data, error: insErr } = await db.from('profiles').insert(row).select('id').single()
     if (insErr || !data) {
       setError((he ? 'ההוספה נכשלה: ' : 'Adding failed: ') + (insErr?.message ?? ''))
@@ -118,7 +124,7 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
       setBusyId(null)
       return
     }
-    await createClient().storage.from('registration-photos').remove([r.photo_path])
+    await createClient().storage.from('registration-photos').remove(allPhotoPaths(r))
     if (r.user_id) {
       // Also remove the candidate's login so the email can register again.
       const { data: sess } = await createClient().auth.getSession()
@@ -230,10 +236,13 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
                     {he ? 'מחיקה' : 'Delete'}
                   </button>
                 </div>
-                {photos[r.id] && (
-                  // Signed URL from private storage; next/image would need the host allow-listed.
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={photos[r.id]} alt="" className="max-h-72 rounded-2xl object-contain self-start bg-[#f1f1f1]" />
+                {!!photos[r.id]?.length && (
+                  <div className="flex flex-wrap gap-3">
+                    {photos[r.id].map((u, i) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img key={i} src={u} alt="" className="h-48 rounded-2xl object-contain bg-[#f1f1f1]" />
+                    ))}
+                  </div>
                 )}
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
                   {fields.map((f) =>
