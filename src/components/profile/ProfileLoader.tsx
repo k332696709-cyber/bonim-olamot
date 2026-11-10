@@ -9,6 +9,7 @@ import { MOCK_FEMALE_PROFILES, MOCK_MALE_PROFILES } from '@/constants/mockProfil
 import { createClient } from '@/lib/supabase/client'
 import { mapProfileRow, PROFILE_SELECT } from '@/lib/supabase/mapProfile'
 import { getSession } from '@/lib/auth/session'
+import { useConfirm } from '@/components/ui/useConfirm'
 import type { FemaleProfile, MaleProfile } from '@/types/registration'
 
 /**
@@ -17,6 +18,7 @@ import type { FemaleProfile, MaleProfile } from '@/types/registration'
  */
 export function ProfileLoader({ locale, id }: { locale: string; id: string }) {
   const he = locale === 'he'
+  const { confirm, dialog } = useConfirm(he)
   const router = useRouter()
   const [state, setState] = useState<'loading' | 'ready' | 'missing'>('loading')
   const [gender, setGender] = useState<'male' | 'female'>('female')
@@ -71,7 +73,7 @@ export function ProfileLoader({ locale, id }: { locale: string; id: string }) {
     const q = he
       ? `למחוק את הפרופיל של ${profile.firstName} ${profile.lastName} לצמיתות? גם ההערות וההתאמות שלו יימחקו. אי אפשר לשחזר.`
       : `Permanently delete ${profile.firstName} ${profile.lastName}'s profile? Their notes and matches are deleted too. This cannot be undone.`
-    if (!window.confirm(q)) return
+    if (!(await confirm(q, { danger: true, confirmLabel: he ? 'מחיקת הפרופיל' : 'Delete profile' }))) return
     setError('')
     const { error: err } = await createClient().from('profiles').delete().eq('id', id)
     if (err) {
@@ -88,6 +90,7 @@ export function ProfileLoader({ locale, id }: { locale: string; id: string }) {
 
   return (
     <div className="flex flex-col gap-6">
+      {dialog}
       {(photoUrl || (isAdmin && fromDb)) && (
         <div className="flex items-center gap-4 flex-wrap">
           {photoUrl && (

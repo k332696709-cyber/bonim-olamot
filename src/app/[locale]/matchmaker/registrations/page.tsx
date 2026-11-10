@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
+import { useConfirm } from '@/components/ui/useConfirm'
 import { FEMALE_FORM, MALE_FORM, allFields, type RegistrationForm } from '@/constants/registrationForms'
 import { registrationToProfileRow } from '@/lib/registration/toProfile'
 
@@ -23,6 +24,7 @@ const FORMS: Record<Gender, RegistrationForm> = { male: MALE_FORM, female: FEMAL
 /** Administrator view of the registration questionnaires submitted through the site. */
 export default function RegistrationsPage({ params: { locale } }: { params: { locale: string } }) {
   const he = locale === 'he'
+  const { confirm, dialog } = useConfirm(he)
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
   const [gender, setGender] = useState<Gender>('male')
   const [rows, setRows] = useState<Row[]>([])
@@ -71,7 +73,7 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
     const ask = he
       ? `להוסיף את ${name} לפרופילים של השדכנים? הם יראו את הפרטים והטלפון.`
       : `Add ${name} to the matchmakers' profiles? They will see the details and phone.`
-    if (!window.confirm(ask)) return
+    if (!(await confirm(ask, { confirmLabel: he ? 'הוספה לפרופילים' : 'Add' }))) return
     setBusyId(r.id)
     setError('')
     setNotice('')
@@ -95,7 +97,7 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
     const extra = r.profile_id ? (he ? ' גם הפרופיל שנוצר ממנה יימחק.' : ' The profile created from it is deleted too.') : ''
     const ask = (he ? `למחוק את ההרשמה של ${name} לצמיתות, כולל התמונה?` : `Permanently delete ${name}'s registration, including the photo?`)
       + extra + (he ? ' אי אפשר לשחזר.' : ' This cannot be undone.')
-    if (!window.confirm(ask)) return
+    if (!(await confirm(ask, { danger: true, confirmLabel: he ? 'מחיקה' : 'Delete' }))) return
     setBusyId(r.id)
     setError('')
     setNotice('')
@@ -154,6 +156,7 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
 
   return (
     <div className="min-h-screen bg-[#f1f1f1]" dir={he ? 'rtl' : 'ltr'}>
+      {dialog}
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
           <div>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
+import { useConfirm } from '@/components/ui/useConfirm'
 
 interface Message {
   id: string
@@ -18,6 +19,7 @@ interface Message {
 /** System administrator's inbox for messages left through the website contact form. */
 export default function InboxPage({ params: { locale } }: { params: { locale: string } }) {
   const he = locale === 'he'
+  const { confirm, dialog } = useConfirm(he)
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
   const [msgs, setMsgs] = useState<Message[]>([])
   const [loading, setLoading] = useState(true)
@@ -57,7 +59,7 @@ export default function InboxPage({ params: { locale } }: { params: { locale: st
   }
 
   const remove = async (id: string) => {
-    if (!window.confirm(he ? 'למחוק את ההודעה לצמיתות?' : 'Delete this message permanently?')) return
+    if (!(await confirm(he ? 'למחוק את ההודעה לצמיתות?' : 'Delete this message permanently?', { danger: true, confirmLabel: he ? 'מחיקה' : 'Delete' }))) return
     setMsgs((m) => m.filter((x) => x.id !== id))
     const { error: err } = await db().from('contact_messages').delete().eq('id', id)
     if (err) load()
@@ -96,6 +98,7 @@ export default function InboxPage({ params: { locale } }: { params: { locale: st
 
   return (
     <div className="min-h-screen bg-[#f1f1f1]" dir={he ? 'rtl' : 'ltr'}>
+      {dialog}
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
           <div>

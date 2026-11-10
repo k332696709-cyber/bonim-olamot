@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
+import { useConfirm } from '@/components/ui/useConfirm'
 import { specialtyLabel } from '@/constants/matchmakerForm'
 
 interface Application {
@@ -38,6 +39,7 @@ interface Member {
 /** Administrator view of the matchmaker team: who can sign in and who is an admin. */
 export default function TeamPage({ params: { locale } }: { params: { locale: string } }) {
   const he = locale === 'he'
+  const { confirm, dialog } = useConfirm(he)
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
   const [me, setMe] = useState('')
   const [members, setMembers] = useState<Member[]>([])
@@ -87,7 +89,7 @@ export default function TeamPage({ params: { locale } }: { params: { locale: str
     const ask = he
       ? `למחוק את ${m.first_name} ${m.last_name} (${m.email}) מהצוות? הגישה שלו/ה למערכת תוסר, וההתחברות תימחק. אי אפשר לשחזר.`
       : `Remove ${m.first_name} ${m.last_name} (${m.email}) from the team? Their access is removed and their login deleted. This cannot be undone.`
-    if (!window.confirm(ask)) return
+    if (!(await confirm(ask, { danger: true, confirmLabel: he ? 'מחיקה' : 'Remove' }))) return
     setError('')
     const { data: sess } = await createClient().auth.getSession()
     const res = await fetch('/api/admin/matchmaker', {
@@ -105,7 +107,7 @@ export default function TeamPage({ params: { locale } }: { params: { locale: str
 
   const setAdmin = async (m: Member, value: boolean) => {
     const verb = value ? (he ? 'להפוך למנהל' : 'make an admin') : he ? 'להסיר הרשאת מנהל מ' : 'remove admin rights from'
-    if (!window.confirm(`${verb} ${m.first_name} ${m.last_name} (${m.email})?`)) return
+    if (!(await confirm(`${verb} ${m.first_name} ${m.last_name} (${m.email})?`))) return
     setMembers((list) => list.map((x) => (x.id === m.id ? { ...x, is_admin: value } : x)))
     const { error: err } = await createClient().from('matchmakers').update({ is_admin: value }).eq('id', m.id)
     if (err) {
@@ -119,7 +121,7 @@ export default function TeamPage({ params: { locale } }: { params: { locale: str
     const q = approve
       ? (he ? `לאשר את ${name} כשדכן/ית? הם יוכלו להיכנס למערכת.` : `Approve ${name} as a matchmaker? They will be able to sign in.`)
       : (he ? `לדחות את הבקשה של ${name}?` : `Reject ${name}'s request?`)
-    if (!window.confirm(q)) return
+    if (!(await confirm(q, { danger: !approve, confirmLabel: approve ? (he ? 'אישור' : 'Approve') : he ? 'דחייה' : 'Reject' }))) return
     setError('')
     const db = createClient() as any
     if (approve) {
@@ -155,6 +157,7 @@ export default function TeamPage({ params: { locale } }: { params: { locale: str
 
   return (
     <div className="min-h-screen bg-[#f1f1f1]" dir={he ? 'rtl' : 'ltr'}>
+      {dialog}
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-6 py-5">
           <Link href={`/${locale}/matchmaker`} className="text-xs text-navy-400 hover:text-navy-600">{he ? '← לוח הבקרה' : '← Dashboard'}</Link>
