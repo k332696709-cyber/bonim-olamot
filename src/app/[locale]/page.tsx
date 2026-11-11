@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { BotChat } from '@/components/home/BotChat'
 import { Showcase } from '@/components/home/Showcase'
 import { Reveal } from '@/components/home/Reveal'
+import { WordBand } from '@/components/home/WordBand'
 import { getT } from '@/lib/i18n/translations'
 import { fetchPublishedSpots } from '@/lib/dateSpots'
 import { CATEGORY_LABELS } from '@/types/dateSpots'
@@ -81,20 +82,7 @@ export default async function HomePage({ params: { locale } }: { params: { local
       </section>
 
       {/* ══ Marquee strip ══════════════════════════════════════════════════════ */}
-      <div className="bg-burgundy-500 text-white overflow-hidden py-4 select-none" aria-hidden="true">
-        <div className="marquee-track">
-          {[0, 1].map((n) => (
-            <div key={n} className="flex items-center shrink-0">
-              {[...marqueeWords, ...marqueeWords, ...marqueeWords].map((w, i) => (
-                <span key={`${n}-${i}`} className="flex items-center text-lg font-medium">
-                  <span className="px-6">{w}</span>
-                  <span className="text-white/60">✳</span>
-                </span>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
+      <WordBand words={marqueeWords} />
 
       {/* ══ Showcase: stacked animated cards ═══════════════════════════════════ */}
       <Showcase locale={locale} />
