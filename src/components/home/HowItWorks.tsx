@@ -66,21 +66,25 @@ function ProposalVisual({ he, live }: { he: boolean; live: boolean }) {
 }
 
 function SupportVisual({ he, live }: { he: boolean; live: boolean }) {
-  const step = useCycle(live, 5, 1300)
-  const stages = he ? ['בדיקה', 'הצעה', 'פגישה א', 'פגישה ב', 'סיום'] : ['Check', 'Proposal', 'Meeting 1', 'Meeting 2', 'Done']
+  const stages = he
+    ? ['בדיקה', 'הצעה', "פגישה א'", "פגישה ב'", 'עוד פגישות', 'סגירת ווארט']
+    : ['Check', 'Proposal', 'Meeting 1', 'Meeting 2', 'More meetings', 'Engagement']
+  const step = useCycle(live, stages.length, 1300)
+  const last = stages.length - 1
   return (
-    <div className="rounded-3xl bg-[#f6f6f6] p-5 w-full">
+    <div className="rounded-3xl bg-[#f6f6f6] p-4 sm:p-5 w-full">
       <div className="relative flex items-start justify-between">
-        <div className="absolute top-3 inset-x-3 h-0.5 bg-navy-100" />
-        <div className="absolute top-3 start-3 h-0.5 bg-burgundy-500 transition-[width] duration-1000" style={{ width: `calc(${(step / 4) * 100}% - ${step === 4 ? 24 : 0}px)` }} />
-        {stages.map((s, i) => (
-          <div key={s} className="relative flex flex-col items-center gap-2 w-12">
+        <div className="absolute top-3 inset-x-[26px] h-0.5 bg-navy-100">
+          <div className="h-full bg-burgundy-500 transition-[width] duration-1000" style={{ width: `${(step / last) * 100}%` }} />
+        </div>
+        {stages.map((st, i) => (
+          <div key={st} className="relative flex flex-col items-center gap-2 w-[52px]">
             <span className={`w-6 h-6 rounded-full border-2 transition-all duration-500 ${i <= step ? 'bg-burgundy-500 border-burgundy-500 scale-110' : 'bg-white border-navy-200'}`} />
-            <span className={`text-[10px] text-center leading-tight transition-colors ${i <= step ? 'text-navy-800 font-semibold' : 'text-navy-300'}`}>{s}</span>
+            <span className={`text-[10px] text-center leading-tight transition-colors ${i <= step ? 'text-navy-800 font-semibold' : 'text-navy-300'}`}>{st}</span>
           </div>
         ))}
       </div>
-      <p className="text-center text-sm text-navy-700 mt-5">{he ? 'מלווים בכל שלב, עד הסיום' : 'Supported at every stage, to the end'}</p>
+      <p className="text-center text-sm text-navy-700 mt-5">{he ? 'מלווים בכל שלב, עד סגירת הווארט' : 'Supported at every stage, until the engagement'}</p>
     </div>
   )
 }
