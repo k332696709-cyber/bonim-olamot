@@ -3,9 +3,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import {
-  MOCK_LEADERBOARD,
-} from '@/constants/mockHubData'
 import type { FemaleProfile, MaleProfile } from '@/types/registration'
 import { ProfilesTable } from '@/components/matchmaker/ProfilesTable'
 import { computeStatus, lockRemainingMs } from '@/lib/matchmaker/statusUtils'
@@ -19,7 +16,7 @@ import { SocialWall } from '@/components/hub/SocialWall'
 import { MatchProgressSection } from '@/components/hub/MatchProgressSection'
 import { PerformanceScorecard } from '@/components/hub/PerformanceScorecard'
 import { AdminLeaderboard } from '@/components/hub/AdminLeaderboard'
-import type { SocialPost, Announcement, MatchProgress, MatchStage, TaggedProfile } from '@/types/hub'
+import type { SocialPost, Announcement, MatchProgress, MatchStage, TaggedProfile, MatchmakerLeaderboardEntry } from '@/types/hub'
 
 type Tab = 'bachurot' | 'bachurim'
 
@@ -280,9 +277,41 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
     return result
   }, [femaleProfiles, maleProfiles])
 
+  // Real per-matchmaker activity, computed from the posts and matches the matchmakers made.
+  const leaderboard = useMemo<MatchmakerLeaderboardEntry[]>(() => {
+    const now = Date.now()
+    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime()
+    const map = new Map<string, MatchmakerLeaderboardEntry>()
+    const entry = (email: string, name: string) => {
+      const key = email || name
+      if (!key) return null
+      let e = map.get(key)
+      if (!e) {
+        e = { name: name || email, email, postsCount: 0, statusUpdatesCount: 0, successfulMatchesCount: 0, activeProposalsCount: 0, stalledCount: 0 }
+        map.set(key, e)
+      }
+      return e
+    }
+    for (const p of posts) {
+      if (p.createdAt.getTime() >= monthStart) entry(p.authorEmail, p.author)!.postsCount++
+    }
+    for (const m of matchProgress) {
+      const e = entry(m.matchmakerEmail, m.matchmakerName)
+      if (!e) continue
+      if (m.stage === 'closing') e.successfulMatchesCount++
+      else {
+        e.activeProposalsCount++
+        if (now - m.updatedAt.getTime() > 7 * 24 * 60 * 60 * 1000) e.stalledCount = (e.stalledCount ?? 0) + 1
+      }
+      if (m.updatedAt.getTime() >= monthStart) e.statusUpdatesCount++
+    }
+    if (currentEmail && !map.has(currentEmail)) entry(currentEmail, session?.name ?? currentEmail)
+    return Array.from(map.values())
+  }, [posts, matchProgress, currentEmail, session?.name])
+
   const myLeaderboardEntry = useMemo(
-    () => MOCK_LEADERBOARD.find(e => e.email === currentEmail) ?? null,
-    [currentEmail]
+    () => leaderboard.find(e => e.email === currentEmail) ?? null,
+    [leaderboard, currentEmail]
   )
 
   const tabLabel = (which: Tab) => which === 'bachurot' ? d.bachurot : d.bachurim
@@ -398,7 +427,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
         {/* ── Admin Leaderboard (admin only) ── */}
         {isAdmin && (
           <section>
-            <AdminLeaderboard entries={MOCK_LEADERBOARD} locale={locale} />
+            <AdminLeaderboard entries={leaderboard} locale={locale} />
           </section>
         )}
 

@@ -23,6 +23,10 @@ export interface DateSpot {
   vibe: string           // short Hebrew description of the atmosphere
   address?: string
   googleMapsUrl?: string
+  websiteUrl?: string
+  phone?: string
+  /** Paid partner: shown first with a badge. */
+  sponsored?: boolean
   kosher?: boolean
   priceRange?: PriceRange
   averageRating: number  // pre-computed average (1–5)

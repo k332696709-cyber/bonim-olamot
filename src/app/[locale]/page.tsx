@@ -1,21 +1,22 @@
 import Link from 'next/link'
 import { BotChat } from '@/components/home/BotChat'
-import { DashboardMockup } from '@/components/home/DashboardMockup'
 import { SmartAssistantMockup } from '@/components/home/SmartAssistantMockup'
 import { Reveal } from '@/components/home/Reveal'
 import { getT } from '@/lib/i18n/translations'
-import { DATE_SPOTS_MOCK } from '@/constants/dateSpotsMockData'
+import { fetchPublishedSpots } from '@/lib/dateSpots'
 import { CATEGORY_LABELS } from '@/types/dateSpots'
 
 const pill =
   'inline-flex items-center justify-center gap-2 rounded-full font-bold transition-all duration-200'
 
-export default function HomePage({ params: { locale } }: { params: { locale: string } }) {
+export const dynamic = 'force-dynamic'
+
+export default async function HomePage({ params: { locale } }: { params: { locale: string } }) {
   const T = getT(locale)
   const isHe = locale === 'he'
   const arrow = isHe ? '←' : '→'
 
-  const previewSpots = DATE_SPOTS_MOCK.slice(0, 3)
+  const previewSpots = (await fetchPublishedSpots()).slice(0, 3)
 
   const marqueeWords = isHe
     ? ['שידוכים', 'ייעוץ', 'גיבוש', 'טיפים', 'ועוד']
@@ -95,24 +96,8 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
         </div>
       </div>
 
-      {/* ══ Dashboard preview (light) ══════════════════════════════════════════ */}
-      <section className="px-4 pt-20 sm:pt-28 pb-4 bg-[#f1f1f1]">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-5xl text-navy-800 leading-tight">
-            <span className="font-light">{isHe ? 'מבחוץ אתר. ' : 'Outside, a website. '}</span>
-            <span className="font-bold text-burgundy-500">{isHe ? 'מבפנים מערכת.' : 'Inside, a system.'}</span>
-          </h2>
-          <p className="text-navy-500 text-base sm:text-lg mt-3 max-w-xl mx-auto">
-            {isHe
-              ? 'כל מועמד, כל הצעה וכל שלב בדרך לשידוך, מסודרים בלוח אחד עבור השדכנים.'
-              : 'Every candidate, proposal and step on the way to a match, organized in one dashboard for matchmakers.'}
-          </p>
-        </div>
-        <DashboardMockup locale={locale} />
-      </section>
-
       {/* ══ Smart assistant (dark) ═════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden bg-navy-800 text-[#f1f1f1] px-4 py-20 sm:py-28 mt-16 sm:mt-24 rounded-[40px] mx-2 sm:mx-4">
+      <section className="relative overflow-hidden bg-navy-800 text-[#f1f1f1] px-4 py-20 sm:py-28 mt-0 sm:mt-0">
         <div className="absolute inset-0 bg-grid-dark" aria-hidden="true" />
         <div className="absolute -top-24 end-[-6rem] w-[26rem] h-[26rem] rounded-full bg-navy-400/30 blur-3xl animate-float" aria-hidden="true" />
         <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
@@ -266,8 +251,13 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
                     <span className="text-xs font-semibold bg-white/15 rounded-full px-3 py-1">
                       {isHe ? cat.he : cat.en}
                     </span>
+                    {spot.sponsored && (
+                      <span className="text-[10px] font-bold rounded-full px-2.5 py-1 bg-white text-navy-800 ms-auto">
+                        {isHe ? 'שותף' : 'Partner'}
+                      </span>
+                    )}
                     {spot.kosher && (
-                      <span className="text-[10px] font-bold rounded-full px-2.5 py-1 bg-burgundy-400 text-white ms-auto">
+                      <span className={`text-[10px] font-bold rounded-full px-2.5 py-1 bg-burgundy-400 text-white ${spot.sponsored ? '' : 'ms-auto'}`}>
                         {isHe ? '✓ כשר' : '✓ Kosher'}
                       </span>
                     )}
@@ -277,13 +267,6 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
                     <div>
                       <h3 className="text-base font-bold text-navy-800 leading-snug">{spot.name}</h3>
                       <p className="text-xs text-navy-400 mt-0.5">📍 {spot.city}</p>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <span key={i} className={`text-sm ${i < Math.round(spot.averageRating) ? 'text-amber-400' : 'text-gray-200'}`}>★</span>
-                      ))}
-                      <span className="text-xs text-navy-400 ms-1">{spot.averageRating}</span>
                     </div>
 
                     <p className="text-sm text-navy-600 leading-relaxed line-clamp-2 flex-1">{spot.vibe}</p>

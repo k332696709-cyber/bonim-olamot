@@ -1,12 +1,12 @@
 import Link from 'next/link'
-import { DATE_SPOTS_MOCK } from '@/constants/dateSpotsMockData'
+import { fetchPublishedSpots } from '@/lib/dateSpots'
 import { DateSpotsClient } from '@/components/date-spots/DateSpotsClient'
 
-// TODO: Replace with real data fetching when Supabase is connected:
-// const spots = await supabase.from('date_spots').select('*, reviews(*)')
+export const dynamic = 'force-dynamic'
 
-export default function DateSpotsPage({ params: { locale } }: { params: { locale: string } }) {
+export default async function DateSpotsPage({ params: { locale } }: { params: { locale: string } }) {
   const isHe = locale === 'he'
+  const spots = await fetchPublishedSpots()
 
   return (
     <div className="min-h-screen bg-[#f1f1f1]" dir={isHe ? 'rtl' : 'ltr'}>
@@ -27,7 +27,7 @@ export default function DateSpotsPage({ params: { locale } }: { params: { locale
           {/* Quick stats */}
           <div className="flex items-center justify-center gap-8 mt-8 text-sm text-navy-300">
             <div className="flex flex-col items-center">
-              <span className="text-2xl font-bold text-white">{DATE_SPOTS_MOCK.length}</span>
+              <span className="text-2xl font-bold text-white">{spots.length}</span>
               <span>{isHe ? 'מקומות' : 'Spots'}</span>
             </div>
             <div className="w-px h-8 bg-navy-600" />
@@ -58,7 +58,7 @@ export default function DateSpotsPage({ params: { locale } }: { params: { locale
 
       {/* ── Main content ── */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
-        <DateSpotsClient spots={DATE_SPOTS_MOCK} locale={locale} />
+        <DateSpotsClient spots={spots} locale={locale} />
       </main>
 
       {/* ── Footer CTA ── */}

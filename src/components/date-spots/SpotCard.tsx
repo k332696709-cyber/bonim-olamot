@@ -5,6 +5,8 @@ import type { DateSpot } from '@/types/dateSpots'
 import { CATEGORY_LABELS } from '@/types/dateSpots'
 import { StarDisplay, StarInput } from './StarRating'
 
+const isHttpUrl = (v: string) => v.startsWith('https://') || v.startsWith('http://')
+
 // ─── Review form ──────────────────────────────────────────────────────────────
 
 function ReviewForm({
@@ -116,6 +118,11 @@ export function SpotCard({ spot, locale = 'he' }: SpotCardProps) {
         <span className="text-xs font-semibold text-navy-600 bg-white/70 rounded-full px-2.5 py-0.5">
           {isHe ? cat.he : cat.en}
         </span>
+        {spot.sponsored && (
+          <span className="text-[10px] font-bold rounded-full px-2 py-0.5 bg-burgundy-500 text-white">
+            {isHe ? 'שותף' : 'Partner'}
+          </span>
+        )}
         {spot.kosher !== undefined && (
           <span className={`text-[10px] font-bold rounded-full px-2 py-0.5 ${
             spot.kosher ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
@@ -137,14 +144,14 @@ export function SpotCard({ spot, locale = 'he' }: SpotCardProps) {
           <p className="text-xs text-gray-500 mt-0.5">📍 {spot.city}</p>
         </div>
 
-        <StarDisplay rating={localRating} reviewCount={localReviews.length} size="sm" />
+        {localReviews.length > 0 && <StarDisplay rating={localRating} reviewCount={localReviews.length} size="sm" />}
 
         {/* Vibe — user-generated content, keep in original language */}
         <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">{spot.vibe}</p>
 
         {/* Actions */}
         <div className="flex items-center gap-2 mt-auto pt-2 flex-wrap">
-          {spot.googleMapsUrl && (
+          {spot.googleMapsUrl && isHttpUrl(spot.googleMapsUrl) && (
             <a
               href={spot.googleMapsUrl}
               target="_blank"
@@ -159,6 +166,18 @@ export function SpotCard({ spot, locale = 'he' }: SpotCardProps) {
                   d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
               </svg>
               {isHe ? 'הנחיות לניווט' : 'Get Directions'}
+            </a>
+          )}
+          {spot.websiteUrl && isHttpUrl(spot.websiteUrl) && (
+            <a href={spot.websiteUrl} target="_blank" rel="noopener noreferrer"
+              className="px-3 py-1.5 rounded-lg border border-navy-200 text-navy-700 hover:bg-navy-50 text-xs font-semibold transition-colors">
+              {isHe ? 'אתר' : 'Website'}
+            </a>
+          )}
+          {spot.phone && (
+            <a href={`tel:${spot.phone.replace(/[^0-9+]/g, '')}`}
+              className="px-3 py-1.5 rounded-lg border border-navy-200 text-navy-700 hover:bg-navy-50 text-xs font-semibold transition-colors">
+              {isHe ? 'טלפון' : 'Call'}
             </a>
           )}
           <button

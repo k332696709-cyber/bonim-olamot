@@ -107,11 +107,16 @@ export function PerformanceScorecard({ entry, locale }: PerformanceScorecardProp
         value={entry.activeProposalsCount}
       />
       <Row
+        label={isHe ? 'תקועות (7+ ימים בלי עדכון)' : 'Stalled (no update 7+ days)'}
+        value={entry.stalledCount ?? 0}
+        valueClass={(entry.stalledCount ?? 0) > 0 ? 'text-red-500' : 'text-green-600'}
+      />
+      <Row
         label={isHe ? 'פוסטים החודש' : 'Posts This Month'}
         value={entry.postsCount}
       />
       <Row
-        label={isHe ? 'עדכוני סטטוס' : 'Status Updates'}
+        label={isHe ? 'עדכוני סטטוס החודש' : 'Status Updates This Month'}
         value={entry.statusUpdatesCount}
       />
 

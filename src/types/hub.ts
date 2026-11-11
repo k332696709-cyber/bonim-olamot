@@ -50,4 +50,6 @@ export interface MatchmakerLeaderboardEntry {
   statusUpdatesCount: number
   successfulMatchesCount: number
   activeProposalsCount: number
+  /** Proposals with no update for 7+ days. */
+  stalledCount?: number
 }

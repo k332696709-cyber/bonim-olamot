@@ -75,7 +75,7 @@ function PhotosLink({ locale, cls }: { locale: string; cls: string }) {
   )
 }
 
-/** Admin shortcuts: inbox, photos to review, website registrations, team. */
+/** Admin shortcuts: inbox, photos to review, website registrations, date spots, team. */
 export function AdminLinks({ locale }: { locale: string }) {
   const he = locale === 'he'
   const cls = 'inline-flex items-center gap-2 rounded-full border border-navy-200 text-navy-700 hover:bg-navy-50 text-sm font-semibold px-5 h-10 transition-colors'
@@ -84,6 +84,7 @@ export function AdminLinks({ locale }: { locale: string }) {
       <InboxLink locale={locale} />
       <PhotosLink locale={locale} cls={cls} />
       <Link href={`/${locale}/matchmaker/registrations`} className={cls}>{he ? 'הרשמות' : 'Registrations'}</Link>
+      <Link href={`/${locale}/matchmaker/date-spots`} className={cls}>{he ? 'מקומות לדייט' : 'Date spots'}</Link>
       <Link href={`/${locale}/matchmaker/team`} className={cls}>{he ? 'צוות' : 'Team'}</Link>
     </div>
   )
