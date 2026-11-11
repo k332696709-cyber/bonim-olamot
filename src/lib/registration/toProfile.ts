@@ -1,3 +1,4 @@
+import { prettyChoices } from '@/constants/registrationForms'
 import { buildProfile } from '@/lib/auth/registration'
 
 /**
@@ -14,6 +15,7 @@ export function registrationToProfileRow(
   photoPaths: string[],
 ) {
   const p = buildProfile(gender, a, 'import') as any
+  const pretty = prettyChoices
 
   // "שם מלא" usually already contains the surname; avoid showing it twice.
   const last = (a.lastName ?? '').trim()
@@ -34,10 +36,10 @@ export function registrationToProfileRow(
     line('לימודי מקצוע', a.professionalStudies),
     line('לימודים', a.studies),
     line('קביעת עיתים/מסגרת', a.framework),
-    line('איך מגדיר/ה את הסגנון', a.styleSelf),
+    line('איך מגדיר/ה את הסגנון', pretty(a.styleSelf)),
     line('פירוט הסגנון', a.styleSelfDetail),
-    line('סגנון לבוש', a.clothingSelf),
-    line('כובע/כיסוי ראש אחרי חתונה', a.hatAfterWedding || a.headcoverSelf),
+    line('סגנון לבוש', pretty(a.clothingSelf)),
+    line('כובע/כיסוי ראש אחרי חתונה', pretty(a.hatAfterWedding) || pretty(a.headcoverSelf)),
     line('גישה לטכנולוגיה', a.techSelf),
     line('רמת חיים/סגנון', a.livingSelf),
     line('מאפיינים', a.traits),
@@ -56,10 +58,10 @@ export function registrationToProfileRow(
   const aboutPartner = join([
     a.aboutPartner?.trim() ?? '',
     '',
-    line('סגנון מבוקש', a.styleSought),
+    line('סגנון מבוקש', pretty(a.styleSought)),
     line('פירוט הסגנון המבוקש', a.styleSoughtDetail),
-    line('סגנון לבוש שלו/ה', a.clothingHer || a.clothingHim),
-    line('כיסוי ראש/כובע', a.headcoverHer || a.hatHim),
+    line('סגנון לבוש שלו/ה', pretty(a.clothingHer) || pretty(a.clothingHim)),
+    line('כיסוי ראש/כובע', pretty(a.headcoverHer) || pretty(a.hatHim)),
     line('גישה לטכנולוגיה', a.techHer || a.techHim),
     line('רמת חיים/סגנון', a.livingHer || a.livingHim),
     line('עדה/זרם מועדפים', a.edahSought),

@@ -15,6 +15,8 @@ export interface TallyField {
   type: FieldType
   required: boolean
   options?: string[]
+  /** Several options may be chosen (stored joined with " | "). */
+  multi?: boolean
   /** Short numeric free-text answers (age, number of children). */
   numeric?: boolean
   /** Section heading rendered above this field. */
@@ -29,6 +31,30 @@ export interface RegistrationForm {
   gender: 'male' | 'female'
   title: string
   pages: TallyPage[]
+}
+
+/** Every choice list ends with "other". */
+export const OTHER = 'אחר'
+export const CHOICE_SEP = ' | '
+
+export function withOther(options: string[]): string[] {
+  return options.includes(OTHER) ? options : [...options, OTHER]
+}
+
+/** Splits a stored answer into its chosen items. */
+export function parseChoices(value: string): string[] {
+  return value.split(CHOICE_SEP).map((x) => x.trim()).filter(Boolean)
+}
+
+/** Readable form of a stored answer ("a | b" becomes "a, b"). */
+export function prettyChoices(value?: string): string {
+  return value ? parseChoices(value).join(', ') : ''
+}
+
+/** First chosen item, for places that need a single value. Free-text "other" gives ''. */
+export function firstChoice(value?: string): string {
+  const first = parseChoices(value ?? '')[0] ?? ''
+  return first === OTHER || first.startsWith(OTHER + ': ') ? '' : first
 }
 
 export const MAX_PHOTO_BYTES = 10 * 1024 * 1024
@@ -92,27 +118,27 @@ export const MALE_FORM: RegistrationForm = {
         { id: 'email',     label: 'אימייל', type: 'email', required: true },
         { id: 'photo',     label: 'תמונות שידוכים (עד 5)', type: 'file', required: true, hint: 'אפשר להעלות עד 5 תמונות. התמונה הראשונה היא הראשית.' },
         {
-          id: 'styleSelf', label: 'איך אתה מגדיר את הסגנון שלך?', type: 'select', required: true, sectionBefore: 'פרטים ממוקדים',
+          id: 'styleSelf', label: 'איך אתה מגדיר את הסגנון שלך?', type: 'select', multi: true, required: true, sectionBefore: 'פרטים ממוקדים',
           options: ['שמור ישיבתי', 'שמור עובד', 'פתוח', 'פתוח במידה', 'מודרני', 'מודרני מאוד'],
         },
         { id: 'styleSelfDetail', label: 'במה זה מתבטא בעיקר? (בלבוש, גישה לטכנולוגיה, רמת חיים, סגנון)', type: 'textarea', required: true },
         {
-          id: 'clothingSelf', label: 'סגנון לבוש שלך?', type: 'select', required: true,
+          id: 'clothingSelf', label: 'סגנון לבוש שלך?', type: 'select', multi: true, required: true,
           options: ['(פשוט) רק שחור לבן', 'שחור לבן, עדכני/אלגנטי', 'שבת, אירועים ש"לב, יום חול צבעוני', 'רק צבעוני', 'אחר'],
         },
-        { id: 'hatAfterWedding', label: 'כובע לאחר חתונה', type: 'select', required: true, options: ['קנייטש', 'שטריימל', 'ספודיק', 'ללא כלל', 'אחר'] },
+        { id: 'hatAfterWedding', label: 'כובע לאחר חתונה', type: 'select', multi: true, required: true, options: ['קנייטש', 'שטריימל', 'ספודיק', 'ללא כלל', 'אחר'] },
         { id: 'techSelf',   label: 'גישה לטכנולוגיה', type: 'textarea', required: true },
         { id: 'livingSelf', label: 'רמת חיים, סגנון', type: 'textarea', required: true },
         {
-          id: 'styleSought', label: 'איזה סגנון אתה מחפש?', type: 'select', required: true,
+          id: 'styleSought', label: 'איזה סגנון אתה מחפש?', type: 'select', multi: true, required: true,
           options: ['פשוטה/קלאסית', 'פתוחה', 'פתוחה במידה', 'מודרנית', 'מודרנית מאוד'],
         },
         { id: 'styleSoughtDetail', label: 'במה זה מתבטא בעיקר? (בלבוש, גישה לטכנולוגיה, רמת חיים/סגנון)', type: 'textarea', required: true },
         {
-          id: 'clothingHer', label: 'סגנון לבוש שלה', type: 'select', required: true,
+          id: 'clothingHer', label: 'סגנון לבוש שלה', type: 'select', multi: true, required: true,
           options: ['פשוט', 'קלאסי', 'עדכני בסטייל', 'מכובד', 'מודרני', 'מודרני מאוד'],
         },
-        { id: 'headcoverHer', label: 'כיסוי ראש שלה לאחר חתונה', type: 'select', required: true, options: [...HEADCOVER, 'אחר'] },
+        { id: 'headcoverHer', label: 'כיסוי ראש שלה לאחר חתונה', type: 'select', multi: true, required: true, options: [...HEADCOVER, 'אחר'] },
         { id: 'techHer',    label: 'גישה שלה לטכנולוגיה', type: 'textarea', required: true },
         { id: 'livingHer',  label: 'רמת חיים/סגנון שלה', type: 'textarea', required: true },
         { id: 'traits',     label: 'מה מאפיין אותך במיוחד?', hint: "רגוע/יוזם/ביישן ועוד' (נא לכתוב מספר מאפיינים)", type: 'textarea', required: true },
@@ -149,28 +175,28 @@ export const FEMALE_FORM: RegistrationForm = {
         { id: 'email',     label: 'אימייל', type: 'email', required: true },
         { id: 'photo',     label: 'תמונות שידוכים (עד 5)', type: 'file', required: true, hint: 'אפשר להעלות עד 5 תמונות. התמונה הראשונה היא הראשית.' },
         {
-          id: 'styleSelf', label: 'איך את מגדירה את הסגנון שלך?', type: 'select', required: true,
+          id: 'styleSelf', label: 'איך את מגדירה את הסגנון שלך?', type: 'select', multi: true, required: true,
           options: ['שמורה', 'פתוחה', 'פתוחה במידה', 'מודרנית', 'מודרנית מאוד'],
         },
         { id: 'styleSelfDetail', label: 'במה זה מתבטא בעיקר? (בלבוש/גישה לטכנולוגיה/רמת חיים/סגנון)', type: 'textarea', required: true },
         {
-          id: 'clothingSelf', label: 'סגנון לבוש שלך', type: 'select', required: true,
+          id: 'clothingSelf', label: 'סגנון לבוש שלך', type: 'select', multi: true, required: true,
           options: ['פשוט', 'קלאסי', 'עדכני בסטייל', 'מכובד', 'מודרני', 'מודרני מאוד'],
         },
-        { id: 'headcoverSelf', label: 'כיסוי ראש לאחר חתונה', type: 'select', required: true, options: HEADCOVER },
+        { id: 'headcoverSelf', label: 'כיסוי ראש לאחר חתונה', type: 'select', multi: true, required: true, options: HEADCOVER },
         { id: 'techSelf',   label: 'גישה לטכנולוגיה', type: 'textarea', required: true },
         { id: 'livingSelf', label: 'רמת חיים/סגנון', type: 'textarea', required: true },
         {
-          id: 'styleSought', label: 'איזה סגנון את מחפשת?', type: 'select', required: true,
+          id: 'styleSought', label: 'איזה סגנון את מחפשת?', type: 'select', multi: true, required: true,
           options: ['שמור/ישיבתי', 'שמור/עובד', 'פתוח', 'פתוח במידה', 'מודרני', 'מודרני מאוד'],
         },
         // Tally's original is missing the closing parenthesis here; added.
         { id: 'styleSoughtDetail', label: 'במה זה מתבטא בעיקר? (בלבוש/גישה לטכנולוגיה/רמת חיים, סגנון)', type: 'textarea', required: true },
         {
-          id: 'clothingHim', label: 'סגנון לבוש שלו', type: 'select', required: true,
+          id: 'clothingHim', label: 'סגנון לבוש שלו', type: 'select', multi: true, required: true,
           options: ['רק שחור לבן', 'שחור לבן. אלגנטי/עדכני', 'שחור לבן שבת ואירועים, יום חול צבעוני', 'רק צבעוני'],
         },
-        { id: 'hatHim',     label: 'כובע אחרי חתונה', type: 'select', required: true, options: ['כובע קנייטש', 'שטריימל', 'ספודיק', 'ללא כובע כלל'] },
+        { id: 'hatHim',     label: 'כובע אחרי חתונה', type: 'select', multi: true, required: true, options: ['כובע קנייטש', 'שטריימל', 'ספודיק', 'ללא כובע כלל'] },
         { id: 'techHim',    label: 'גישה שלו לטכנולוגיה', type: 'textarea', required: true },
         { id: 'livingHim',  label: 'רמת חיים/סגנון שלו', type: 'textarea', required: true },
         { id: 'traits',     label: 'מה מאפיין אותך במיוחד?', hint: "רגועה/יוזמת/ביישנית ועוד' (נא לכתוב מספר מאפיינים)", type: 'textarea', required: true },
@@ -193,7 +219,15 @@ export function validateField(f: TallyField, value: string): string | null {
   if (f.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'כתובת אימייל לא תקינה'
   if (f.type === 'tel' && !/^[0-9+\-\s()]{7,20}$/.test(v)) return 'מספר טלפון לא תקין'
   if (f.numeric && !/^\d{1,3}$/.test(v)) return 'נא להזין מספר'
-  if (f.type === 'select' && f.options && !f.options.includes(v)) return 'בחירה לא תקינה'
+  if (f.type === 'select' && f.options) {
+    const opts = withOther(f.options)
+    const items = parseChoices(v)
+    if (!f.multi && items.length > 1) return 'בחירה לא תקינה'
+    for (const item of items) {
+      const base = item.startsWith(OTHER + ': ') ? OTHER : item
+      if (!opts.includes(base)) return 'בחירה לא תקינה'
+    }
+  }
   if (v.length > 2000) return 'הטקסט ארוך מדי'
   return null
 }

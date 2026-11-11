@@ -2,6 +2,7 @@ import type {
   Brings, FemaleProfile, MaleProfile, PhoneType, RelationshipValue, Trait,
 } from '@/types/registration'
 import { setCandidateSession } from './candidateSession'
+import { firstChoice } from '@/constants/registrationForms'
 
 /**
  * "Registered" state for a candidate, kept in this browser (localStorage) after a
@@ -71,7 +72,12 @@ const pickWords = <T extends string>(text: string, table: [string[], T][]): T[] 
   table.filter(([words]) => words.some((w) => text.includes(w))).map(([, v]) => v).slice(0, 3)
 
 /** Build an engine profile from the registration answers (unknown parts get neutral defaults). */
-export function buildProfile(gender: 'male' | 'female', a: Record<string, string>, id: string): MaleProfile | FemaleProfile {
+export function buildProfile(gender: 'male' | 'female', raw: Record<string, string>, id: string): MaleProfile | FemaleProfile {
+  // Multi-choice answers: the engine's single-value fields use the first choice.
+  const a: Record<string, string> = { ...raw }
+  for (const k of ['styleSelf', 'styleSought', 'clothingSelf', 'clothingHer', 'clothingHim', 'headcoverSelf', 'headcoverHer', 'hatAfterWedding', 'hatHim']) {
+    if (k in a) a[k] = firstChoice(a[k])
+  }
   const brings = pickWords(a.brings ?? '', BRING_WORDS)
   const valueKeys: string[] = ['stability', 'emotional', 'homey', 'depth', 'lightness']
   const sharedValues = brings.filter((b) => valueKeys.includes(b)) as RelationshipValue[]

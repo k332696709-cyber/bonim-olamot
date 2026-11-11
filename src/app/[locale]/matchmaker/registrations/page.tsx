@@ -6,7 +6,7 @@ import { restoreSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
 import { allPhotoPaths } from '@/lib/registration/photos'
 import { useConfirm } from '@/components/ui/useConfirm'
-import { FEMALE_FORM, MALE_FORM, allFields, type RegistrationForm } from '@/constants/registrationForms'
+import { FEMALE_FORM, MALE_FORM, allFields, prettyChoices, type RegistrationForm } from '@/constants/registrationForms'
 import { registrationToProfileRow } from '@/lib/registration/toProfile'
 
 interface Row {
@@ -248,7 +248,7 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
                     r.answers[f.id] ? (
                       <div key={f.id}>
                         <dt className="text-xs font-semibold text-navy-400">{labelOf(f.id, f.label)}</dt>
-                        <dd className="text-navy-800 whitespace-pre-wrap break-words">{r.answers[f.id]}</dd>
+                        <dd className="text-navy-800 whitespace-pre-wrap break-words">{f.type === 'select' ? prettyChoices(r.answers[f.id]) : r.answers[f.id]}</dd>
                       </div>
                     ) : null,
                   )}

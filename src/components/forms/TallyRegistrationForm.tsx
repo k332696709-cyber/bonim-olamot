@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import {
-  allFields, MAX_PHOTO_BYTES, MAX_PHOTOS, validateField,
+  allFields, MAX_PHOTO_BYTES, MAX_PHOTOS, validateField, withOther, parseChoices, CHOICE_SEP, OTHER,
   type RegistrationForm, type TallyField,
 } from '@/constants/registrationForms'
 
@@ -155,6 +155,22 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
     'w-full rounded-2xl border bg-white px-4 py-3 text-[15px] text-navy-800 placeholder:text-navy-300 ' +
     'focus:outline-none focus:ring-2 focus:ring-navy-400 focus:border-navy-400 transition-colors'
 
+  /** Chip selection: one choice, or several when the field is multi. "Other" opens a free-text box. */
+  const toggleChoice = (f: TallyField, option: string) => {
+    const current = parseChoices(values[f.id] ?? '')
+    const isOther = (x: string) => x === OTHER || x.startsWith(OTHER + ': ')
+    const has = option === OTHER ? current.some(isOther) : current.includes(option)
+    let next: string[]
+    if (f.multi) next = has ? current.filter((x) => (option === OTHER ? !isOther(x) : x !== option)) : [...current, option]
+    else next = has ? [] : [option]
+    setVal(f.id, next.join(CHOICE_SEP))
+  }
+  const setOtherText = (f: TallyField, text: string) => {
+    const clean = text.replace(/\|/g, '/')
+    const current = parseChoices(values[f.id] ?? '').filter((x) => !(x === OTHER || x.startsWith(OTHER + ': ')))
+    setVal(f.id, [...current, clean.trim() ? `${OTHER}: ${clean}` : OTHER].join(CHOICE_SEP))
+  }
+
   const renderField = (f: TallyField) => {
     const err = errors[f.id]
     const border = err ? 'border-burgundy-400' : 'border-navy-100 hover:border-navy-300'
@@ -165,7 +181,7 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
           <h2 className="text-xl font-bold text-navy-800 border-b border-navy-50 pb-3 pt-2">{f.sectionBefore}</h2>
         )}
         <div className="flex flex-col gap-1.5">
-          <label htmlFor={id} className="text-[15px] font-semibold text-navy-800">
+          <label id={`${id}-label`} htmlFor={f.type === 'select' ? undefined : id} className="text-[15px] font-semibold text-navy-800">
             {f.label}
             {f.required && <span className="text-burgundy-500 ms-1" aria-hidden>*</span>}
           </label>
@@ -179,17 +195,48 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
             />
           )}
 
-          {f.type === 'select' && (
-            <select
-              id={id} value={values[f.id] ?? ''} onChange={(e) => setVal(f.id, e.target.value)}
-              className={`${inputBase} ${border} appearance-none bg-no-repeat bg-[length:1rem] pe-4 ps-10
-                bg-[position:left_1rem_center] bg-[url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23336caf' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")]`}
-              aria-invalid={!!err} aria-required={f.required}
-            >
-              <option value="">בחר...</option>
-              {f.options!.map((o) => <option key={o} value={o}>{o}</option>)}
-            </select>
-          )}
+          {f.type === 'select' && (() => {
+            const chosen = parseChoices(values[f.id] ?? '')
+            const otherItem = chosen.find((x) => x === OTHER || x.startsWith(OTHER + ': '))
+            return (
+              <div className="flex flex-col gap-3" role={f.multi ? 'group' : 'radiogroup'} aria-labelledby={`${id}-label`} id={id}>
+                {f.multi && <p className="text-sm text-navy-400 -mt-0.5">אפשר לבחור יותר מאפשרות אחת</p>}
+                <div className="flex flex-wrap gap-2">
+                  {withOther(f.options!).map((o) => {
+                    const on = o === OTHER ? !!otherItem : chosen.includes(o)
+                    return (
+                      <button
+                        key={o}
+                        type="button"
+                        role={f.multi ? 'checkbox' : 'radio'}
+                        aria-checked={on}
+                        onClick={() => toggleChoice(f, o)}
+                        className={`rounded-full border px-4 py-2.5 text-[15px] transition-colors ${
+                          on
+                            ? 'bg-navy-800 border-navy-800 text-white font-semibold'
+                            : err ? 'bg-white border-burgundy-400 text-navy-700 hover:border-navy-400' : 'bg-white border-navy-100 text-navy-700 hover:border-navy-300'
+                        }`}
+                      >
+                        {on && f.multi && <span className="me-1.5" aria-hidden>{'\u2713'}</span>}
+                        {o}
+                      </button>
+                    )
+                  })}
+                </div>
+                {otherItem && (
+                  <input
+                    type="text"
+                    value={otherItem.startsWith(OTHER + ': ') ? otherItem.slice(OTHER.length + 2) : ''}
+                    onChange={(e) => setOtherText(f, e.target.value)}
+                    maxLength={120}
+                    placeholder="פרטו (לא חובה)"
+                    className={`${inputBase} ${border}`}
+                    aria-label="פירוט עבור אחר"
+                  />
+                )}
+              </div>
+            )
+          })()}
 
           {(f.type === 'text' || f.type === 'tel' || f.type === 'email') && (
             <input
