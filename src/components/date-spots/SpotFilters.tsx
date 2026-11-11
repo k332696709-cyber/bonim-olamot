@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import type { SpotCategory, SpotRegion } from '@/types/dateSpots'
-import { CATEGORY_LABELS, REGION_LABELS } from '@/types/dateSpots'
+import { CATEGORY_LABELS, REGION_LABELS, REGION_ORDER } from '@/types/dateSpots'
 
 export interface FilterState {
   search:   string
@@ -32,11 +32,8 @@ export function SpotFilters({ filters, onChange, totalShown, totalAll, locale = 
   ]
 
   const REGIONS: Array<{ value: SpotRegion | 'all'; label: string }> = [
-    { value: 'all',       label: isHe ? 'כל הארץ'    : 'All Regions'                },
-    { value: 'jerusalem', label: isHe ? REGION_LABELS.jerusalem.he : REGION_LABELS.jerusalem.en },
-    { value: 'center',    label: isHe ? REGION_LABELS.center.he    : REGION_LABELS.center.en    },
-    { value: 'north',     label: isHe ? REGION_LABELS.north.he     : REGION_LABELS.north.en     },
-    { value: 'south',     label: isHe ? REGION_LABELS.south.he     : REGION_LABELS.south.en     },
+    { value: 'all', label: isHe ? 'כל הארץ' : 'All Regions' },
+    ...REGION_ORDER.map((value) => ({ value, label: isHe ? REGION_LABELS[value].he : REGION_LABELS[value].en })),
   ]
 
   const activeCategory = filters.category !== 'all' ? CATEGORY_LABELS[filters.category] : null

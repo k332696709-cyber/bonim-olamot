@@ -290,7 +290,7 @@ export type Database = {
           id: string
           name: string
           city: string
-          region: 'jerusalem' | 'center' | 'north' | 'south'
+          region: string
           category: 'restaurant' | 'hotel_lobby' | 'park' | 'quiet'
           vibe: string | null
           address: string | null
@@ -305,7 +305,7 @@ export type Database = {
           id?: string
           name: string
           city: string
-          region: 'jerusalem' | 'center' | 'north' | 'south'
+          region: string
           category: 'restaurant' | 'hotel_lobby' | 'park' | 'quiet'
           vibe?: string | null
           address?: string | null
@@ -320,7 +320,7 @@ export type Database = {
           id?: string
           name?: string
           city?: string
-          region?: 'jerusalem' | 'center' | 'north' | 'south'
+          region?: string
           category?: 'restaurant' | 'hotel_lobby' | 'park' | 'quiet'
           vibe?: string | null
           address?: string | null
@@ -380,7 +380,7 @@ export type Database = {
       match_stage: 'checking' | 'proposal_sent' | 'meeting_1' | 'meeting_2' | 'closing'
       match_status: 'active' | 'closed' | 'rejected'
       spot_category: 'restaurant' | 'hotel_lobby' | 'park' | 'quiet'
-      spot_region: 'jerusalem' | 'center' | 'north' | 'south'
+      spot_region: string
       price_range: '₪' | '₪₪' | '₪₪₪'
     }
   }

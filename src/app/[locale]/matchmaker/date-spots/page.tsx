@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { restoreSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
 import { useConfirm } from '@/components/ui/useConfirm'
-import { CATEGORY_LABELS, REGION_LABELS, type SpotCategory, type SpotRegion } from '@/types/dateSpots'
+import { CATEGORY_LABELS, REGION_LABELS, REGION_ORDER, type SpotCategory, type SpotRegion } from '@/types/dateSpots'
 import type { DateSpotRow } from '@/lib/dateSpots'
 
 interface Draft {
@@ -232,7 +232,7 @@ export default function DateSpotsAdminPage({ params: { locale } }: { params: { l
                 <input className={input} value={draft.city} maxLength={80} onChange={(e) => set('city', e.target.value)} /></div>
               <div className="flex flex-col gap-1.5"><label className={label}>{he ? 'אזור' : 'Region'}</label>
                 <select className={input} value={draft.region} onChange={(e) => set('region', e.target.value as SpotRegion)}>
-                  {(Object.keys(REGION_LABELS) as SpotRegion[]).map((k) => <option key={k} value={k}>{he ? REGION_LABELS[k].he : REGION_LABELS[k].en}</option>)}
+                  {REGION_ORDER.map((k) => <option key={k} value={k}>{he ? REGION_LABELS[k].he : REGION_LABELS[k].en}</option>)}
                 </select></div>
               <div className="flex flex-col gap-1.5"><label className={label}>{he ? 'קטגוריה' : 'Category'}</label>
                 <select className={input} value={draft.category} onChange={(e) => set('category', e.target.value as SpotCategory)}>
@@ -326,7 +326,7 @@ export default function DateSpotsAdminPage({ params: { locale } }: { params: { l
                     {!r.is_published && <span className="text-[10px] font-bold bg-navy-100 text-navy-600 rounded-full px-2.5 py-0.5">{he ? 'מוסתר' : 'Hidden'}</span>}
                     {r.is_sponsored && !isActivePartner(r) && <span className="text-[10px] font-bold bg-orange-100 text-orange-700 rounded-full px-2.5 py-0.5">{he ? 'השותפות פגה' : 'Partnership expired'}</span>}
                   </div>
-                  <p className="text-xs text-navy-400 mt-1">{r.city} · {he ? REGION_LABELS[r.region].he : REGION_LABELS[r.region].en} · {he ? cat.he : cat.en}</p>
+                  <p className="text-xs text-navy-400 mt-1">{r.city} · {he ? REGION_LABELS[r.region]?.he ?? r.region : REGION_LABELS[r.region]?.en ?? r.region} · {he ? cat.he : cat.en}</p>
                   {r.admin_notes && <p className="text-xs text-navy-500 mt-1.5 bg-[#f6f6f6] rounded-xl px-3 py-1.5">{r.admin_notes}</p>}
                 </div>
                 <div className="flex gap-2 flex-wrap">
