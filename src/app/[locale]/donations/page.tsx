@@ -6,22 +6,22 @@ export default function DonationsPage({ params: { locale } }: { params: { locale
 
   const causes = [
     {
-      icon: '💍',
+      icon: '',
       title: isHe ? 'סיוע לחתן וכלה' : 'Support for Chatan & Kallah',
       desc: isHe ? 'עזרה לזוגות מתחתנים במצב כלכלי קשה' : 'Help for couples getting married in financial difficulty',
     },
     {
-      icon: '🕍',
+      icon: '',
       title: isHe ? 'פעילות הקהילה' : 'Community Activities',
       desc: isHe ? 'מימון אירועי שידוכים וכנסי הכרות' : 'Funding matchmaking events and introduction conferences',
     },
     {
-      icon: '📚',
+      icon: '',
       title: isHe ? 'הכשרת שדכנים' : 'Matchmaker Training',
       desc: isHe ? 'הכשרה מקצועית לשדכנים חדשים' : 'Professional training for new matchmakers',
     },
     {
-      icon: '🤝',
+      icon: '',
       title: isHe ? 'ייעוץ זוגי' : 'Couples Counseling',
       desc: isHe ? 'מימון ייעוץ לזוגות זקוקים' : 'Funding counseling for couples in need',
     },
@@ -32,7 +32,6 @@ export default function DonationsPage({ params: { locale } }: { params: { locale
 
       {/* Hero */}
       <div className="hero-burgundy text-white text-center px-4 py-16 sm:py-20">
-        <div className="text-5xl mb-4">❤️</div>
         <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-3">
           {isHe ? 'תרומה לארגון בונים עולמות' : 'Donate to Bonim Olamot'}
         </h1>
@@ -62,7 +61,6 @@ export default function DonationsPage({ params: { locale } }: { params: { locale
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {causes.map((c) => (
                 <div key={c.title} className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4 flex gap-3 items-start">
-                  <span className="text-2xl shrink-0">{c.icon}</span>
                   <div>
                     <p className="text-sm font-semibold text-navy-700">{c.title}</p>
                     <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{c.desc}</p>

@@ -26,10 +26,9 @@ interface StatCardProps {
   value: number
   label: string
   color: 'navy' | 'green' | 'red' | 'orange'
-  icon: React.ReactNode
 }
 
-function StatCard({ value, label, color, icon }: StatCardProps) {
+function StatCard({ value, label, color }: StatCardProps) {
   const colorMap = {
     navy:   { bg: 'bg-navy-50',   border: 'border-navy-200',   text: 'text-navy-700',   val: 'text-navy-600' },
     green:  { bg: 'bg-green-50',  border: 'border-green-200',  text: 'text-green-700',  val: 'text-green-600' },
@@ -39,9 +38,6 @@ function StatCard({ value, label, color, icon }: StatCardProps) {
   const c = colorMap[color]
   return (
     <div className={`rounded-2xl border ${c.bg} ${c.border} px-5 py-4 flex items-center gap-4 shadow-sm`}>
-      <div className={`w-11 h-11 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center text-xl shrink-0`}>
-        {icon}
-      </div>
       <div>
         <p className={`text-2xl font-bold tabular-nums ${c.val}`}>{value}</p>
         <p className={`text-xs font-medium ${c.text} mt-0.5`}>{label}</p>
@@ -91,10 +87,9 @@ function UserBadge({ session, locale, onLogout }: { session: MatchmakerSession; 
 
 // ─── Section Header ───────────────────────────────────────────────────────────
 
-function SectionHeader({ emoji, title, subtitle }: { emoji: string; title: string; subtitle?: string }) {
+function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="flex items-center gap-2 mb-1">
-      <span className="text-base">{emoji}</span>
       <div>
         <h2 className="text-sm font-bold text-navy-600">{title}</h2>
         {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
@@ -373,10 +368,10 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
 
         {/* ── Stats row ── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <StatCard value={stats.totalF} label={d.bachurot}      color="navy"   icon="👩" />
-          <StatCard value={stats.totalM} label={d.bachurim}      color="navy"   icon="👨" />
-          <StatCard value={stats.active} label={d.activeMatches} color="green"  icon="🔒" />
-          <StatCard value={stats.urgent} label={d.urgent}        color="red"    icon="🚨" />
+          <StatCard value={stats.totalF} label={d.bachurot}      color="navy"/>
+          <StatCard value={stats.totalM} label={d.bachurim}      color="navy"/>
+          <StatCard value={stats.active} label={d.activeMatches} color="green"/>
+          <StatCard value={stats.urgent} label={d.urgent}        color="red"/>
         </div>
 
         {/* ── Social Wall + Performance Scorecard ── */}
@@ -386,7 +381,6 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
             {/* Social Wall (2/3 width on large screens) */}
             <div className="lg:col-span-2 flex flex-col gap-3">
               <SectionHeader
-                emoji="💬"
                 title={isHe ? 'חומת עדכונים – Social Wall' : 'Social Wall'}
                 subtitle={isHe ? 'שתף עדכונים ותייג מועמדים' : 'Share updates and tag candidates'}
               />
@@ -404,7 +398,6 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
             {/* Performance Scorecard (1/3 width) */}
             <div className="flex flex-col gap-3">
               <SectionHeader
-                emoji="⭐"
                 title={isHe ? 'ביצועים אישיים' : 'My Performance'}
                 subtitle={isHe ? 'הסטטיסטיקות שלך' : 'Your personal stats'}
               />
@@ -434,7 +427,6 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
         {/* ── Tab bar + Profiles table ── */}
         <section className="flex flex-col gap-4">
           <SectionHeader
-            emoji="📋"
             title={isHe ? 'רשימת מועמדים' : 'Candidate List'}
           />
           <div className="flex gap-2">

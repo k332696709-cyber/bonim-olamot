@@ -89,10 +89,8 @@ function MatchCard({
       <div className="flex items-start justify-between gap-2 mb-3" dir={isHe ? 'rtl' : 'ltr'}>
         <div>
           <div className="flex items-center gap-1.5 text-sm font-semibold text-navy-700 flex-wrap">
-            <span className="text-red-500 text-xs">♀</span>
             <span>{match.femaleName}</span>
             <span className="text-gray-300">×</span>
-            <span className="text-blue-500 text-xs">♂</span>
             <span>{match.maleName}</span>
           </div>
           <p className="text-[11px] text-gray-400 mt-0.5">
@@ -149,7 +147,7 @@ export function MatchProgressSection({
     <div className="bg-white rounded-2xl border border-gray-200 shadow-card p-5" dir={isHe ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-bold text-navy-600 flex items-center gap-2">
-          <span>📊</span>
+          <span></span>
           <span>{isHe ? 'מעקב התקדמות שידוכים' : 'Match Progress Tracker'}</span>
         </h2>
         <span className="text-xs text-gray-400">

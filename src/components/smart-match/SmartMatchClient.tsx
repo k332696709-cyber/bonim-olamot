@@ -43,7 +43,7 @@ export function SmartMatchClient({ locale }: { locale: string }) {
     return (
       <div className="max-w-xl mx-auto px-4 pb-24">
         <div className="rounded-[32px] bg-white shadow-card px-6 py-12 sm:px-10 text-center">
-          <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-2xl mb-5">{pending ? '⏳' : '🔒'}</div>
+          <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-2xl mb-5">{pending ? '' : ''}</div>
           <h2 className="text-2xl font-bold text-navy-800 mb-2">
             {pending
               ? (he ? 'ההרשמה שלך ממתינה לאישור' : 'Your registration is waiting for approval')
@@ -255,7 +255,7 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
           </div>
 
           <p className="text-xs text-navy-500 bg-white rounded-full px-4 py-2 self-start shadow-sm">
-            🔒 {he
+            {he
               ? 'מוצגים רק פרטים בסיסיים. שמות משפחה וטלפונים נחשפים רק אחרי עניין הדדי ואישור שדכנית.'
               : 'Only basic details are shown. Surnames and phone numbers are revealed only after mutual interest and matchmaker approval.'}
           </p>
@@ -351,8 +351,8 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
                   <div className="rounded-3xl bg-navy-800 text-white px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
                     <p className="flex-1 text-sm">
                       {he
-                        ? '🎉 יש עניין הדדי! שדכנית תיכנס לתמונה ותיצור איתך קשר.'
-                        : '🎉 Mutual interest! A matchmaker will step in and contact you.'}
+                        ? 'יש עניין הדדי! שדכנית תיכנס לתמונה ותיצור איתך קשר.'
+                        : 'Mutual interest! A matchmaker will step in and contact you.'}
                     </p>
                     <Link
                       href={`/${locale}/contact`}

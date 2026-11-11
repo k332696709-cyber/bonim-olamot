@@ -139,7 +139,6 @@ export default function PrivacyPage({ params: { locale } }: { params: { locale: 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#f1f1f1]" dir={he ? 'rtl' : 'ltr'}>
       <div className="hero-dark text-white text-center px-4 py-16 sm:py-24">
-        <div className="text-5xl mb-5">🔒</div>
         <h1 className="text-3xl sm:text-4xl font-bold mb-4 leading-tight">{he ? 'מדיניות פרטיות' : 'Privacy Policy'}</h1>
         <p className="text-navy-100 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
           {he

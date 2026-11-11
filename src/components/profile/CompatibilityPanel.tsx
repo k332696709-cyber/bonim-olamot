@@ -44,7 +44,7 @@ function ConflictBadge({ conflict, locale }: { conflict: ConflictAlert; locale: 
       isMajor ? 'bg-red-50 border border-red-200' : 'bg-amber-50 border border-amber-200'
     }`}>
       <span className={`text-base mt-0.5 shrink-0 ${isMajor ? 'text-red-500' : 'text-amber-500'}`}>
-        {isMajor ? '⚠' : '◎'}
+        {isMajor ? '' : '◎'}
       </span>
       <div>
         <span className={`text-xs font-semibold uppercase tracking-wide ${
@@ -122,7 +122,6 @@ export function CompatibilityPanel({
   return (
     <div className="bg-white rounded-2xl shadow-card border border-gray-100 px-6 py-5">
       <h2 className="font-semibold text-navy-500 text-base mb-4 flex items-center gap-2">
-        <span className="text-lg">⚡</span>
         {T.compatibility.title}
       </h2>
 

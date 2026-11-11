@@ -9,7 +9,7 @@ const daysAgo = (d: number) => new Date(now - d * 24 * 60 * 60 * 1000)
 
 export const MOCK_ANNOUNCEMENT: Announcement = {
   id: 'a1',
-  text: 'פגישת זום מחר בשעה 20:00 – נא לאשר השתתפות עד הבוקר 📢',
+  text: 'פגישת זום מחר בשעה 20:00 – נא לאשר השתתפות עד הבוקר ',
   createdBy: 'admin@bonim-olamot.co.il',
   active: true,
 }
@@ -49,7 +49,7 @@ export const MOCK_SOCIAL_POSTS: SocialPost[] = [
     id: 'p4',
     author: 'מרים כ.',
     authorEmail: 'miriam@bonim-olamot.co.il',
-    content: 'בירורים הסתיימו בהצלחה – מזל טוב! שידוך מושלם ❤️',
+    content: 'בירורים הסתיימו בהצלחה – מזל טוב! שידוך מושלם ',
     taggedProfiles: [
       { id: 'f5', name: 'שרה ישראלי', gender: 'female' },
       { id: 'm4', name: 'שמואל ברגר', gender: 'male' },

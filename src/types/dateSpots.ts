@@ -2,7 +2,7 @@
 // Structured for easy Supabase / DB connection later.
 // Replace mockData with real API calls when backend is ready.
 
-export type SpotCategory = 'restaurant' | 'hotel_lobby' | 'park' | 'quiet'
+export type SpotCategory = 'restaurant' | 'hotel_lobby' | 'park' | 'quiet' | 'other'
 export type SpotRegion   = 'jerusalem' | 'center' | 'north' | 'south'
 export type PriceRange   = '\u20aa' | '\u20aa\u20aa' | '\u20aa\u20aa\u20aa'
 
@@ -36,11 +36,12 @@ export interface DateSpot {
 
 // ─── Category / Region label maps ────────────────────────────────────────────
 
-export const CATEGORY_LABELS: Record<SpotCategory, { he: string; en: string; emoji: string }> = {
-  restaurant:  { he: 'מסעדות',           en: 'Restaurants',    emoji: '🍽️' },
-  hotel_lobby: { he: 'בתי מלון / לובי', en: 'Hotel Lobbies',  emoji: '🏨' },
-  park:        { he: 'פארקים וטבע',      en: 'Parks & Nature', emoji: '🌳' },
-  quiet:       { he: 'מקומות שקטים',     en: 'Quiet Spots',   emoji: '🕊️' },
+export const CATEGORY_LABELS: Record<SpotCategory, { he: string; en: string }> = {
+  restaurant:  { he: 'מסעדות',           en: 'Restaurants' },
+  hotel_lobby: { he: 'בתי מלון / לובי', en: 'Hotel Lobbies' },
+  park:        { he: 'פארקים וטבע',      en: 'Parks & Nature' },
+  quiet:       { he: 'מקומות שקטים',     en: 'Quiet Spots' },
+  other:       { he: 'אחר',              en: 'Other' },
 }
 
 export const REGION_LABELS: Record<SpotRegion, { he: string; en: string }> = {

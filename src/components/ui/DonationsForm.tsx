@@ -27,8 +27,7 @@ function CardIcon({ type }: { type: CardType }) {
   if (type === 'amex') return (
     <span className="text-[10px] font-black text-green-700 bg-green-50 border border-green-200 rounded px-1.5 py-0.5">AMEX</span>
   )
-  return <span className="text-gray-300">💳</span>
-}
+  return}
 
 function formatCardNumber(value: string, type: CardType): string {
   const digits = value.replace(/\D/g, '')
@@ -87,7 +86,6 @@ export function DonationsForm({ locale = 'he', compact = false }: DonationsFormP
   if (submitted) {
     return (
       <div className="flex flex-col items-center gap-4 py-8 text-center">
-        <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-3xl">🎉</div>
         <h3 className="text-xl font-bold text-green-700">
           {isHe ? 'תודה על תרומתך!' : 'Thank you for your donation!'}
         </h3>
@@ -266,8 +264,8 @@ export function DonationsForm({ locale = 'he', compact = false }: DonationsFormP
         {loading
           ? (isHe ? 'מעבד תשלום...' : 'Processing...')
           : finalAmount > 0
-            ? (isHe ? `❤️ תרום ₪${finalAmount}` : `❤️ Donate ₪${finalAmount}`)
-            : (isHe ? '❤️ תרום עכשיו' : '❤️ Donate Now')
+            ? (isHe ? `תרום ₪${finalAmount}` : `Donate ₪${finalAmount}`)
+            : (isHe ? 'תרום עכשיו' : 'Donate Now')
         }
       </button>
 

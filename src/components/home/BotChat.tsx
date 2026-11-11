@@ -95,7 +95,7 @@ export function BotChat({ locale }: { locale: string }) {
     return (
       <div className="flex items-center gap-3">
         <span className="w-11 h-11 rounded-xl bg-burgundy-500 flex items-center justify-center text-[10px] font-bold shrink-0">
-          {a === 'contact' ? '✉' : 'FORM'}
+          {a === 'contact' ? '' : 'FORM'}
         </span>
         <div className="leading-tight flex-1 min-w-0">
           <p className="font-semibold truncate">{map.title}</p>

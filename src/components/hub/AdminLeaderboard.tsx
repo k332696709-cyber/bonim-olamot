@@ -2,7 +2,7 @@
 
 import type { MatchmakerLeaderboardEntry } from '@/types/hub'
 
-const MEDALS = ['🥇', '🥈', '🥉']
+const MEDALS = ['', '', '']
 
 interface AdminLeaderboardProps {
   entries: MatchmakerLeaderboardEntry[]
@@ -20,7 +20,6 @@ export function AdminLeaderboard({ entries, locale }: AdminLeaderboardProps) {
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-card p-5" dir={isHe ? 'rtl' : 'ltr'}>
       <div className="flex items-center gap-2 mb-4 flex-wrap">
-        <span className="text-base">🏆</span>
         <h2 className="text-sm font-bold text-navy-600">
           {isHe ? 'לוח מובילים – שדכנים' : 'Matchmaker Leaderboard'}
         </h2>

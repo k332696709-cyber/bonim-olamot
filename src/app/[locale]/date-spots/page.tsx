@@ -14,7 +14,6 @@ export default async function DateSpotsPage({ params: { locale } }: { params: { 
       {/* ── Hero header ── */}
       <div className="hero-dark text-white px-4 py-16 sm:py-20 text-center">
         <div className="max-w-2xl mx-auto">
-          <div className="text-5xl mb-4">💑</div>
           <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-3">
             {isHe ? 'מנוע חיפוש מקומות לדייטים' : 'Date-Spot Finder'}
           </h1>
@@ -37,7 +36,7 @@ export default async function DateSpotsPage({ params: { locale } }: { params: { 
             </div>
             <div className="w-px h-8 bg-navy-600" />
             <div className="flex flex-col items-center">
-              <span className="text-2xl font-bold text-white">4</span>
+              <span className="text-2xl font-bold text-white">5</span>
               <span>{isHe ? 'קטגוריות' : 'Categories'}</span>
             </div>
           </div>
@@ -47,7 +46,7 @@ export default async function DateSpotsPage({ params: { locale } }: { params: { 
       {/* ── Tips strip ── */}
       <div className="bg-burgundy-600 text-white px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center gap-3 flex-wrap justify-center text-sm">
-          <span className="font-bold">💡 {isHe ? 'טיפ:' : 'Tip:'}</span>
+          <span className="font-bold">{isHe ? 'טיפ:' : 'Tip:'}</span>
           <span>
             {isHe
               ? 'לפגישה ראשונה — לובי מלון או בית קפה שקט. לפגישות מתקדמות — מסעדת שף או טיול בטבע.'
@@ -71,7 +70,7 @@ export default async function DateSpotsPage({ params: { locale } }: { params: { 
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-navy-800 hover:bg-navy-700
             text-white text-sm font-semibold transition-colors"
         >
-          📬 {isHe ? 'שלח הצעה' : 'Suggest a spot'}
+          {isHe ? 'שלח הצעה' : 'Suggest a spot'}
         </a>
         <div className="mt-6">
           <Link href={`/${locale}`} className="text-xs text-gray-400 hover:text-navy-500 transition-colors">

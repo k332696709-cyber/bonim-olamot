@@ -22,12 +22,13 @@ export function SpotFilters({ filters, onChange, totalShown, totalAll, locale = 
   const isHe = locale === 'he'
   const set = (patch: Partial<FilterState>) => onChange({ ...filters, ...patch })
 
-  const CATEGORIES: Array<{ value: SpotCategory | 'all'; label: string; emoji: string }> = [
-    { value: 'all',         label: isHe ? 'הכל' : 'All',                           emoji: '✨' },
-    { value: 'restaurant',  label: isHe ? CATEGORY_LABELS.restaurant.he  : CATEGORY_LABELS.restaurant.en,  emoji: CATEGORY_LABELS.restaurant.emoji  },
-    { value: 'hotel_lobby', label: isHe ? CATEGORY_LABELS.hotel_lobby.he : CATEGORY_LABELS.hotel_lobby.en, emoji: CATEGORY_LABELS.hotel_lobby.emoji },
-    { value: 'park',        label: isHe ? CATEGORY_LABELS.park.he        : CATEGORY_LABELS.park.en,        emoji: CATEGORY_LABELS.park.emoji        },
-    { value: 'quiet',       label: isHe ? CATEGORY_LABELS.quiet.he       : CATEGORY_LABELS.quiet.en,       emoji: CATEGORY_LABELS.quiet.emoji       },
+  const CATEGORIES: Array<{ value: SpotCategory | 'all'; label: string }> = [
+    { value: 'all',         label: isHe ? 'הכל' : 'All' },
+    { value: 'restaurant',  label: isHe ? CATEGORY_LABELS.restaurant.he  : CATEGORY_LABELS.restaurant.en },
+    { value: 'hotel_lobby', label: isHe ? CATEGORY_LABELS.hotel_lobby.he : CATEGORY_LABELS.hotel_lobby.en },
+    { value: 'park',        label: isHe ? CATEGORY_LABELS.park.he        : CATEGORY_LABELS.park.en },
+    { value: 'quiet',       label: isHe ? CATEGORY_LABELS.quiet.he       : CATEGORY_LABELS.quiet.en },
+    { value: 'other',       label: isHe ? CATEGORY_LABELS.other.he       : CATEGORY_LABELS.other.en },
   ]
 
   const REGIONS: Array<{ value: SpotRegion | 'all'; label: string }> = [
@@ -55,7 +56,7 @@ export function SpotFilters({ filters, onChange, totalShown, totalAll, locale = 
           type="text"
           value={filters.search}
           onChange={(e) => set({ search: e.target.value })}
-          placeholder={isHe ? 'חיפוש לפי שם או עיר...' : 'Search by name or city...'}
+          placeholder={isHe ? 'חיפוש לפי עיר, שם מקום, כתובת או סוג...' : 'Search by city, place name, address or type...'}
           className="w-full ps-10 pe-4 py-3 rounded-xl border border-gray-200 text-sm bg-white
             focus:outline-none focus:ring-2 focus:ring-navy-300 focus:border-navy-400 transition"
           dir={isHe ? 'rtl' : 'ltr'}
@@ -73,7 +74,7 @@ export function SpotFilters({ filters, onChange, totalShown, totalAll, locale = 
 
       {/* Category buttons */}
       <div className="flex flex-wrap gap-2">
-        {CATEGORIES.map(({ value, label, emoji }) => (
+        {CATEGORIES.map(({ value, label }) => (
           <button
             key={value}
             type="button"
@@ -85,7 +86,6 @@ export function SpotFilters({ filters, onChange, totalShown, totalAll, locale = 
                 : 'bg-white text-gray-600 border-gray-200 hover:border-navy-300 hover:text-navy-600',
             )}
           >
-            <span>{emoji}</span>
             <span>{label}</span>
           </button>
         ))}
@@ -133,12 +133,12 @@ export function SpotFilters({ filters, onChange, totalShown, totalAll, locale = 
           )}
           {activeCategory && (
             <span className="text-xs bg-navy-50 text-navy-700 border border-navy-200 rounded-full px-2.5 py-0.5">
-              {activeCategory.emoji} {isHe ? activeCategory.he : activeCategory.en}
+              {isHe ? activeCategory.he : activeCategory.en}
             </span>
           )}
           {activeRegion && (
             <span className="text-xs bg-burgundy-50 text-burgundy-700 border border-burgundy-200 rounded-full px-2.5 py-0.5">
-              📍 {isHe ? activeRegion.he : activeRegion.en}
+              {isHe ? activeRegion.he : activeRegion.en}
             </span>
           )}
           <button

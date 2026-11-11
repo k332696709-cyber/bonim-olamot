@@ -86,7 +86,6 @@ export default function ContactPage({ params: { locale } }: { params: { locale: 
 
       {/* ── Hero ───────────────────────────────────────────────────── */}
       <div className="hero-dark text-white text-center px-4 py-16 sm:py-24">
-        <div className="text-5xl mb-5">💬</div>
         <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-4 leading-tight">
           {isHe ? 'אנחנו כאן בשבילך' : 'We Are Here for You'}
         </h1>

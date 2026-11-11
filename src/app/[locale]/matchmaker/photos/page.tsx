@@ -89,7 +89,6 @@ export default function PhotosPage({ params: { locale } }: { params: { locale: s
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-4" dir={he ? 'rtl' : 'ltr'}>
         <div className="rounded-[32px] bg-white shadow-card p-10 text-center max-w-md">
-          <div className="text-4xl mb-3">🔒</div>
           <h1 className="text-xl font-bold text-navy-800 mb-2">{he ? 'אישור תמונות למנהל המערכת בלבד' : 'Photo review is for the system administrator only'}</h1>
           <Link href={`/${locale}/matchmaker`} className="text-sm text-navy-500 underline">{he ? 'חזרה ללוח הבקרה' : 'Back to dashboard'}</Link>
         </div>
@@ -120,7 +119,7 @@ export default function PhotosPage({ params: { locale } }: { params: { locale: s
         {loading && <p className="sm:col-span-2 text-center text-gray-400 py-10">{he ? 'טוען...' : 'Loading…'}</p>}
         {error && <p className="sm:col-span-2 rounded-2xl bg-burgundy-50 border border-burgundy-200 text-burgundy-600 text-sm px-5 py-4" role="alert">{error}</p>}
         {!loading && !error && items.length === 0 && (
-          <p className="sm:col-span-2 text-center text-gray-400 py-16">{he ? 'אין תמונות שממתינות לאישור 🎉' : 'No photos waiting 🎉'}</p>
+          <p className="sm:col-span-2 text-center text-gray-400 py-16">{he ? 'אין תמונות שממתינות לאישור ' : 'No photos waiting '}</p>
         )}
 
         {items.map((it) => (

@@ -5,7 +5,7 @@ export default function AboutPage({ params: { locale } }: { params: { locale: st
 
   const values = [
     {
-      icon: '🕊️',
+      icon: '',
       title:    isHe ? 'יראת שמיים'          : 'Heavenly Fear',
       subtitle: isHe ? 'Torah-guided matching' : 'Torah-guided matching',
       desc: isHe
@@ -13,7 +13,7 @@ export default function AboutPage({ params: { locale } }: { params: { locale: st
         : 'Every match is guided by a deep awareness of its sacred significance. We see each couple as an entire world, and act with genuine reverence.',
     },
     {
-      icon: '🤝',
+      icon: '',
       title:    isHe ? 'כבוד האדם'     : 'Human Dignity',
       subtitle: isHe ? 'Every person matters' : 'Every person matters',
       desc: isHe
@@ -21,7 +21,7 @@ export default function AboutPage({ params: { locale } }: { params: { locale: st
         : 'Every candidate is first and foremost a person with dignity, hopes, and dreams. We commit to fair, respectful, and humane treatment at every stage.',
     },
     {
-      icon: '🔒',
+      icon: '',
       title:    isHe ? 'דיסקרטיות מוחלטת' : 'Absolute Discretion',
       subtitle: isHe ? 'Your privacy is sacred' : 'Your privacy is sacred',
       desc: isHe
@@ -62,7 +62,6 @@ export default function AboutPage({ params: { locale } }: { params: { locale: st
 
       {/* ── Hero ──────────────────────────────────────────────────── */}
       <div className="hero-dark text-white text-center px-4 py-16 sm:py-24">
-        <div className="text-5xl mb-5">🏡</div>
         <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-4 leading-tight">
           {isHe ? 'אודות בונים עולמות' : 'About Bonim Olamot'}
         </h1>
@@ -108,7 +107,6 @@ export default function AboutPage({ params: { locale } }: { params: { locale: st
             {values.map((v) => (
               <div key={v.title}
                 className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-3">
-                <span className="text-4xl">{v.icon}</span>
                 <div>
                   <h3 className="text-base font-bold text-navy-700">{v.title}</h3>
                   <p className="text-xs text-navy-400 font-medium mt-0.5">{v.subtitle}</p>

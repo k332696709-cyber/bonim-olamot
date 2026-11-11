@@ -38,64 +38,64 @@ export default function TermsPage({ params: { locale } }: { params: { locale: st
   const charterPoints = isHe
     ? [
         {
-          icon: '🏅',
+          icon: '',
           title: 'נציגות ומחויבות',
           body: 'השדכן/ית הם נציגים רשמיים של הארגון ומחויבים לפעול על פי ערכיו, נהליו ואמנת האתיקה שלו בכל עת.',
         },
         {
-          icon: '🔒',
+          icon: '',
           title: 'פרטיות וסודיות',
           body: 'שמירה על סודיות מוחלטת. פרטי מועמדים לא יועברו לאף גורם מחוץ למערכת. דיווח ייעשה אך ורק להנהלת הארגון.',
         },
         {
-          icon: '💼',
+          icon: '',
           title: 'מקצועיות ואמינות',
           body: 'השדכן/ית מחויב/ת להציג מידע מדויק ומאומת בלבד. אין ללחוץ על מועמדים ואין להוסיף פרטים שאינם ידועים בוודאות.',
         },
         {
-          icon: '🤝',
+          icon: '',
           title: 'ליווי מלא עד לסיום',
           body: 'השדכן/ית מתחייב/ת ללוות את המועמדים לאורך כל שלבי התהליך — מהצגת ההצעה ועד לסיומו, בין אם בהצלחה ובין אם לאו.',
         },
         {
-          icon: '💰',
+          icon: '',
           title: 'שכר טרחה',
           body: 'דמי השידוך משולמים בהתאם לנהלי הארגון, ואך ורק במועד האירוסין. אין לדרוש תשלום כלשהו בשלבים קודמים לכך.',
         },
         {
-          icon: '⚖️',
+          icon: '',
           title: 'יושרה ושוויון',
           body: 'כל מועמד ומועמדת יטופלו בשוויון ובכבוד, ללא אפליה על בסיס מוצא, מצב כלכלי או כל שיקול זר אחר.',
         },
       ]
     : [
         {
-          icon: '🏅',
+          icon: '',
           title: 'Representation & Commitment',
           body: 'Matchmakers are official representatives of the organization and are committed to acting in accordance with its values, procedures, and code of ethics at all times.',
         },
         {
-          icon: '🔒',
+          icon: '',
           title: 'Privacy & Confidentiality',
           body: 'Absolute confidentiality is maintained. Candidate details will not be passed to any party outside the system. Reporting is done exclusively to organizational management.',
         },
         {
-          icon: '💼',
+          icon: '',
           title: 'Professionalism & Integrity',
           body: 'Matchmakers are committed to presenting only accurate, verified information. No pressure may be applied to candidates, and no unconfirmed details may be added.',
         },
         {
-          icon: '🤝',
+          icon: '',
           title: 'Full Support Until Conclusion',
           body: 'Matchmakers commit to accompanying candidates through every stage of the process — from presenting the proposal until its conclusion, whether successful or not.',
         },
         {
-          icon: '💰',
+          icon: '',
           title: 'Matchmaking Fees',
           body: 'Matchmaking fees are paid in accordance with organizational policy, and only upon engagement (Eirusin). No payment of any kind may be requested at prior stages.',
         },
         {
-          icon: '⚖️',
+          icon: '',
           title: 'Integrity & Equality',
           body: 'Every candidate is treated with equality and dignity, without discrimination based on origin, financial status, or any other irrelevant consideration.',
         },
@@ -113,7 +113,6 @@ export default function TermsPage({ params: { locale } }: { params: { locale: st
 
       {/* ── Hero ──────────────────────────────────────────────────── */}
       <div className="hero-dark text-white text-center px-4 py-16 sm:py-24">
-        <div className="text-5xl mb-5">📜</div>
         <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-4 leading-tight">
           {isHe ? 'תקנון ותנאי שימוש' : 'Terms of Service & Code of Ethics'}
         </h1>
@@ -174,7 +173,6 @@ export default function TermsPage({ params: { locale } }: { params: { locale: st
 
           {/* Intro callout */}
           <div className="bg-navy-50 border border-navy-200 rounded-2xl p-5 mb-6 flex gap-4 items-start">
-            <span className="text-2xl shrink-0">ℹ️</span>
             <p className="text-sm text-navy-700 leading-relaxed">
               {isHe
                 ? 'אמנה זו חלה על כל שדכן ושדכנית הפועלים בשם ארגון בונים עולמות. היא מפורסמת לידיעת הציבור כהתחייבות גלויה לסטנדרטים המקצועיים והמוסריים שלנו.'
@@ -187,7 +185,6 @@ export default function TermsPage({ params: { locale } }: { params: { locale: st
               <div key={p.title}
                 className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{p.icon}</span>
                   <h3 className="text-sm font-bold text-navy-700">{p.title}</h3>
                 </div>
                 <p className="text-sm text-gray-500 leading-relaxed">{p.body}</p>

@@ -93,7 +93,7 @@ export function CandidateArea({ locale }: { locale: string }) {
   if (state.status === 'signed_out' || state.status === 'not_candidate') {
     return shell(
       <div className="rounded-[32px] bg-white shadow-card px-6 py-12 text-center">
-        <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-2xl mb-5">🔒</div>
+        <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-2xl mb-5">✓</div>
         {isStaff ? (
           <>
             <h2 className="text-xl font-bold text-navy-800 mb-2">{he ? 'אתה מחובר כשדכן/ית או מנהל' : 'You are signed in as a matchmaker or admin'}</h2>
@@ -133,7 +133,7 @@ export function CandidateArea({ locale }: { locale: string }) {
   if (state.status === 'pending') {
     return shell(
       <div className="rounded-[32px] bg-white shadow-card px-6 py-12 text-center">
-        <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-2xl mb-5">⏳</div>
+        <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-2xl mb-5">✓</div>
         <h2 className="text-2xl font-bold text-navy-800 mb-2">
           {he ? `שלום ${a.fullName ?? ''}` : `Hello ${a.fullName ?? ''}`}
         </h2>
@@ -186,7 +186,7 @@ export function CandidateArea({ locale }: { locale: string }) {
         <div className="rounded-2xl bg-[#f1f1f1] px-4 py-3 mb-5 text-sm flex flex-col gap-2">
           <p className="text-navy-700">
             {state.photoStatus === 'approved' && (he ? '✓ התמונות אושרו ומוצגות למשתמשים.' : '✓ Your photos were approved and are shown to users.')}
-            {state.photoStatus === 'pending' && (he ? '⏳ התמונות ממתינות לבדיקה. עד האישור רק את/ה רואה אותן.' : '⏳ Your photos are waiting for review. Until then only you can see them.')}
+            {state.photoStatus === 'pending' && (he ? 'התמונות ממתינות לבדיקה. עד האישור רק את/ה רואה אותן.' : 'Your photos are waiting for review. Until then only you can see them.')}
             {state.photoStatus === 'rejected' && (he ? '✗ התמונות לא אושרו. נא להעלות תמונות אחרות, ברורות ומתאימות.' : '✗ Your photos were not approved. Please upload other clear, suitable photos.')}
           </p>
           <div className="flex items-center gap-3 flex-wrap">

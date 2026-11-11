@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import type { DateSpot } from '@/types/dateSpots'
+import { CATEGORY_LABELS, REGION_LABELS } from '@/types/dateSpots'
 import { SpotFilters, type FilterState } from './SpotFilters'
 import { SpotCard } from './SpotCard'
 
@@ -22,12 +23,15 @@ export function DateSpotsClient({ spots, locale = 'he' }: DateSpotsClientProps) 
 
   const filtered = useMemo(() => {
     return spots.filter((spot) => {
-      const q = filters.search.trim().toLowerCase()
-      const matchSearch =
-        !q ||
-        spot.name.toLowerCase().includes(q) ||
-        spot.city.toLowerCase().includes(q) ||
-        spot.vibe.toLowerCase().includes(q)
+      // Free search over everything the visitor might type: name, city, address, description,
+      // category and region, in Hebrew or English. Every word must match somewhere.
+      const haystack = [
+        spot.name, spot.city, spot.address ?? '', spot.vibe,
+        CATEGORY_LABELS[spot.category]?.he, CATEGORY_LABELS[spot.category]?.en,
+        REGION_LABELS[spot.region]?.he, REGION_LABELS[spot.region]?.en,
+      ].join(' ').toLowerCase()
+      const words = filters.search.trim().toLowerCase().split(/s+/).filter(Boolean)
+      const matchSearch = words.every((w) => haystack.includes(w))
 
       const matchCategory =
         filters.category === 'all' || spot.category === filters.category
@@ -62,7 +66,6 @@ export function DateSpotsClient({ spots, locale = 'he' }: DateSpotsClientProps) 
         </div>
       ) : (
         <div className="flex flex-col items-center gap-3 py-20 text-center">
-          <span className="text-5xl">🔍</span>
           <p className="text-lg font-semibold text-gray-500">
             {isHe ? 'לא נמצאו מקומות התואמים לחיפוש' : 'No spots match your search'}
           </p>

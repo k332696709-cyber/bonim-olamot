@@ -247,7 +247,6 @@ export default async function HomePage({ params: { locale } }: { params: { local
                     hover:-translate-y-1.5 transition-transform duration-300"
                 >
                   <div className="bg-navy-800 text-white px-5 py-3.5 flex items-center gap-2">
-                    <span className="text-lg">{cat.emoji}</span>
                     <span className="text-xs font-semibold bg-white/15 rounded-full px-3 py-1">
                       {isHe ? cat.he : cat.en}
                     </span>
@@ -266,7 +265,7 @@ export default async function HomePage({ params: { locale } }: { params: { local
                   <div className="px-5 py-5 flex flex-col gap-2 flex-1">
                     <div>
                       <h3 className="text-base font-bold text-navy-800 leading-snug">{spot.name}</h3>
-                      <p className="text-xs text-navy-400 mt-0.5">📍 {spot.city}</p>
+                      <p className="text-xs text-navy-400 mt-0.5">{spot.city}</p>
                     </div>
 
                     <p className="text-sm text-navy-600 leading-relaxed line-clamp-2 flex-1">{spot.vibe}</p>

@@ -205,8 +205,8 @@ export function SocialWall({ posts, currentUserName, currentUserEmail, currentMa
                 <div className="flex gap-1 mb-2">
                   {([
                     { key: 'all',    label: isHe ? 'הכל'       : 'All' },
-                    { key: 'female', label: isHe ? 'מיועדות 👩' : 'Female 👩' },
-                    { key: 'male',   label: isHe ? 'מיועדים 👨' : 'Male 👨' },
+                    { key: 'female', label: isHe ? 'מיועדות ' : 'Female ' },
+                    { key: 'male',   label: isHe ? 'מיועדים ' : 'Male ' },
                   ] as const).map(tab => (
                     <button
                       key={tab.key}

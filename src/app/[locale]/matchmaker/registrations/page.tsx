@@ -146,7 +146,6 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-4" dir={he ? 'rtl' : 'ltr'}>
         <div className="rounded-[32px] bg-white shadow-card p-10 text-center max-w-md">
-          <div className="text-4xl mb-3">🔒</div>
           <h1 className="text-xl font-bold text-navy-800 mb-2">{he ? 'ההרשמות פתוחות למנהל המערכת בלבד' : 'Registrations are for the system administrator only'}</h1>
           <Link href={`/${locale}/matchmaker`} className="text-sm text-navy-500 underline">{he ? 'חזרה ללוח הבקרה' : 'Back to dashboard'}</Link>
         </div>

@@ -30,7 +30,7 @@ export function InboxLink({ locale }: { locale: string }) {
       href={`/${locale}/matchmaker/inbox`}
       className="inline-flex items-center gap-2 rounded-full bg-navy-800 hover:bg-navy-700 text-white text-sm font-semibold px-5 h-10 transition-colors"
     >
-      ✉ {he ? 'תיבת פניות' : 'Inbox'}
+      {he ? 'תיבת פניות' : 'Inbox'}
       {!!unread && (
         <span className="min-w-5 h-5 px-1.5 rounded-full bg-burgundy-400 text-[11px] font-bold flex items-center justify-center">
           {unread}

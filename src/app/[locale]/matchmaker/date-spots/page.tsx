@@ -178,7 +178,6 @@ export default function DateSpotsAdminPage({ params: { locale } }: { params: { l
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-4" dir={he ? 'rtl' : 'ltr'}>
         <div className="rounded-[32px] bg-white shadow-card p-10 text-center max-w-md">
-          <div className="text-4xl mb-3">🔒</div>
           <h1 className="text-xl font-bold text-navy-800 mb-2">{he ? 'ניהול מקומות לדייט למנהל המערכת בלבד' : 'Date spots are for the system administrator only'}</h1>
           <Link href={`/${locale}/matchmaker`} className="text-sm text-navy-500 underline">{he ? 'חזרה ללוח הבקרה' : 'Back to dashboard'}</Link>
         </div>
@@ -237,7 +236,7 @@ export default function DateSpotsAdminPage({ params: { locale } }: { params: { l
                 </select></div>
               <div className="flex flex-col gap-1.5"><label className={label}>{he ? 'קטגוריה' : 'Category'}</label>
                 <select className={input} value={draft.category} onChange={(e) => set('category', e.target.value as SpotCategory)}>
-                  {(Object.keys(CATEGORY_LABELS) as SpotCategory[]).map((k) => <option key={k} value={k}>{CATEGORY_LABELS[k].emoji} {he ? CATEGORY_LABELS[k].he : CATEGORY_LABELS[k].en}</option>)}
+                  {(Object.keys(CATEGORY_LABELS) as SpotCategory[]).map((k) => <option key={k} value={k}>{he ? CATEGORY_LABELS[k].he : CATEGORY_LABELS[k].en}</option>)}
                 </select></div>
               <div className="flex flex-col gap-1.5 sm:col-span-2"><label className={label}>{he ? 'תיאור קצר (אווירה)' : 'Short description'}</label>
                 <textarea className={`${input} min-h-[90px]`} value={draft.vibe} maxLength={500} onChange={(e) => set('vibe', e.target.value)} /></div>
@@ -322,13 +321,13 @@ export default function DateSpotsAdminPage({ params: { locale } }: { params: { l
               <article key={r.id} className={`rounded-[24px] bg-white shadow-card p-5 flex flex-col sm:flex-row sm:items-center gap-4 ${r.is_published ? '' : 'opacity-70'}`}>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-bold text-navy-800">{cat.emoji} {r.name}</h3>
+                    <h3 className="font-bold text-navy-800">{r.name}</h3>
                     {isActivePartner(r) && <span className="text-[10px] font-bold bg-burgundy-500 text-white rounded-full px-2.5 py-0.5">{he ? 'שותף' : 'Partner'}{r.sponsor_until ? ` · ${r.sponsor_until}` : ''}</span>}
                     {!r.is_published && <span className="text-[10px] font-bold bg-navy-100 text-navy-600 rounded-full px-2.5 py-0.5">{he ? 'מוסתר' : 'Hidden'}</span>}
                     {r.is_sponsored && !isActivePartner(r) && <span className="text-[10px] font-bold bg-orange-100 text-orange-700 rounded-full px-2.5 py-0.5">{he ? 'השותפות פגה' : 'Partnership expired'}</span>}
                   </div>
                   <p className="text-xs text-navy-400 mt-1">{r.city} · {he ? REGION_LABELS[r.region].he : REGION_LABELS[r.region].en} · {he ? cat.he : cat.en}</p>
-                  {r.admin_notes && <p className="text-xs text-navy-500 mt-1.5 bg-[#f6f6f6] rounded-xl px-3 py-1.5">📝 {r.admin_notes}</p>}
+                  {r.admin_notes && <p className="text-xs text-navy-500 mt-1.5 bg-[#f6f6f6] rounded-xl px-3 py-1.5">{r.admin_notes}</p>}
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   <button onClick={() => startEdit(r)} className="h-9 px-4 rounded-full border border-navy-200 text-xs font-semibold text-navy-700 hover:bg-navy-50">{he ? 'עריכה' : 'Edit'}</button>
