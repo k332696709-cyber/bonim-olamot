@@ -49,7 +49,7 @@ export function SmartAssistantMockup({ locale }: { locale: string }) {
           <span className="text-[10px] font-semibold bg-white/10 rounded-full px-3 py-1">{he ? 'הדמיה' : 'Preview'}</span>
         </div>
 
-        <div className="p-5 flex flex-col gap-3 min-h-[360px] bg-[#f6f6f6]">
+        <div className="p-4 sm:p-5 flex flex-col gap-3 min-h-[280px] sm:min-h-[360px] bg-[#f6f6f6]">
           <Bubble show={step >= 1} mine>
             {he ? 'מחפשת בחור ישיבתי מירושלים, גיל 25 עד 28' : 'Looking for a yeshiva guy from Jerusalem, 25 to 28'}
           </Bubble>

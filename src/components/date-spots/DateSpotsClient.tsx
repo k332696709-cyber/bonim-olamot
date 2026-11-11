@@ -5,6 +5,7 @@ import type { DateSpot } from '@/types/dateSpots'
 import { CATEGORY_LABELS, REGION_LABELS } from '@/types/dateSpots'
 import { SpotFilters, type FilterState } from './SpotFilters'
 import { SpotCard } from './SpotCard'
+import { Reveal } from '@/components/home/Reveal'
 
 interface DateSpotsClientProps {
   spots:   DateSpot[]
@@ -60,8 +61,10 @@ export function DateSpotsClient({ spots, locale = 'he' }: DateSpotsClientProps) 
       {/* Results grid */}
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map((spot) => (
-            <SpotCard key={spot.id} spot={spot} locale={locale} />
+          {filtered.map((spot, i) => (
+            <Reveal key={spot.id} delay={(i % 3) * 120}>
+              <SpotCard spot={spot} locale={locale} />
+            </Reveal>
           ))}
         </div>
       ) : (

@@ -6,6 +6,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
     <div>
       <PageHero
         badge="הרשמה"
+        chips={['עד 5 תמונות', 'פרופיל מיידי', 'העוזר החכם', 'שדכנים מלווים']}
         title={"שאלון הכרות 'בונים עולמות' מיועדים"}
         subtitle="ממלאים פעם אחת, והשדכנים והעוזר החכם עושים את השאר."
       />

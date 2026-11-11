@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { fetchPublishedSpots } from '@/lib/dateSpots'
+import { PageHero } from '@/components/layout/PageHero'
 import { DateSpotsClient } from '@/components/date-spots/DateSpotsClient'
 
 export const dynamic = 'force-dynamic'
@@ -12,36 +13,30 @@ export default async function DateSpotsPage({ params: { locale } }: { params: { 
     <div className="min-h-screen bg-[#f1f1f1]" dir={isHe ? 'rtl' : 'ltr'}>
 
       {/* ── Hero header ── */}
-      <div className="hero-dark text-white px-4 py-16 sm:py-20 text-center">
-        <div className="max-w-2xl mx-auto">
-          <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-3">
-            {isHe ? 'מנוע חיפוש מקומות לדייטים' : 'Date-Spot Finder'}
-          </h1>
-          <p className="text-navy-200 text-base sm:text-lg max-w-xl mx-auto">
-            {isHe
-              ? 'מצאו את המקום המושלם לפגישה ראשונה — מסעדות, לוביות מלון, פארקים ומקומות שקטים ברחבי הארץ'
-              : 'Find the perfect spot for a first date across Israel'}
-          </p>
-
-          {/* Quick stats */}
-          <div className="flex items-center justify-center gap-8 mt-8 text-sm text-navy-300">
-            <div className="flex flex-col items-center">
-              <span className="text-2xl font-bold text-white">{spots.length}</span>
-              <span>{isHe ? 'מקומות' : 'Spots'}</span>
-            </div>
-            <div className="w-px h-8 bg-navy-600" />
-            <div className="flex flex-col items-center">
-              <span className="text-2xl font-bold text-white">4</span>
-              <span>{isHe ? 'אזורים' : 'Regions'}</span>
-            </div>
-            <div className="w-px h-8 bg-navy-600" />
-            <div className="flex flex-col items-center">
-              <span className="text-2xl font-bold text-white">5</span>
-              <span>{isHe ? 'קטגוריות' : 'Categories'}</span>
-            </div>
+      <PageHero
+        title={isHe ? 'מנוע חיפוש מקומות לדייטים' : 'Date-Spot Finder'}
+        subtitle={isHe
+          ? 'מצאו את המקום המושלם לפגישה ראשונה: מסעדות, לוביות מלון, פארקים ומקומות שקטים ברחבי הארץ'
+          : 'Find the perfect spot for a first date across Israel'}
+        chips={isHe ? ['בני ברק', 'אשדוד', 'חיפה', 'ירושלים', 'לובי מלון'] : ['Bnei Brak', 'Ashdod', 'Haifa', 'Jerusalem', 'Hotel lobby']}
+      >
+        <div className="flex items-center justify-center gap-8 text-sm text-navy-200">
+          <div className="flex flex-col items-center">
+            <span className="text-2xl font-bold text-white">{spots.length}</span>
+            <span>{isHe ? 'מקומות' : 'Spots'}</span>
+          </div>
+          <div className="w-px h-8 bg-navy-600" />
+          <div className="flex flex-col items-center">
+            <span className="text-2xl font-bold text-white">17</span>
+            <span>{isHe ? 'אזורים' : 'Regions'}</span>
+          </div>
+          <div className="w-px h-8 bg-navy-600" />
+          <div className="flex flex-col items-center">
+            <span className="text-2xl font-bold text-white">5</span>
+            <span>{isHe ? 'קטגוריות' : 'Categories'}</span>
           </div>
         </div>
-      </div>
+      </PageHero>
 
       {/* ── Tips strip ── */}
       <div className="bg-burgundy-600 text-white px-4 py-3">

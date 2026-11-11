@@ -84,7 +84,33 @@
     animation: float-y 7s ease-in-out infinite;
   }
 
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-up {
+    animation: fade-up 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  @keyframes drift {
+    0%, 100% { transform: translate(0, 0); }
+    25%      { transform: translate(8px, -12px); }
+    50%      { transform: translate(-6px, -4px); }
+    75%      { transform: translate(10px, 8px); }
+  }
+  .animate-drift {
+    animation: drift 9s ease-in-out infinite;
+  }
+
+  @keyframes sweep {
+    from { transform: translateX(-120%); }
+    to   { transform: translateX(120%); }
+  }
+  .animate-sweep {
+    animation: sweep 6s ease-in-out infinite;
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .marquee-track, .animate-float { animation: none; }
+    .marquee-track, .animate-float, .animate-drift, .animate-sweep, .animate-fade-up { animation: none; }
   }
 }

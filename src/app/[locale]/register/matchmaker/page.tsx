@@ -7,6 +7,7 @@ export default function MatchmakerRegisterPage({ params: { locale } }: { params:
     <div>
       <PageHero
         badge={he ? 'לשדכנים' : 'For matchmakers'}
+        chips={he ? ['לוח מועמדים', 'הצעות', 'סטטיסטיקה אישית', 'רשת שדכנים'] : ['Candidate board', 'Proposals', 'Personal stats', 'Matchmaker network']}
         title={he ? 'הרשמת שדכן/שדכנית' : 'Matchmaker registration'}
         subtitle={he ? 'הצטרפו לרשת השדכנים של בונים עולמות. המנהל מאשר כל בקשה.' : 'Join the Bonim Olamot network. The administrator approves every request.'}
       />
