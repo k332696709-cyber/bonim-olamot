@@ -10,7 +10,6 @@ import { restoreSession, clearSession, type MatchmakerSession } from '@/lib/auth
 import { createClient } from '@/lib/supabase/client'
 import { mapProfileRow } from '@/lib/supabase/mapProfile'
 import { getT } from '@/lib/i18n/translations'
-import { AnnouncementBar } from '@/components/hub/AnnouncementBar'
 import { AdminLinks } from '@/components/matchmaker/InboxLink'
 import { SocialWall } from '@/components/hub/SocialWall'
 import { MatchProgressSection } from '@/components/hub/MatchProgressSection'
@@ -323,14 +322,6 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
   return (
     <div className="min-h-screen bg-[#f1f1f1]" dir={isHe ? 'rtl' : 'ltr'}>
 
-      {/* ── Global Announcement Bar ── */}
-      <AnnouncementBar
-        announcement={announcement}
-        isAdmin={isAdmin}
-        locale={locale}
-        onUpdate={handleAnnouncementUpdate}
-      />
-
       {/* ── Page header ── */}
       <header>
         <div className="hero-dark text-white pt-6 pb-20">
@@ -381,14 +372,16 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
             {/* Social Wall (2/3 width on large screens) */}
             <div className="lg:col-span-2 flex flex-col gap-3">
               <SectionHeader
-                title={isHe ? 'חומת עדכונים – Social Wall' : 'Social Wall'}
-                subtitle={isHe ? 'שתף עדכונים ותייג מועמדים' : 'Share updates and tag candidates'}
+                title={isHe ? 'ערוץ השדכנים' : 'Matchmakers channel'}
+                subtitle={isHe ? 'הודעות פנימיות לצוות, עם תיוג מועמדים' : 'Internal team messages, with candidate tags'}
               />
               <SocialWall
                 posts={posts}
                 currentUserName={session?.name ?? ''}
                 currentUserEmail={currentEmail}
                 currentMatchmakerId={session?.matchmakerId ?? ''}
+                isAdmin={isAdmin}
+                onDeletePost={(id) => setPosts(prev => prev.filter(p => p.id !== id))}
                 locale={locale}
                 onNewPost={handleNewPost}
                 taggableProfiles={taggableProfiles}
