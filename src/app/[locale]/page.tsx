@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { BotChat } from '@/components/home/BotChat'
 import { Showcase } from '@/components/home/Showcase'
+import { HowItWorks } from '@/components/home/HowItWorks'
 import { Reveal } from '@/components/home/Reveal'
 import { WordBand } from '@/components/home/WordBand'
 import { getT } from '@/lib/i18n/translations'
@@ -86,6 +87,9 @@ export default async function HomePage({ params: { locale } }: { params: { local
 
       {/* ══ Showcase: stacked animated cards ═══════════════════════════════════ */}
       <Showcase locale={locale} />
+
+      {/* ══ How it works: stacked animated steps ═══════════════════════════════ */}
+      <HowItWorks locale={locale} />
 
       {/* ══ 2. Candidates (light) ══════════════════════════════════════════════ */}
       <section className="px-4 py-20 sm:py-28 bg-[#f1f1f1]">
