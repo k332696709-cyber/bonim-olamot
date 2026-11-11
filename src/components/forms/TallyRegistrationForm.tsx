@@ -21,6 +21,7 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
   const [serverError, setServerError] = useState('')
   const [done, setDone] = useState(false)
   const [consent, setConsent] = useState(false)
+  const [customDraft, setCustomDraft] = useState<Record<string, string>>({})
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const topRef = useRef<HTMLDivElement>(null)
@@ -163,7 +164,19 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
     let next: string[]
     if (f.multi) next = has ? current.filter((x) => (option === OTHER ? !isOther(x) : x !== option)) : [...current, option]
     else next = has ? [] : [option]
+    if (f.max && next.length > f.max) return
     setVal(f.id, next.join(CHOICE_SEP))
+  }
+  const addCustom = (f: TallyField) => {
+    const text = (customDraft[f.id] ?? '').replace(/\|/g, '/').trim().slice(0, 60)
+    if (!text) return
+    const current = parseChoices(values[f.id] ?? '')
+    if (current.includes(text) || (f.max && current.length >= f.max)) return
+    setVal(f.id, [...current, text].join(CHOICE_SEP))
+    setCustomDraft((d) => ({ ...d, [f.id]: '' }))
+  }
+  const removeChoice = (f: TallyField, item: string) => {
+    setVal(f.id, parseChoices(values[f.id] ?? '').filter((x) => x !== item).join(CHOICE_SEP))
   }
   const setOtherText = (f: TallyField, text: string) => {
     const clean = text.replace(/\|/g, '/')
@@ -197,23 +210,34 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
 
           {f.type === 'select' && (() => {
             const chosen = parseChoices(values[f.id] ?? '')
-            const otherItem = chosen.find((x) => x === OTHER || x.startsWith(OTHER + ': '))
+            const listed = f.custom ? f.options! : withOther(f.options!)
+            const otherItem = f.custom ? undefined : chosen.find((x) => x === OTHER || x.startsWith(OTHER + ': '))
+            const ownItems = f.custom ? chosen.filter((x) => !f.options!.includes(x)) : []
+            const full = !!f.max && chosen.length >= f.max
             return (
               <div className="flex flex-col gap-3" role={f.multi ? 'group' : 'radiogroup'} aria-labelledby={`${id}-label`} id={id}>
-                {f.multi && <p className="text-sm text-navy-400 -mt-0.5">אפשר לבחור יותר מאפשרות אחת</p>}
+                {f.multi && !f.custom && <p className="text-sm text-navy-400 -mt-0.5">אפשר לבחור יותר מאפשרות אחת</p>}
+                {f.max && (
+                  <p className={`text-xs font-semibold ${full ? 'text-burgundy-500' : 'text-navy-400'}`} aria-live="polite">
+                    {chosen.length} מתוך {f.max}{full ? ' · אפשר להסיר כדי לבחור אחר' : ''}
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-2">
-                  {withOther(f.options!).map((o) => {
+                  {listed.map((o) => {
                     const on = o === OTHER ? !!otherItem : chosen.includes(o)
+                    const blocked = full && !on
                     return (
                       <button
                         key={o}
                         type="button"
                         role={f.multi ? 'checkbox' : 'radio'}
                         aria-checked={on}
-                        onClick={() => toggleChoice(f, o)}
+                        aria-disabled={blocked}
+                        onClick={() => { if (!blocked) toggleChoice(f, o) }}
                         className={`rounded-full border px-4 py-2.5 text-[15px] transition-colors ${
                           on
                             ? 'bg-navy-800 border-navy-800 text-white font-semibold'
+                            : blocked ? 'bg-white border-navy-50 text-navy-300 cursor-not-allowed'
                             : err ? 'bg-white border-burgundy-400 text-navy-700 hover:border-navy-400' : 'bg-white border-navy-100 text-navy-700 hover:border-navy-300'
                         }`}
                       >
@@ -222,7 +246,41 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
                       </button>
                     )
                   })}
+                  {ownItems.map((o) => (
+                    <button
+                      key={o}
+                      type="button"
+                      onClick={() => removeChoice(f, o)}
+                      aria-label={`הסרת ${o}`}
+                      className="rounded-full border px-4 py-2.5 text-[15px] bg-burgundy-500 border-burgundy-500 text-white font-semibold"
+                    >
+                      {o} <span className="ms-1.5" aria-hidden>{'\u00d7'}</span>
+                    </button>
+                  ))}
                 </div>
+                {f.custom && (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={customDraft[f.id] ?? ''}
+                      onChange={(e) => setCustomDraft((d) => ({ ...d, [f.id]: e.target.value }))}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustom(f) } }}
+                      maxLength={60}
+                      disabled={full}
+                      placeholder={full ? 'הגעתם למקסימום' : 'הוסיפו משהו משלכם'}
+                      className={`${inputBase} ${border} disabled:opacity-50`}
+                      aria-label="הוספת בחירה משלכם"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => addCustom(f)}
+                      disabled={full || !(customDraft[f.id] ?? '').trim()}
+                      className="shrink-0 rounded-2xl bg-navy-800 hover:bg-navy-700 disabled:opacity-40 text-white px-5 text-sm font-semibold"
+                    >
+                      הוספה
+                    </button>
+                  </div>
+                )}
                 {otherItem && (
                   <input
                     type="text"

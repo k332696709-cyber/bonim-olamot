@@ -17,6 +17,10 @@ export interface TallyField {
   options?: string[]
   /** Several options may be chosen (stored joined with " | "). */
   multi?: boolean
+  /** Highest number of choices (multi fields). */
+  max?: number
+  /** The person may add their own entries next to the listed options (no "other" chip then). */
+  custom?: boolean
   /** Short numeric free-text answers (age, number of children). */
   numeric?: boolean
   /** Section heading rendered above this field. */
@@ -60,6 +64,9 @@ export function firstChoice(value?: string): string {
 export const MAX_PHOTO_BYTES = 10 * 1024 * 1024
 export const MAX_PHOTOS = 5
 
+const TRAITS_MALE = ['רגוע', 'שמח', 'רציני', 'זורם', 'עמוק', 'חברותי', 'יוזם', 'ביישן', 'תקשורתי', 'אחראי', 'סבלני', 'אופטימי', 'חם', 'צנוע', 'יצירתי', 'מסודר', 'בעל חוש הומור', 'נותן', 'עצמאי', 'רגיש', 'נעים', 'מעשי']
+const TRAITS_FEMALE = ['רגועה', 'שמחה', 'רצינית', 'זורמת', 'עמוקה', 'חברותית', 'יוזמת', 'ביישנית', 'תקשורתית', 'אחראית', 'סבלנית', 'אופטימית', 'חמה', 'צנועה', 'יצירתית', 'מסודרת', 'בעלת חוש הומור', 'נותנת', 'עצמאית', 'רגישה', 'נעימה', 'מעשית']
+const BRINGS = ['יציבות', 'עומק', 'אמינות', 'אחריות', 'מחויבות', 'רגש', 'ביתיות', 'קלילות ושמחה', 'תקשורת', 'נאמנות', 'תמיכה', 'סבלנות', 'יושרה', 'חיבור לתורה ולערכים', 'יוזמה', 'יציבות כלכלית', 'מקצועיות והשכלה', 'הומור']
 const FAMILY_MALE = ['רווק', 'גרוש ללא', 'גרוש עם ילדים', 'אלמן ללא', 'אלמן עם ילדים']
 const FAMILY_FEMALE = ['רווקה', 'גרושה ללא', 'גרושה עם ילדים', 'אלמנה']
 const PHONE_TYPES = ['פשוט (כשר)', 'מוגן/מסונן', 'לא כשר', 'גם כשר וגם מוגן', 'גם כשר וגם לא מוגן']
@@ -141,8 +148,8 @@ export const MALE_FORM: RegistrationForm = {
         { id: 'headcoverHer', label: 'כיסוי ראש שלה לאחר חתונה', type: 'select', multi: true, required: true, options: [...HEADCOVER, 'אחר'] },
         { id: 'techHer',    label: 'גישה שלה לטכנולוגיה', type: 'textarea', required: true },
         { id: 'livingHer',  label: 'רמת חיים/סגנון שלה', type: 'textarea', required: true },
-        { id: 'traits',     label: 'מה מאפיין אותך במיוחד?', hint: "רגוע/יוזם/ביישן ועוד' (נא לכתוב מספר מאפיינים)", type: 'textarea', required: true },
-        { id: 'brings',     label: 'מה אתה מביא לנישואים?', hint: "יציבות/עומק/אמינות ועוד' (נא לכתוב מספר דברים)", type: 'textarea', required: true },
+        { id: 'traits',     label: 'מה מאפיין אותך במיוחד?', hint: 'אפשר לבחור עד 5, ולהוסיף משלכם', type: 'select', multi: true, custom: true, max: 5, required: true, options: TRAITS_MALE },
+        { id: 'brings',     label: 'מה אתה מביא לנישואים?', hint: 'אפשר לבחור עד 5, ולהוסיף משלכם', type: 'select', multi: true, custom: true, max: 5, required: true, options: BRINGS },
         { id: 'edahSought', label: 'עדה/זרם/קהילה מעודפ/ת?', type: 'textarea', required: true },
         { id: 'notSuitable', label: 'מה לא מתאים בכלל?', hint: "מודרנית מדי, סגורה מדי, שקטה מדי ועוד'", type: 'textarea', required: true },
       ],
@@ -199,8 +206,8 @@ export const FEMALE_FORM: RegistrationForm = {
         { id: 'hatHim',     label: 'כובע אחרי חתונה', type: 'select', multi: true, required: true, options: ['כובע קנייטש', 'שטריימל', 'ספודיק', 'ללא כובע כלל'] },
         { id: 'techHim',    label: 'גישה שלו לטכנולוגיה', type: 'textarea', required: true },
         { id: 'livingHim',  label: 'רמת חיים/סגנון שלו', type: 'textarea', required: true },
-        { id: 'traits',     label: 'מה מאפיין אותך במיוחד?', hint: "רגועה/יוזמת/ביישנית ועוד' (נא לכתוב מספר מאפיינים)", type: 'textarea', required: true },
-        { id: 'brings',     label: 'מה את מביאה לנשואים?', hint: "יציבות/עומק/אמינות ועוד' (נא לכתוב מספר דברים)", type: 'textarea', required: true },
+        { id: 'traits',     label: 'מה מאפיין אותך במיוחד?', hint: 'אפשר לבחור עד 5, ולהוסיף משלכם', type: 'select', multi: true, custom: true, max: 5, required: true, options: TRAITS_FEMALE },
+        { id: 'brings',     label: 'מה את מביאה לנשואים?', hint: 'אפשר לבחור עד 5, ולהוסיף משלכם', type: 'select', multi: true, custom: true, max: 5, required: true, options: BRINGS },
         { id: 'edahSought', label: 'עדה/זרם/קהילה מעודפ/ת?', type: 'textarea', required: true },
         { id: 'notSuitable', label: 'מה לא מתאים בכלל?', hint: "מודרני מדי, סגור מדי, שקט מדי ועוד'", type: 'textarea', required: true },
       ],
@@ -219,6 +226,12 @@ export function validateField(f: TallyField, value: string): string | null {
   if (f.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'כתובת אימייל לא תקינה'
   if (f.type === 'tel' && !/^[0-9+\-\s()]{7,20}$/.test(v)) return 'מספר טלפון לא תקין'
   if (f.numeric && !/^\d{1,3}$/.test(v)) return 'נא להזין מספר'
+  if (f.type === 'select' && f.custom) {
+    const items = parseChoices(v)
+    if (f.max && items.length > f.max) return `אפשר לבחור עד ${f.max}`
+    if (items.some((x) => x.length > 60)) return 'אחת הבחירות ארוכה מדי'
+    return null
+  }
   if (f.type === 'select' && f.options) {
     const opts = withOther(f.options)
     const items = parseChoices(v)
