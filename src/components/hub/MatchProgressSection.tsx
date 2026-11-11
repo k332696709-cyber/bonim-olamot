@@ -8,7 +8,8 @@ const STAGE_LABELS_HE: Record<MatchStage, string> = {
   proposal_sent: 'הצעה נשלחה',
   meeting_1: 'פגישה 1',
   meeting_2: 'פגישה 2',
-  closing: 'סגירה',
+  more_meetings: 'עוד פגישות',
+  closing: 'סגירת ווארט',
 }
 
 const STAGE_LABELS_EN: Record<MatchStage, string> = {
@@ -16,7 +17,8 @@ const STAGE_LABELS_EN: Record<MatchStage, string> = {
   proposal_sent: 'Proposal Sent',
   meeting_1: 'Meeting 1',
   meeting_2: 'Meeting 2',
-  closing: 'Closing',
+  more_meetings: 'More meetings',
+  closing: 'Engagement',
 }
 
 const STAGE_TRACK_COLOR: Record<MatchStage, string> = {
@@ -24,6 +26,7 @@ const STAGE_TRACK_COLOR: Record<MatchStage, string> = {
   proposal_sent: 'bg-blue-400',
   meeting_1: 'bg-orange-400',
   meeting_2: 'bg-navy-500',
+  more_meetings: 'bg-purple-500',
   closing: 'bg-green-500',
 }
 
@@ -32,6 +35,7 @@ const STAGE_BADGE: Record<MatchStage, string> = {
   proposal_sent: 'bg-blue-50  border-blue-200  text-blue-700',
   meeting_1:     'bg-orange-50 border-orange-200 text-orange-700',
   meeting_2:     'bg-navy-50  border-navy-200  text-navy-700',
+  more_meetings: 'bg-purple-50 border-purple-200 text-purple-700',
   closing:       'bg-green-50 border-green-200 text-green-700',
 }
 
@@ -54,7 +58,7 @@ function ProgressBar({ stage, locale }: { stage: MatchStage; locale: string }) {
               }`}
             />
             <span
-              className={`text-[9px] font-medium leading-tight text-center whitespace-nowrap ${
+              className={`text-[9px] font-medium leading-tight text-center ${
                 isCurrent ? 'text-navy-600 font-bold' : filled ? 'text-gray-500' : 'text-gray-300'
               }`}
             >
@@ -147,7 +151,6 @@ export function MatchProgressSection({
     <div className="bg-white rounded-2xl border border-gray-200 shadow-card p-5" dir={isHe ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-bold text-navy-600 flex items-center gap-2">
-          <span></span>
           <span>{isHe ? 'מעקב התקדמות שידוכים' : 'Match Progress Tracker'}</span>
         </h2>
         <span className="text-xs text-gray-400">

@@ -1,10 +1,11 @@
-export type MatchStage = 'checking' | 'proposal_sent' | 'meeting_1' | 'meeting_2' | 'closing'
+export type MatchStage = 'checking' | 'proposal_sent' | 'meeting_1' | 'meeting_2' | 'more_meetings' | 'closing'
 
 export const MATCH_STAGES: MatchStage[] = [
   'checking',
   'proposal_sent',
   'meeting_1',
   'meeting_2',
+  'more_meetings',
   'closing',
 ]
 

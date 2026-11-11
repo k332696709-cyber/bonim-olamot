@@ -211,7 +211,7 @@ export type Database = {
           matchmaker_id: string | null
           female_id: string
           male_id: string
-          stage: 'checking' | 'proposal_sent' | 'meeting_1' | 'meeting_2' | 'closing'
+          stage: 'checking' | 'proposal_sent' | 'meeting_1' | 'meeting_2' | 'more_meetings' | 'closing'
           status: 'active' | 'closed' | 'rejected'
           notes: string | null
           created_at: string
@@ -222,7 +222,7 @@ export type Database = {
           matchmaker_id?: string | null
           female_id: string
           male_id: string
-          stage?: 'checking' | 'proposal_sent' | 'meeting_1' | 'meeting_2' | 'closing'
+          stage?: 'checking' | 'proposal_sent' | 'meeting_1' | 'meeting_2' | 'more_meetings' | 'closing'
           status?: 'active' | 'closed' | 'rejected'
           notes?: string | null
           created_at?: string
@@ -233,7 +233,7 @@ export type Database = {
           matchmaker_id?: string | null
           female_id?: string
           male_id?: string
-          stage?: 'checking' | 'proposal_sent' | 'meeting_1' | 'meeting_2' | 'closing'
+          stage?: 'checking' | 'proposal_sent' | 'meeting_1' | 'meeting_2' | 'more_meetings' | 'closing'
           status?: 'active' | 'closed' | 'rejected'
           notes?: string | null
           created_at?: string
@@ -377,7 +377,7 @@ export type Database = {
     Enums: {
       gender_type: 'male' | 'female'
       matchmaker_status_type: 'green' | 'orange' | 'light_red' | 'bright_red'
-      match_stage: 'checking' | 'proposal_sent' | 'meeting_1' | 'meeting_2' | 'closing'
+      match_stage: 'checking' | 'proposal_sent' | 'meeting_1' | 'meeting_2' | 'more_meetings' | 'closing'
       match_status: 'active' | 'closed' | 'rejected'
       spot_category: 'restaurant' | 'hotel_lobby' | 'park' | 'quiet'
       spot_region: string
