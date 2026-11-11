@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import type { FemaleProfile, MaleProfile, Note } from '@/types/registration'
 import { getT } from '@/lib/i18n/translations'
@@ -13,6 +14,7 @@ import { Button } from '@/components/ui/Button'
 import { FEMALE_STYLE_OPTIONS, MALE_STYLE_OPTIONS } from '@/constants/formOptions'
 import { createClient } from '@/lib/supabase/client'
 import { getSession } from '@/lib/auth/session'
+import { downloadProfilePdf } from '@/lib/pdf/download'
 
 type AnyProfile = FemaleProfile | MaleProfile
 
@@ -22,6 +24,7 @@ interface RowState {
   notes:      Note[]
   notesOpen:  boolean
   exporting:  boolean
+  exportError: string
 }
 
 export interface ProfilesTableProps {
@@ -143,6 +146,7 @@ const IconEye = () => (
 export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTableProps) {
   const T = getT(locale)
   const { name: currentName, isAdmin } = useLockIdentity()
+  const router = useRouter()
 
   const [rowStates, setRowStates] = useState<Record<string, RowState>>(() =>
     Object.fromEntries(
@@ -154,6 +158,7 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
           notes:     [...p.notes],
           notesOpen: false,
           exporting: false,
+          exportError: '',
         },
       ]),
     ),
@@ -205,23 +210,16 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
   }, [currentName])
 
   const handleExport = useCallback(async (id: string) => {
-    updateRow(id, { exporting: true })
+    updateRow(id, { exporting: true, exportError: '' })
     try {
-      const res = await fetch(`/api/export/profile/${id}?gender=${gender}`, { method: 'POST' })
-      if (!res.ok) throw new Error('Export failed')
-      const blob = await res.blob()
-      const url  = URL.createObjectURL(blob)
-      const a    = document.createElement('a')
-      a.href = url
-      a.download = `profile-${id}.pdf`
-      a.click()
-      URL.revokeObjectURL(url)
+      await downloadProfilePdf({ id, type: 'card', locale })
     } catch (err) {
       console.error('PDF export error:', err)
+      updateRow(id, { exportError: err instanceof Error ? err.message : String(err) })
     } finally {
       updateRow(id, { exporting: false })
     }
-  }, [gender, updateRow])
+  }, [locale, updateRow])
 
   const d = T.dashboard
   const cols = [d.cols.name, d.cols.age, d.cols.city, d.cols.style, d.cols.status, d.cols.lastOffer, d.cols.lock, d.cols.actions]
@@ -273,8 +271,12 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
               <React.Fragment key={profile.id}>
                 {/* ── Main row ── */}
                 <tr
+                  onClick={() => router.push(`/${locale}/matchmaker/profiles/${profile.id}`)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) router.push(`/${locale}/matchmaker/profiles/${profile.id}`) }}
+                  tabIndex={0}
+                  role="link"
                   className={cn(
-                    'border-b border-gray-100 transition-colors duration-100',
+                    'border-b border-gray-100 transition-colors duration-100 cursor-pointer focus:outline-none focus-visible:bg-navy-50',
                     lockedByOther
                       ? 'bg-red-50/30 hover:bg-red-50/50'
                       : isEven
@@ -283,10 +285,11 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                   )}
                 >
                   {/* Name */}
-                  <td className="px-4 py-3.5 whitespace-nowrap">
+                  <td className="px-4 py-4 whitespace-nowrap">
                     <Link
                       href={`/${locale}/matchmaker/profiles/${profile.id}`}
-                      className="font-semibold text-navy-700 hover:text-navy-500 hover:underline underline-offset-2 transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-[15px] font-bold text-navy-700 hover:text-navy-500 transition-colors"
                     >
                       {profile.firstName}
                       <span className="text-gray-400 font-normal ms-1 text-xs">
@@ -296,17 +299,17 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                   </td>
 
                   {/* Age */}
-                  <td className="px-4 py-3.5 text-gray-600 text-center tabular-nums">
+                  <td className="px-4 py-4 text-gray-600 text-center tabular-nums">
                     {profile.age}
                   </td>
 
                   {/* City */}
-                  <td className="px-4 py-3.5 text-gray-600 whitespace-nowrap">
+                  <td className="px-4 py-4 text-gray-600 whitespace-nowrap">
                     {profile.city}
                   </td>
 
                   {/* Style */}
-                  <td className="px-4 py-3.5 text-gray-600 whitespace-nowrap">
+                  <td className="px-4 py-4 text-gray-600 whitespace-nowrap">
                     {getStyleLabel(profile, gender, locale)}
                   </td>
 
@@ -325,7 +328,7 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                   </td>
 
                   {/* Lock column */}
-                  <td className="px-4 py-3.5 whitespace-nowrap">
+                  <td className="px-4 py-3.5 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                     {lockedByOther ? (
                       /* Locked by someone else — show blocked badge */
                       <LockedByOtherBadge
@@ -364,15 +367,15 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                   </td>
 
                   {/* Actions */}
-                  <td className="px-4 py-3.5">
+                  <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {/* View — always available */}
                       <Link
                         href={`/${locale}/matchmaker/profiles/${profile.id}`}
                         className={cn(
-                          'inline-flex items-center gap-1 text-xs font-medium',
-                          'px-2.5 py-1.5 rounded-lg border border-navy-200',
-                          'text-navy-600 hover:bg-navy-50 transition-colors whitespace-nowrap',
+                          'inline-flex items-center gap-1 text-xs font-semibold',
+                          'px-3 py-2 rounded-lg bg-navy-700 text-white',
+                          'hover:bg-navy-600 transition-colors whitespace-nowrap',
                         )}
                       >
                         <IconEye />
@@ -419,6 +422,9 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
                         )}
                       </button>
                     </div>
+                    {rs.exportError && (
+                      <p className="text-[11px] text-red-600 mt-1.5 max-w-[240px] leading-snug" role="alert">{rs.exportError}</p>
+                    )}
                   </td>
                 </tr>
 

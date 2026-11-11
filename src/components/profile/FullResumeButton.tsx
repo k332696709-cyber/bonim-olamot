@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { downloadProfilePdf } from '@/lib/pdf/download'
 import { Button } from '@/components/ui/Button'
 
 interface FullResumeButtonProps {
@@ -22,30 +23,7 @@ export function FullResumeButton({
     setLoading(true)
     setErrorMsg(null)
     try {
-      const url = `/api/export/profile/${profileId}?gender=${gender}&type=full&locale=${locale}`
-      const res = await fetch(url, { method: 'POST' })
-
-      if (!res.ok) {
-        // Try to surface the server's error message
-        let detail = `HTTP ${res.status}`
-        try {
-          const body = await res.json()
-          detail = body.detail ?? body.error ?? detail
-        } catch { /* ignore parse error */ }
-        throw new Error(detail)
-      }
-
-      const blob = await res.blob()
-      if (blob.size === 0) throw new Error(isHe ? 'קובץ ריק התקבל' : 'Empty file received')
-
-      const objectUrl = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = objectUrl
-      a.download = `resume-${profileId}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(objectUrl)
+      await downloadProfilePdf({ id: profileId, type: 'full', locale })
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       console.error('[FullResumeButton]', msg)
@@ -79,6 +57,10 @@ export function FullResumeButton({
           ? (isHe ? 'מייצא...' : 'Exporting...')
           : (isHe ? 'קורות חיים מלאים' : 'Full Resume PDF')}
       </Button>
+
+      <p className="text-[11px] text-gray-400 max-w-[220px] leading-tight">
+        {isHe ? 'כל הפרטים והתשובות, כולל שם משפחה וטלפון. לשימוש פנימי.' : 'Every detail and answer, including surname and phone. Internal use.'}
+      </p>
 
       {errorMsg && (
         <p className="text-xs text-red-600 font-medium max-w-[220px] text-right leading-tight">

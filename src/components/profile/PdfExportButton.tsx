@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { downloadProfilePdf } from '@/lib/pdf/download'
 import { getT } from '@/lib/i18n/translations'
 
 interface PdfExportButtonProps {
@@ -20,28 +21,7 @@ export function PdfExportButton({ profileId, locale = 'he', gender = 'female' }:
     setLoading(true)
     setErrorMsg(null)
     try {
-      const res = await fetch(`/api/export/profile/${profileId}?gender=${gender}`, { method: 'POST' })
-
-      if (!res.ok) {
-        let detail = `HTTP ${res.status}`
-        try {
-          const body = await res.json()
-          detail = body.detail ?? body.error ?? detail
-        } catch { /* ignore */ }
-        throw new Error(detail)
-      }
-
-      const blob = await res.blob()
-      if (blob.size === 0) throw new Error(isHe ? 'קובץ ריק התקבל' : 'Empty file received')
-
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `profile-${profileId}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+      await downloadProfilePdf({ id: profileId, type: 'card', locale })
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       console.error('[PdfExportButton]', msg)
@@ -67,6 +47,10 @@ export function PdfExportButton({ profileId, locale = 'he', gender = 'female' }:
         </svg>
         {loading ? T.pdf.exporting : T.pdf.export}
       </Button>
+
+      <p className="text-[11px] text-gray-400 max-w-[220px] leading-tight">
+        {isHe ? 'עמוד אחד לשיתוף בבירורים. בלי שם משפחה ובלי טלפון.' : 'One page to share when making inquiries. No surname, no phone.'}
+      </p>
 
       {errorMsg && (
         <p className="text-xs text-red-600 font-medium max-w-[220px] text-right leading-tight">

@@ -311,7 +311,6 @@ function makeStyles(lang: LangKey) {
     hiddenValue: {
       color: '#9CA3AF',
       fontSize: 10,
-      fontStyle: 'italic',
       flex: 1,
     },
     // ── Tag cloud ────────────────────────────────────────────────────────────
@@ -866,7 +865,6 @@ const legacyStyles = StyleSheet.create({
   hiddenValue: {
     color: '#9CA3AF',
     fontSize: 10,
-    fontStyle: 'italic',
   },
   footer: {
     position: 'absolute',

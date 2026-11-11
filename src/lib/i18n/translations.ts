@@ -211,7 +211,7 @@ export const translations = {
       onlyAdminRelease: 'רק הם או מנהל יכולים לשחרר נעילה זו',
     },
     pdf: {
-      export: 'הפק כרטיס בירורים',
+      export: 'כרטיס בירורים',
       exporting: 'מייצא...',
     },
     profile: {
@@ -495,7 +495,7 @@ export const translations = {
       onlyAdminRelease: 'Only they or an admin can release this lock',
     },
     pdf: {
-      export: 'Generate Profile Card',
+      export: 'Inquiry card',
       exporting: 'Exporting...',
     },
     profile: {
