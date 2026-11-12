@@ -122,9 +122,21 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
       return NextResponse.json({ message: 'שמירת השאלון נכשלה. נסו שוב.' }, { status: 502 })
     }
 
+    // One row per photo, each reviewed on its own by the administrator.
+    const { error: phErr } = await (admin as any).from('candidate_photos').insert(
+      paths.map((path, position) => ({ user_id: userId, gender: form.gender, position, path, status: 'pending', is_main: position === 0 })),
+    )
+    if (phErr) {
+      console.error('registration: candidate_photos insert failed', phErr.message)
+      await (admin as any).from(table).delete().eq('id', reg.id)
+      await admin.storage.from('registration-photos').remove(paths)
+      await admin.auth.admin.deleteUser(userId)
+      return NextResponse.json({ message: 'שמירת התמונות נכשלה. נסו שוב.' }, { status: 502 })
+    }
+
     // The profile is created right away: the candidate sees it at once and matchmakers can
-    // work with it. Only the photo waits for the administrator's review.
-    const profileRow = { ...registrationToProfileRow(form.gender, answers, paths), matchmaker_status: 'bright_red' }
+    // work with it. Photos join the profile one by one, as the administrator approves them.
+    const profileRow = { ...registrationToProfileRow(form.gender, answers, []), matchmaker_status: 'bright_red' }
     const { data: profile, error: profErr } = await (admin as any).from('profiles').insert(profileRow).select('id').single()
     if (profErr || !profile) {
       console.error('registration: profile creation failed', profErr?.message)

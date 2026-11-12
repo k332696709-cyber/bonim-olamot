@@ -1,10 +1,19 @@
 /* eslint-disable */
 import { createClient } from '@/lib/supabase/client'
 import { mapProfileRow, PROFILE_SELECT } from '@/lib/supabase/mapProfile'
-import { allPhotoPaths } from '@/lib/registration/photos'
 import type { FemaleProfile, MaleProfile } from '@/types/registration'
 
 export type CandidateStatus = 'signed_out' | 'not_candidate' | 'pending' | 'approved'
+
+export interface CandidatePhoto {
+  id: string
+  /** Box number, 0 to 4 (0 is the main photo). */
+  slot: number
+  status: 'pending' | 'approved' | 'rejected'
+  url: string
+  /** The photo the candidate chose as their main one. */
+  main: boolean
+}
 
 export interface CandidateState {
   status: CandidateStatus
@@ -15,6 +24,8 @@ export interface CandidateState {
   photoUrl?: string
   /** All photos, main first. */
   photoUrls?: string[]
+  /** The five photo boxes, each with its own review status. */
+  photos?: CandidatePhoto[]
   /** pending = waiting for the administrator, approved = visible to others, rejected = upload a new one. */
   photoStatus?: 'pending' | 'approved' | 'rejected'
   /** Own profile, only once the administrator approved the registration. */
@@ -49,12 +60,16 @@ export async function loadCandidate(): Promise<CandidateState> {
       photoStatus: reg.photo_status,
     }
 
-    const urls: string[] = []
-    for (const path of allPhotoPaths(reg)) {
-      const { data: signed } = await db.storage.from('registration-photos').createSignedUrl(path, 3600)
-      if (signed?.signedUrl) urls.push(signed.signedUrl)
+    const { data: photoRows } = await db
+      .from('candidate_photos').select('id, path, position, status, is_main').eq('user_id', user.id).order('position')
+    const photos: CandidatePhoto[] = []
+    for (const r of photoRows ?? []) {
+      const { data: signed } = await db.storage.from('registration-photos').createSignedUrl(r.path, 3600)
+      photos.push({ id: r.id, slot: r.position, status: r.status, url: signed?.signedUrl ?? '', main: !!r.is_main })
     }
-    if (urls.length) { base.photoUrl = urls[0]; base.photoUrls = urls }
+    base.photos = photos
+    base.photoUrls = photos.map((x) => x.url).filter(Boolean)
+    base.photoUrl = (photos.find((x) => x.main) ?? photos[0])?.url || undefined
 
     if (reg.profile_id) {
       const { data: row } = await db.from('profiles').select(PROFILE_SELECT).eq('id', reg.profile_id).maybeSingle()

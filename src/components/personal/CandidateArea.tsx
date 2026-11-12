@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { clearSession, restoreSession } from '@/lib/auth/session'
 import { loadCandidate, type CandidateState } from '@/lib/auth/candidate'
+import { PhotoSlots } from '@/components/personal/PhotoSlots'
+import { TallyRegistrationForm } from '@/components/forms/TallyRegistrationForm'
+import { FEMALE_FORM, MALE_FORM } from '@/constants/registrationForms'
 import {
   FEMALE_STYLE_OPTIONS, MALE_STYLE_OPTIONS, TRAIT_OPTIONS_FEMALE, TRAIT_OPTIONS_MALE,
 } from '@/constants/formOptions'
@@ -25,9 +28,8 @@ export function CandidateArea({ locale }: { locale: string }) {
   const router = useRouter()
   const [state, setState] = useState<CandidateState | null>(null)
   const [isStaff, setIsStaff] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [photoMsg, setPhotoMsg] = useState('')
-  const fileRef = useRef<HTMLInputElement>(null)
+  const [editing, setEditing] = useState(false)
+  const [savedMsg, setSavedMsg] = useState('')
 
   useEffect(() => {
     let alive = true
@@ -40,37 +42,7 @@ export function CandidateArea({ locale }: { locale: string }) {
     return () => { alive = false }
   }, [])
 
-  const replacePhoto = async (list: FileList | null) => {
-    const files = Array.from(list ?? [])
-    if (files.length === 0) return
-    setPhotoMsg('')
-    if (files.length > 5) return setPhotoMsg(he ? 'אפשר להעלות עד 5 תמונות.' : 'You can upload up to 5 photos.')
-    if (files.some((f) => !f.type.startsWith('image/'))) return setPhotoMsg(he ? 'יש לבחור קבצי תמונה.' : 'Please choose image files.')
-    if (files.some((f) => f.size > 10 * 1024 * 1024)) return setPhotoMsg(he ? 'קובץ גדול מדי (עד 10 מגה-בייט לתמונה).' : 'File too large (max 10 MB each).')
-    setUploading(true)
-    try {
-      const { data: sess } = await createClient().auth.getSession()
-      const fd = new FormData()
-      for (const f of files) fd.append('photo', f)
-      const res = await fetch('/api/candidate/photo', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${sess.session?.access_token ?? ''}` },
-        body: fd,
-      })
-      const json = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        setPhotoMsg(json?.message ?? (he ? 'ההעלאה נכשלה.' : 'Upload failed.'))
-      } else {
-        setPhotoMsg(he ? 'התמונות הועלו וממתינות לאישור.' : 'Photos uploaded and waiting for approval.')
-        setState(await loadCandidate())
-      }
-    } catch {
-      setPhotoMsg(he ? 'ההעלאה נכשלה. בדקו את החיבור.' : 'Upload failed. Check your connection.')
-    } finally {
-      setUploading(false)
-      if (fileRef.current) fileRef.current.value = ''
-    }
-  }
+  const reload = async () => setState(await loadCandidate())
 
   const signOut = async () => {
     await createClient().auth.signOut()
@@ -167,6 +139,34 @@ export function CandidateArea({ locale }: { locale: string }) {
     [he ? 'אימייל' : 'Email', p?.email],
   ]
 
+  if (editing && state.gender) {
+    return shell(
+      <div className="flex flex-col gap-4">
+        <div className="rounded-[32px] bg-white shadow-card px-6 py-5">
+          <h2 className="text-xl font-bold text-navy-800">{he ? 'עריכת הפרופיל' : 'Edit your profile'}</h2>
+          <p className="text-sm text-navy-500 mt-1">
+            {he
+              ? 'כל הפרטים שמילאתם בהרשמה. אחרי השמירה הם מתעדכנים גם אצל השדכנים. את התמונות מנהלים בעמוד הפרופיל, וכתובת המייל לא ניתנת לשינוי כאן.'
+              : 'All the details you filled in when registering. After saving, matchmakers see the update too. Photos are managed on your profile page, and the email address cannot change here.'}
+          </p>
+        </div>
+        <TallyRegistrationForm
+          form={state.gender === 'female' ? FEMALE_FORM : MALE_FORM}
+          endpoint="/api/candidate/profile"
+          mode="edit"
+          initialValues={state.answers ?? {}}
+          onCancel={() => setEditing(false)}
+          onSaved={async () => {
+            await reload()
+            setEditing(false)
+            setSavedMsg(he ? 'הפרופיל עודכן.' : 'Profile updated.')
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }}
+        />
+      </div>,
+    )
+  }
+
   return shell(
     <div className="flex flex-col gap-5">
       <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-8">
@@ -180,34 +180,17 @@ export function CandidateArea({ locale }: { locale: string }) {
             <p className="text-xs font-semibold tracking-widest text-burgundy-500">{he ? 'הפרופיל שלי' : 'MY PROFILE'}</p>
             <h2 className="text-2xl font-bold text-navy-800">{p?.firstName} {p?.lastName}</h2>
           </div>
+          <button
+            type="button"
+            onClick={() => { setSavedMsg(''); setEditing(true); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+            className="ms-auto h-11 px-6 rounded-full bg-navy-800 hover:bg-navy-700 text-white text-sm font-semibold"
+          >
+            {he ? 'עריכת הפרופיל' : 'Edit profile'}
+          </button>
         </div>
+        {savedMsg && <p className="rounded-2xl bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 mb-4" role="status">{savedMsg}</p>}
 
-        {/* Photo review status */}
-        <div className="rounded-2xl bg-[#f1f1f1] px-4 py-3 mb-5 text-sm flex flex-col gap-2">
-          <p className="text-navy-700">
-            {state.photoStatus === 'approved' && (he ? '✓ התמונות אושרו ומוצגות למשתמשים.' : '✓ Your photos were approved and are shown to users.')}
-            {state.photoStatus === 'pending' && (he ? 'התמונות ממתינות לבדיקה. עד האישור רק את/ה רואה אותן.' : 'Your photos are waiting for review. Until then only you can see them.')}
-            {state.photoStatus === 'rejected' && (he ? '✗ התמונות לא אושרו. נא להעלות תמונות אחרות, ברורות ומתאימות.' : '✗ Your photos were not approved. Please upload other clear, suitable photos.')}
-          </p>
-          <div className="flex items-center gap-3 flex-wrap">
-            <input ref={fileRef} type="file" accept="image/*" multiple className="sr-only" onChange={(e) => replacePhoto(e.target.files)} />
-            <button
-              type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-              className={`h-10 px-5 rounded-full text-sm font-semibold disabled:opacity-60 ${state.photoStatus === 'rejected' ? 'bg-burgundy-500 hover:bg-burgundy-600 text-white' : 'border border-navy-200 text-navy-700 hover:bg-white'}`}
-            >
-              {uploading ? (he ? 'מעלה...' : 'Uploading…') : he ? 'החלפת תמונות (עד 5)' : 'Replace photos (up to 5)'}
-            </button>
-            {photoMsg && <span className="text-xs text-navy-600" role="status">{photoMsg}</span>}
-          </div>
-        </div>
-        {(state.photoUrls?.length ?? 0) > 1 && (
-          <div className="flex flex-wrap gap-2 mb-5">
-            {state.photoUrls!.slice(1).map((u, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={i} src={u} alt="" className="w-20 h-20 rounded-2xl object-cover bg-[#f1f1f1]" />
-            ))}
-          </div>
-        )}
+        <PhotoSlots photos={state.photos ?? []} he={he} onChanged={reload} />
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
           {rows.filter(([, v]) => v).map(([k, v]) => (
             <div key={k}>

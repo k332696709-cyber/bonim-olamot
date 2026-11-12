@@ -1,6 +1,7 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import {
   allFields, MAX_PHOTO_BYTES, MAX_PHOTOS, validateField, withOther, parseChoices, CHOICE_SEP, OTHER,
@@ -11,9 +12,20 @@ import {
  * Registration form rendered from a Tally-copy config
  * (see constants/registrationForms.ts). Always Hebrew / RTL, like the original.
  */
-export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationForm; endpoint: string }) {
+export function TallyRegistrationForm({
+  form, endpoint, mode = 'create', initialValues, onSaved, onCancel,
+}: {
+  form: RegistrationForm
+  endpoint: string
+  /** "edit": a signed-in candidate updates their answers (no password, consent or photos here). */
+  mode?: 'create' | 'edit'
+  initialValues?: Record<string, string>
+  onSaved?: () => void
+  onCancel?: () => void
+}) {
+  const editing = mode === 'edit'
   const [page, setPage] = useState(0)
-  const [values, setValues] = useState<Record<string, string>>({})
+  const [values, setValues] = useState<Record<string, string>>(initialValues ?? {})
   const [photos, setPhotos] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -27,7 +39,10 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
   const topRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const pages = form.pages
+  const pages = useMemo(
+    () => (editing ? form.pages.map((pg) => ({ fields: pg.fields.filter((f) => f.type !== 'file') })) : form.pages),
+    [form, editing],
+  )
   const last = page === pages.length - 1
 
   const setVal = (id: string, v: string) => {
@@ -95,9 +110,11 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
     e.preventDefault()
     if (!last) return goNext()
     const acct: Record<string, string> = {}
-    if (password.length < 10) acct.password = 'הסיסמה חייבת להכיל לפחות 10 תווים'
-    if (confirmPassword !== password) acct.confirmPassword = 'הסיסמאות אינן תואמות'
-    if (!consent) acct.consent = 'יש לאשר את ההסכמה כדי להמשיך'
+    if (!editing) {
+      if (password.length < 10) acct.password = 'הסיסמה חייבת להכיל לפחות 10 תווים'
+      if (confirmPassword !== password) acct.confirmPassword = 'הסיסמאות אינן תואמות'
+      if (!consent) acct.consent = 'יש לאשר את ההסכמה כדי להמשיך'
+    }
     if (Object.keys(acct).length > 0) {
       setErrors((e) => ({ ...e, ...acct }))
       return
@@ -114,10 +131,16 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
     try {
       const fd = new FormData()
       for (const f of allFields(form)) if (f.type !== 'file') fd.append(f.id, (values[f.id] ?? '').trim())
-      for (const f of photos) fd.append('photo', f)
-      fd.append('consent', '1')
-      fd.append('password', password)
-      const res = await fetch(endpoint, { method: 'POST', body: fd })
+      let headers: Record<string, string> | undefined
+      if (editing) {
+        const { data: sess } = await createClient().auth.getSession()
+        headers = { Authorization: `Bearer ${sess.session?.access_token ?? ''}` }
+      } else {
+        for (const f of photos) fd.append('photo', f)
+        fd.append('consent', '1')
+        fd.append('password', password)
+      }
+      const res = await fetch(endpoint, { method: editing ? 'PUT' : 'POST', headers, body: fd })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
         if (data?.fields) {
@@ -126,6 +149,10 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
           if (firstBad >= 0) setPage(firstBad)
         }
         setServerError(data?.message ?? 'השליחה נכשלה. נסו שוב בעוד רגע.')
+        return
+      }
+      if (editing) {
+        onSaved?.()
         return
       }
       setDone(true)
@@ -304,7 +331,8 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
               dir={f.type === 'tel' || f.type === 'email' ? 'ltr' : undefined}
               value={values[f.id] ?? ''} onChange={(e) => setVal(f.id, e.target.value)}
               maxLength={f.type === 'text' ? 200 : 100}
-              className={`${inputBase} ${border} ${f.type === 'tel' || f.type === 'email' ? 'text-end' : ''}`}
+              readOnly={editing && f.id === 'email'}
+              className={`${inputBase} ${border} ${f.type === 'tel' || f.type === 'email' ? 'text-end' : ''} ${editing && f.id === 'email' ? 'bg-[#f1f1f1] text-navy-400' : ''}`}
               aria-invalid={!!err} aria-required={f.required}
               autoComplete={f.type === 'email' ? 'email' : f.type === 'tel' ? 'tel' : 'off'}
             />
@@ -380,7 +408,7 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
         {pages[page].fields.map(renderField)}
       </div>
 
-      {last && (
+      {last && !editing && (
         <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-9 flex flex-col gap-4">
           <div>
             <h2 className="text-xl font-bold text-navy-800">סיסמה לכניסה</h2>
@@ -411,7 +439,7 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
         </div>
       )}
 
-      {last && (
+      {last && !editing && (
         <div className="rounded-2xl bg-white shadow-card px-5 py-4">
           <label className="flex items-start gap-3 cursor-pointer">
             <input
@@ -444,10 +472,15 @@ export function TallyRegistrationForm({ form, endpoint }: { form: RegistrationFo
             className="h-12 px-7 rounded-full border border-navy-200 text-navy-700 hover:bg-white text-sm font-semibold transition-colors">
             הקודם
           </button>
+        ) : editing && onCancel ? (
+          <button type="button" onClick={onCancel}
+            className="h-12 px-7 rounded-full border border-navy-200 text-navy-700 hover:bg-white text-sm font-semibold transition-colors">
+            ביטול
+          </button>
         ) : <span />}
         <button type="submit" disabled={submitting}
           className="h-12 min-w-40 px-9 rounded-full bg-burgundy-500 hover:bg-burgundy-600 disabled:opacity-60 text-white text-sm font-bold transition-colors">
-          {last ? (submitting ? 'שולח...' : 'פרסם') : 'הבא'}
+          {last ? (submitting ? (editing ? 'שומר...' : 'שולח...') : editing ? 'שמירת השינויים' : 'פרסם') : 'הבא'}
         </button>
       </div>
     </form>

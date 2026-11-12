@@ -50,11 +50,8 @@ function PhotosLink({ locale, cls }: { locale: string; cls: string }) {
     ;(async () => {
       try {
         const db = createClient() as any
-        let total = 0
-        for (const t of ['male_registrations', 'female_registrations']) {
-          const { count } = await db.from(t).select('id', { count: 'exact', head: true }).eq('photo_status', 'pending')
-          total += count ?? 0
-        }
+        const { count } = await db.from('candidate_photos').select('id', { count: 'exact', head: true }).eq('status', 'pending')
+        const total = count ?? 0
         if (alive) setWaiting(total)
       } catch {
         if (alive) setWaiting(0)
