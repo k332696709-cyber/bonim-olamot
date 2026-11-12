@@ -2,20 +2,19 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { MOCK_FEMALE_PROFILES, MOCK_MALE_PROFILES } from '@/constants/mockProfiles'
+import { createClient } from '@/lib/supabase/client'
 import { loadCandidate, type CandidateState } from '@/lib/auth/candidate'
 import {
   MALE_STYLE_OPTIONS, FEMALE_STYLE_OPTIONS, TRAIT_OPTIONS_MALE, TRAIT_OPTIONS_FEMALE,
 } from '@/constants/formOptions'
 import {
-  applyPrefs, buildProposals, describePrefs, isMale,
+  applyPrefs, describePrefs, isMale,
   type AnyProfile, type Prefs, type Proposal,
 } from '@/lib/matchmaking/assistant'
 
 type Status = 'interested' | 'mutual' | 'passed'
+type LiveProposal = Proposal & { state: 'none' | Status }
 interface Turn { role: 'user' | 'assistant'; text: string }
-
-const ALL_PROFILES: AnyProfile[] = [...MOCK_MALE_PROFILES, ...MOCK_FEMALE_PROFILES]
 
 const label = (opts: { value: string; he: string; en: string }[], v: string, he: boolean) => {
   const o = opts.find((x) => x.value === v)
@@ -89,14 +88,38 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
   const he = locale === 'he'
   const [prefs, setPrefs] = useState<Prefs>({})
   const [status, setStatus] = useState<Record<string, Status>>({})
+  const [all, setAll] = useState<LiveProposal[] | null>(null)
+  const [loadError, setLoadError] = useState(false)
   const [chat, setChat] = useState<Turn[]>([])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const endRef = useRef<HTMLDivElement>(null)
 
-  const all = useMemo(() => buildProposals(me, ALL_PROFILES), [me])
-  const cities = useMemo(() => Array.from(new Set(all.map((p) => p.city))), [all])
-  const shown = useMemo(() => applyPrefs(all, prefs, me), [all, prefs, me])
+  // The proposals are built on the server from real approved profiles; only anonymous fields arrive.
+  useEffect(() => {
+    let alive = true
+    ;(async () => {
+      try {
+        const { data } = await createClient().auth.getSession()
+        const res = await fetch('/api/candidate/proposals', { headers: { Authorization: `Bearer ${data.session?.access_token ?? ''}` } })
+        if (!res.ok) throw new Error('bad')
+        const json = await res.json()
+        if (!alive) return
+        const list: LiveProposal[] = json.proposals ?? []
+        setAll(list)
+        const st: Record<string, Status> = {}
+        for (const p of list) if (p.state !== 'none') st[p.id] = p.state
+        setStatus(st)
+      } catch {
+        if (alive) setLoadError(true)
+      }
+    })()
+    return () => { alive = false }
+  }, [])
+
+  const list = all ?? []
+  const cities = useMemo(() => Array.from(new Set(list.map((p) => p.city).filter(Boolean))), [list])
+  const shown = useMemo(() => applyPrefs(list, prefs, me), [list, prefs, me])
 
   const welcome = he
     ? 'שלום! דירגתי עבורך הצעות לפי התאמה. אפשר לכתוב לי מה לשנות: עיר, טווח גילאים או סגנון.'
@@ -141,13 +164,29 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
     }
   }
 
-  const express = (p: Proposal) => {
-    setStatus((s) => ({ ...s, [p.id]: 'interested' }))
-    // Demo only: a strong match answers "interested" back after a moment.
-    if (p.score >= 70) {
-      setTimeout(() => setStatus((s) => (s[p.id] === 'interested' ? { ...s, [p.id]: 'mutual' } : s)), 1800)
+  const record = async (p: Proposal, kind: 'interested' | 'passed') => {
+    const before = status[p.id]
+    setStatus((s) => ({ ...s, [p.id]: kind }))
+    try {
+      const { data } = await createClient().auth.getSession()
+      const res = await fetch('/api/candidate/interest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token ?? ''}` },
+        body: JSON.stringify({ to: p.id, kind }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error('bad')
+      setStatus((s) => ({ ...s, [p.id]: json.state }))
+    } catch {
+      setStatus((s) => {
+        const next = { ...s }
+        if (before) next[p.id] = before
+        else delete next[p.id]
+        return next
+      })
     }
   }
+  const express = (p: Proposal) => record(p, 'interested')
 
   const styleOpts = isMale(me) ? FEMALE_STYLE_OPTIONS : MALE_STYLE_OPTIONS
   const traitOpts = isMale(me) ? TRAIT_OPTIONS_FEMALE : TRAIT_OPTIONS_MALE
@@ -260,7 +299,22 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
               : 'Only basic details are shown. Surnames and phone numbers are revealed only after mutual interest and matchmaker approval.'}
           </p>
 
-          {shown.length === 0 && (
+          {all === null && !loadError && (
+            <div className="rounded-[28px] bg-white p-10 text-center text-navy-500 shadow-card" aria-busy="true">
+              {he ? 'מחפשת הצעות...' : 'Looking for suggestions…'}
+            </div>
+          )}
+          {loadError && (
+            <div className="rounded-[28px] bg-white p-10 text-center text-navy-500 shadow-card">
+              {he ? 'לא הצלחנו לטעון הצעות. נסו לרענן את העמוד.' : 'We could not load suggestions. Please refresh.'}
+            </div>
+          )}
+          {all !== null && all.length === 0 && (
+            <div className="rounded-[28px] bg-white p-10 text-center text-navy-500 shadow-card">
+              {he ? 'עדיין אין הצעות להצגה. כשיצטרפו עוד מועמדים מתאימים הן יופיעו כאן.' : 'No suggestions yet. They will appear here as more candidates join.'}
+            </div>
+          )}
+          {all !== null && all.length > 0 && shown.length === 0 && (
             <div className="rounded-[28px] bg-white p-10 text-center text-navy-500 shadow-card">
               {he ? 'אין הצעות שמתאימות לסינון הזה. נסו להרחיב אותו.' : 'No suggestions match these filters. Try widening them.'}
             </div>
@@ -335,7 +389,7 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
                       {he ? 'מעוניין/ת' : 'Interested'}
                     </button>
                     <button
-                      onClick={() => setStatus((s) => ({ ...s, [p.id]: 'passed' }))}
+                      onClick={() => record(p, 'passed')}
                       className="h-12 px-6 rounded-full border border-navy-200 text-navy-600 hover:bg-navy-50 text-sm font-medium transition-colors"
                     >
                       {he ? 'לא כרגע' : 'Not now'}
@@ -366,11 +420,6 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
             )
           })}
 
-          <p className="text-xs text-navy-400 text-center">
-            {he
-              ? 'הדגמה: הפרופילים והעניין ההדדי הם נתוני דוגמה. החיבור לנתונים אמיתיים יתבצע בהמשך.'
-              : 'Demo: profiles and mutual interest are sample data. Real data will be connected later.'}
-          </p>
         </section>
       </div>
     </div>
