@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { notifyOwner } from '@/lib/server/notify'
 import { createClient } from '@supabase/supabase-js'
 import { MAX_PHOTO_BYTES, MIN_AGE, SPECIALTY_VALUES } from '@/constants/matchmakerForm'
 
@@ -156,6 +157,8 @@ export async function POST(req: NextRequest) {
       await admin.auth.admin.deleteUser(userId) // roll back so the email is not stuck
       return NextResponse.json({ message: 'שמירת הבקשה נכשלה. נסו שוב.' }, { status: 502 })
     }
+
+    await notifyOwner('בקשת שדכן חדשה', [`שם: ${firstName} ${lastName}`, `עיר: ${city}`], '/he/matchmaker/team')
 
     return NextResponse.json({ ok: true })
   } catch (e) {

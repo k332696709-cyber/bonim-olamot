@@ -3,6 +3,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { allFields, MAX_PHOTO_BYTES, MAX_PHOTOS, validateField, type RegistrationForm } from '@/constants/registrationForms'
 import { registrationToProfileRow } from '@/lib/registration/toProfile'
+import { notifyOwner } from '@/lib/server/notify'
 
 const hits = new Map<string, number[]>()
 function limited(ip: string) {
@@ -146,6 +147,13 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
       return NextResponse.json({ message: 'שמירת הפרופיל נכשלה. נסו שוב.' }, { status: 502 })
     }
     await (admin as any).from(table).update({ profile_id: profile.id }).eq('id', reg.id)
+
+    // Tell the owner (first name, age and city only; the details are in the admin area).
+    await notifyOwner(
+      form.gender === 'male' ? 'הרשמה חדשה: מיועד' : 'הרשמה חדשה: מיועדת',
+      [`שם: ${answers.fullName ?? ''}`, `גיל: ${answers.age ?? ''}`, `עיר: ${answers.city ?? ''}`, `מספר תמונות: ${paths.length}`],
+      '/he/matchmaker/registrations',
+    )
 
     return NextResponse.json({ ok: true })
   } catch (e) {

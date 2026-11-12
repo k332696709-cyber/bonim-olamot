@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { notifyOwner } from '@/lib/server/notify'
 
 export const runtime = 'nodejs'
 
@@ -58,6 +59,7 @@ export async function POST(req: NextRequest) {
       console.error('contact: insert failed', error.message)
       return NextResponse.json({ message: 'שליחת ההודעה נכשלה. נסו שוב.' }, { status: 502 })
     }
+    await notifyOwner('פנייה חדשה מהאתר', [`שם: ${name}`, `נושא: ${subject}`], '/he/matchmaker/inbox')
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error('contact: error', e)

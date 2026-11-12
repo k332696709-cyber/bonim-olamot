@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
-import { getSession } from '@/lib/auth/session'
+import { createClient } from '@/lib/supabase/client'
+import { loadNotifications, markRegistrationsSeen, type Audience } from '@/lib/notifications'
 
 interface NotificationDef {
   id: string
@@ -25,32 +26,12 @@ const T = {
     markRead: 'סמן הכל כנקרא',
     empty: 'אין התראות חדשות',
     close: 'סגור',
-    matchmaker: [
-      { id: 'mm1', text: 'מועמד חדש נרשם בסקטור שלך', href: '/he/matchmaker' },
-      { id: 'mm2', text: 'עדכון מערכת לשדכנים',        href: '/he/matchmaker' },
-      { id: 'mm3', text: 'הודעה חדשה לכלל הצוות',      href: '/he/matchmaker' },
-    ] as NotificationDef[],
-    candidate: [
-      { id: 'c1', text: 'יש לך הצעת שידוך חדשה!',         href: '/he/personal' },
-      { id: 'c2', text: 'סטטוס הפרופיל שלך עודכן',          href: '/he/personal' },
-      { id: 'c3', text: 'גלה מקומות בילוי חדשים באזורך',    href: '/he/date-spots' },
-    ] as NotificationDef[],
   },
   en: {
     title: 'Notifications',
     markRead: 'Mark all as read',
     empty: 'No new notifications',
     close: 'Close',
-    matchmaker: [
-      { id: 'mm1', text: 'New candidate registered in your sector', href: '/en/matchmaker' },
-      { id: 'mm2', text: 'System update for matchmakers',            href: '/en/matchmaker' },
-      { id: 'mm3', text: 'New global announcement for the team',     href: '/en/matchmaker' },
-    ] as NotificationDef[],
-    candidate: [
-      { id: 'c1', text: 'You have a new match suggestion!',       href: '/en/personal' },
-      { id: 'c2', text: 'Your profile status was updated',        href: '/en/personal' },
-      { id: 'c3', text: 'Check out new dating spots in your area', href: '/en/date-spots' },
-    ] as NotificationDef[],
   },
 }
 
@@ -58,18 +39,34 @@ export function NotificationBell({ locale }: NotificationBellProps) {
   const [isOpen, setIsOpen]         = useState(false)
   const [notifications, setNots]    = useState<Notification[]>([])
   const [mounted, setMounted]       = useState(false)
+  const [audience, setAudience]     = useState<Audience>('visitor')
   const [isMobile, setIsMobile]     = useState(false)
   const dropdownRef                 = useRef<HTMLDivElement>(null)
   const isHe                        = locale === 'he'
   const lang                        = isHe ? T.he : T.en
 
-  // Hydration + role detection
+  const SEEN_KEY = 'bell:seen'
+
+  // Real notifications for whoever is signed in; refreshed on sign-in changes and every minute.
   useEffect(() => {
     setMounted(true)
-    const session       = getSession()
-    const isMatchmaker  = session !== null
-    const defs          = isMatchmaker ? lang.matchmaker : lang.candidate
-    setNots(defs.map(d => ({ ...d, read: false })))
+    let alive = true
+    const refresh = async () => {
+      try {
+        const { audience: who, items } = await loadNotifications(locale)
+        if (!alive) return
+        let seen: string[] = []
+        try { seen = JSON.parse(localStorage.getItem(SEEN_KEY) ?? '[]') } catch { /* ignore */ }
+        setAudience(who)
+        setNots(items.map(d => ({ ...d, read: seen.includes(d.id) })))
+      } catch {
+        if (alive) setNots([])
+      }
+    }
+    refresh()
+    const timer = setInterval(refresh, 60_000)
+    const { data: sub } = createClient().auth.onAuthStateChange(() => { refresh() })
+    return () => { alive = false; clearInterval(timer); sub.subscription.unsubscribe() }
   }, [locale])
 
   // Mobile breakpoint detection
@@ -103,9 +100,13 @@ export function NotificationBell({ locale }: NotificationBellProps) {
   const unreadCount = notifications.filter(n => !n.read).length
   const hasUnread   = unreadCount > 0
   const close       = () => setIsOpen(false)
-  const markAllRead = () => setNots(prev => prev.map(n => ({ ...n, read: true })))
+  const markAllRead = () => {
+    try { localStorage.setItem(SEEN_KEY, JSON.stringify(notifications.map(n => n.id))) } catch { /* ignore */ }
+    if (audience === 'admin' || audience === 'matchmaker') markRegistrationsSeen()
+    setNots(prev => prev.map(n => ({ ...n, read: true })))
+  }
 
-  if (!mounted) return null
+  if (!mounted || audience === 'visitor') return null
 
   /* ── Shared panel content ─────────────────────────────────────── */
   const panelContent = (dir: 'rtl' | 'ltr') => (
