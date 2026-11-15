@@ -54,6 +54,35 @@ export async function fetchPublishedSpots(): Promise<DateSpot[]> {
       .eq('is_published', true)
     if (error || !data) return []
     const spots = (data as DateSpotRow[]).map(rowToSpot)
+
+    // Saved reviews are read with the server key: the browser has no direct access to the table,
+    // because it also records who wrote each review.
+    try {
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+      if (url && key && spots.length > 0) {
+        const { createClient: createAdmin } = await import('@supabase/supabase-js')
+        const admin = createAdmin(url, key, { auth: { persistSession: false, autoRefreshToken: false } }) as any
+        const { data: revs } = await admin
+          .from('date_spot_reviews')
+          .select('id, spot_id, rating, comment, author_label, created_at')
+          .in('spot_id', spots.map((s) => s.id))
+          .order('created_at', { ascending: false })
+        const bySpot = new Map<string, any[]>()
+        for (const r of revs ?? []) {
+          const list = bySpot.get(r.spot_id) ?? []
+          list.push({ id: r.id, authorName: r.author_label || 'מועמד', rating: r.rating, text: r.comment ?? '', createdAt: String(r.created_at).slice(0, 10) })
+          bySpot.set(r.spot_id, list)
+        }
+        for (const s of spots) {
+          const list = bySpot.get(s.id) ?? []
+          s.reviews = list
+          s.reviewCount = list.length
+          s.averageRating = list.length ? Math.round((list.reduce((a, r) => a + r.rating, 0) / list.length) * 10) / 10 : 0
+        }
+      }
+    } catch { /* the places are still shown without reviews */ }
+
     return spots.sort((a, b) => Number(!!b.sponsored) - Number(!!a.sponsored) || a.name.localeCompare(b.name, 'he'))
   } catch {
     return []
