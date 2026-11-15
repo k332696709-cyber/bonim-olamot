@@ -21,6 +21,14 @@ export type SpotRegion =
   | 'negev'
   | 'dead_sea'
   | 'arava'
+/** Which date a place suits best. */
+export type DateStage = 'first' | 'second' | 'third'
+export const DATE_STAGE_LABELS: Record<DateStage, { he: string; en: string }> = {
+  first:  { he: 'דייט ראשון',  en: 'First date' },
+  second: { he: 'דייט שני',    en: 'Second date' },
+  third:  { he: 'דייט שלישי',  en: 'Third date' },
+}
+export const DATE_STAGES: DateStage[] = ['first', 'second', 'third']
 export type PriceRange   = '\u20aa' | '\u20aa\u20aa' | '\u20aa\u20aa\u20aa'
 
 export interface SpotReview {
@@ -45,6 +53,8 @@ export interface DateSpot {
   /** Paid partner: shown first with a badge. */
   sponsored?: boolean
   kosher?: boolean
+  /** Which date(s) the place suits: first, second, third. */
+  suitableDates?: DateStage[]
   priceRange?: PriceRange
   averageRating: number  // pre-computed average (1–5)
   reviewCount: number

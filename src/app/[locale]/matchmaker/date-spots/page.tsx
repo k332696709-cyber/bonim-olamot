@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { restoreSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
 import { useConfirm } from '@/components/ui/useConfirm'
-import { CATEGORY_LABELS, REGION_LABELS, REGION_ORDER, type SpotCategory, type SpotRegion } from '@/types/dateSpots'
+import { CATEGORY_LABELS, DATE_STAGES, DATE_STAGE_LABELS, REGION_LABELS, REGION_ORDER, type DateStage, type SpotCategory, type SpotRegion } from '@/types/dateSpots'
 import type { DateSpotRow } from '@/lib/dateSpots'
 
 interface Draft {
@@ -20,6 +20,7 @@ interface Draft {
   phone: string
   kosher: '' | 'yes' | 'no'
   price_range: '' | '₪' | '₪₪' | '₪₪₪'
+  suitable_dates: DateStage[]
   is_published: boolean
   is_sponsored: boolean
   sponsor_until: string
@@ -28,7 +29,7 @@ interface Draft {
 
 const EMPTY: Draft = {
   name: '', city: '', region: 'jerusalem', category: 'restaurant', vibe: '', address: '',
-  google_maps_url: '', website_url: '', phone: '', kosher: '', price_range: '',
+  google_maps_url: '', website_url: '', phone: '', kosher: '', price_range: '', suitable_dates: [],
   is_published: true, is_sponsored: false, sponsor_until: '', admin_notes: '',
 }
 
@@ -36,7 +37,7 @@ const toDraft = (r: DateSpotRow): Draft => ({
   name: r.name, city: r.city, region: r.region, category: r.category, vibe: r.vibe,
   address: r.address ?? '', google_maps_url: r.google_maps_url ?? '', website_url: r.website_url ?? '', phone: r.phone ?? '',
   kosher: r.kosher == null ? '' : r.kosher ? 'yes' : 'no',
-  price_range: r.price_range ?? '', is_published: r.is_published, is_sponsored: r.is_sponsored,
+  price_range: r.price_range ?? '', suitable_dates: r.suitable_dates ?? [], is_published: r.is_published, is_sponsored: r.is_sponsored,
   sponsor_until: r.sponsor_until ?? '', admin_notes: r.admin_notes ?? '',
 })
 
@@ -127,6 +128,7 @@ export default function DateSpotsAdminPage({ params: { locale } }: { params: { l
       phone: draft.phone.trim() || null,
       kosher: draft.kosher === '' ? null : draft.kosher === 'yes',
       price_range: draft.price_range || null,
+      suitable_dates: draft.suitable_dates,
       is_published: draft.is_published,
       is_sponsored: draft.is_sponsored,
       sponsor_until: draft.is_sponsored && draft.sponsor_until ? draft.sponsor_until : null,
@@ -259,6 +261,23 @@ export default function DateSpotsAdminPage({ params: { locale } }: { params: { l
                   <option value="">{he ? 'לא צוין' : 'Not specified'}</option>
                   <option value="₪">₪</option><option value="₪₪">₪₪</option><option value="₪₪₪">₪₪₪</option>
                 </select></div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className={label}>{he ? 'מתאים ל' : 'Suits'}</label>
+              <div className="flex flex-wrap gap-4">
+                {DATE_STAGES.map((d) => (
+                  <label key={d} className="flex items-center gap-2 text-sm text-navy-800 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 accent-burgundy-500"
+                      checked={draft.suitable_dates.includes(d)}
+                      onChange={(e) => set('suitable_dates', e.target.checked ? [...draft.suitable_dates, d] : draft.suitable_dates.filter((x) => x !== d))}
+                    />
+                    {he ? DATE_STAGE_LABELS[d].he : DATE_STAGE_LABELS[d].en}
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div className="rounded-2xl bg-[#f6f6f6] p-5 flex flex-col gap-4">

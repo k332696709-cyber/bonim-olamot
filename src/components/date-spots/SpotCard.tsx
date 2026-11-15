@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import type { DateSpot } from '@/types/dateSpots'
-import { CATEGORY_LABELS } from '@/types/dateSpots'
+import { CATEGORY_LABELS, DATE_STAGES, DATE_STAGE_LABELS } from '@/types/dateSpots'
 import { StarDisplay, StarInput } from './StarRating'
 
 const isHttpUrl = (v: string) => v.startsWith('https://') || v.startsWith('http://')
@@ -145,6 +145,17 @@ export function SpotCard({ spot, locale = 'he' }: SpotCardProps) {
 
         {localReviews.length > 0 && <StarDisplay rating={localRating} reviewCount={localReviews.length} size="sm" />}
 
+        {spot.suitableDates && spot.suitableDates.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-semibold text-gray-400">{isHe ? 'מתאים ל:' : 'Suits:'}</span>
+            {DATE_STAGES.filter((d) => spot.suitableDates!.includes(d)).map((d) => (
+              <span key={d} className="rounded-full bg-burgundy-50 text-burgundy-600 border border-burgundy-100 text-[11px] font-semibold px-2.5 py-0.5">
+                {isHe ? DATE_STAGE_LABELS[d].he : DATE_STAGE_LABELS[d].en}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Vibe — user-generated content, keep in original language */}
         <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">{spot.vibe}</p>
 
@@ -167,6 +178,14 @@ export function SpotCard({ spot, locale = 'he' }: SpotCardProps) {
               {isHe ? 'הנחיות לניווט' : 'Get Directions'}
             </a>
           )}
+          <a
+            href={`https://waze.com/ul?q=${encodeURIComponent(`${spot.name} ${spot.city}`)}&navigate=yes`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 rounded-lg border border-navy-200 text-navy-700 hover:bg-navy-50 text-xs font-semibold transition-colors"
+          >
+            Waze
+          </a>
           {spot.websiteUrl && isHttpUrl(spot.websiteUrl) && (
             <a href={spot.websiteUrl} target="_blank" rel="noopener noreferrer"
               className="px-3 py-1.5 rounded-lg border border-navy-200 text-navy-700 hover:bg-navy-50 text-xs font-semibold transition-colors">

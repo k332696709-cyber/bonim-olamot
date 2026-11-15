@@ -1,4 +1,4 @@
-import type { DateSpot, PriceRange, SpotCategory, SpotRegion } from '@/types/dateSpots'
+import type { DateSpot, DateStage, PriceRange, SpotCategory, SpotRegion } from '@/types/dateSpots'
 
 /** A row of the date_spots table. */
 export interface DateSpotRow {
@@ -14,6 +14,7 @@ export interface DateSpotRow {
   phone: string | null
   kosher: boolean | null
   price_range: PriceRange | null
+  suitable_dates: DateStage[] | null
   is_published: boolean
   is_sponsored: boolean
   sponsor_until: string | null
@@ -34,6 +35,7 @@ export function rowToSpot(r: DateSpotRow): DateSpot {
     websiteUrl: r.website_url ?? undefined,
     phone: r.phone ?? undefined,
     kosher: r.kosher ?? undefined,
+    suitableDates: r.suitable_dates ?? [],
     priceRange: r.price_range ?? undefined,
     sponsored: r.is_sponsored && (!r.sponsor_until || new Date(r.sponsor_until) >= new Date(new Date().toDateString())),
     averageRating: 0,
