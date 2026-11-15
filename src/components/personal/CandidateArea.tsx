@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { clearSession, restoreSession } from '@/lib/auth/session'
 import { loadCandidate, type CandidateState } from '@/lib/auth/candidate'
 import { PhotoSlots } from '@/components/personal/PhotoSlots'
+import { FeeNotices } from '@/components/personal/FeeNotices'
 import { TallyRegistrationForm } from '@/components/forms/TallyRegistrationForm'
 import { FEMALE_FORM, MALE_FORM } from '@/constants/registrationForms'
 import {
@@ -169,6 +170,7 @@ export function CandidateArea({ locale }: { locale: string }) {
 
   return shell(
     <div className="flex flex-col gap-5">
+      <FeeNotices he={he} />
       <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-8">
         <div className="flex items-center gap-4 mb-3">
           {state.photoUrl && (

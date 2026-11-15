@@ -80,6 +80,13 @@ export async function loadNotifications(locale: string): Promise<{ audience: Aud
   const user = data?.session?.user
   if (!user) return { audience: 'visitor', items }
 
+  let feeNotices = 0
+  try {
+    const res = await fetch('/api/candidate/fees', { headers: { Authorization: `Bearer ${data.session.access_token}` } })
+    if (res.ok) feeNotices = ((await res.json()).fees ?? []).filter((f: any) => !f.acknowledged).length
+  } catch { /* the bell just skips it */ }
+  if (feeNotices > 0) items.push({ id: `fees:${feeNotices}`, href: L('/personal'), text: he ? plural(feeNotices, 'עדכון חדש על דמי שידוך', '{n} עדכונים חדשים על דמי שידוך') : `${feeNotices} new matchmaking fee updates` })
+
   const { data: rows } = await db.from('candidate_photos').select('status').eq('user_id', user.id)
   const list: { status: string }[] = rows ?? []
   const rejected = list.filter((r) => r.status === 'rejected').length

@@ -6,19 +6,15 @@ const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 const oneLine = (s: string) => s.replace(/[\r\n]+/g, ' ').trim().slice(0, 150)
 
 /**
- * Emails the site owner about something that needs attention (new registration, inquiry,
- * matchmaker request). Sent through the Gmail account configured in the environment with an app
- * password (GMAIL_USER, GMAIL_APP_PASSWORD, optional NOTIFY_EMAIL). If it is not configured, or sending
- * fails, nothing happens: a notification must never break the visitor's request.
- *
- * Keep the content short and free of phone numbers, photos and sensitive answers; the link
- * leads to the admin area where the details are.
+ * Sends a short email through the Gmail account configured in the environment with an app
+ * password (GMAIL_USER, GMAIL_APP_PASSWORD). Returns true when it was sent. If it is not
+ * configured, or sending fails, it returns false and nothing else happens: an email must
+ * never break the visitor's request.
  */
-export async function notifyOwner(subject: string, lines: string[], path?: string): Promise<void> {
+export async function sendMail(to: string, subject: string, lines: string[], path?: string): Promise<boolean> {
   const user = process.env.GMAIL_USER
   const pass = process.env.GMAIL_APP_PASSWORD
-  if (!user || !pass) return
-  const to = process.env.NOTIFY_EMAIL || user
+  if (!user || !pass || !to) return false
 
   try {
     const transport = nodemailer.createTransport({
@@ -41,7 +37,22 @@ export async function notifyOwner(subject: string, lines: string[], path?: strin
       transport.sendMail({ from: `"בונים עולמות" <${user}>`, to, subject: oneLine(subject), text, html }),
       new Promise((_, rej) => setTimeout(() => rej(new Error('mail timeout')), 8000)),
     ])
+    return true
   } catch (e) {
-    console.error('notifyOwner failed:', e instanceof Error ? e.message : e)
+    console.error('sendMail failed:', e instanceof Error ? e.message : e)
+    return false
   }
+}
+
+/**
+ * Emails the site owner about something that needs attention (new registration, inquiry,
+ * matchmaker request, mutual interest). Goes to NOTIFY_EMAIL, or to the sending account itself.
+ *
+ * Keep the content short and free of phone numbers, photos and sensitive answers; the link
+ * leads to the admin area where the details are.
+ */
+export async function notifyOwner(subject: string, lines: string[], path?: string): Promise<void> {
+  const to = process.env.NOTIFY_EMAIL || process.env.GMAIL_USER
+  if (!to) return
+  await sendMail(to, subject, lines, path)
 }

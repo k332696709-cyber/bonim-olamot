@@ -42,6 +42,11 @@ export interface MatchProgress {
   matchmakerName: string
   matchmakerEmail: string
   updatedAt: Date
+  /** Matchmaking fee the matchmaker sent to both candidates (null until sent). */
+  feeAmount?: number | null
+  feeSentAt?: string | null
+  femaleAck?: boolean
+  maleAck?: boolean
 }
 
 export interface MatchmakerLeaderboardEntry {

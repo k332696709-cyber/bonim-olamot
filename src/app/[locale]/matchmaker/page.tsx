@@ -185,7 +185,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
       // 3. Matches
       const { data: matchesData } = await supabase
         .from('matches')
-        .select('id, female_id, male_id, matchmaker_id, stage, updated_at, matchmakers(first_name, last_name, email)')
+        .select('id, female_id, male_id, matchmaker_id, stage, updated_at, fee_amount, fee_sent_at, fee_female_ack_at, fee_male_ack_at, matchmakers(first_name, last_name, email)')
         .order('updated_at', { ascending: false })
 
       if (matchesData) {
@@ -205,6 +205,10 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
             : '',
           matchmakerEmail: row.matchmakers?.email ?? '',
           updatedAt: new Date(row.updated_at),
+          feeAmount: row.fee_amount ?? null,
+          feeSentAt: row.fee_sent_at ?? null,
+          femaleAck: !!row.fee_female_ack_at,
+          maleAck: !!row.fee_male_ack_at,
         })))
       }
     }
@@ -247,6 +251,30 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
       .update({ stage: newStage, updated_at: new Date().toISOString() })
       .eq('id', matchId)
   }, [])
+
+  // A match was opened or its fee was sent from the tracker: show it without reloading.
+  const handleMatchSaved = useCallback((m: any) => {
+    const nameOf = (id: string) => {
+      const p = [...femaleProfiles, ...maleProfiles].find((x) => x.id === id)
+      return p ? `${p.firstName} ${p.lastName}` : ''
+    }
+    const next: MatchProgress = {
+      id: m.id,
+      femaleId: m.femaleId,
+      femaleName: nameOf(m.femaleId),
+      maleId: m.maleId,
+      maleName: nameOf(m.maleId),
+      stage: m.stage as MatchStage,
+      matchmakerName: session?.name || session?.email || '',
+      matchmakerEmail: session?.email ?? '',
+      updatedAt: new Date(m.updatedAt),
+      feeAmount: m.feeAmount,
+      feeSentAt: m.feeSentAt,
+      femaleAck: m.femaleAck,
+      maleAck: m.maleAck,
+    }
+    setMatchProgress((prev) => (prev.some((x) => x.id === m.id) ? prev.map((x) => (x.id === m.id ? { ...x, ...next, matchmakerName: x.matchmakerName || next.matchmakerName, matchmakerEmail: x.matchmakerEmail || next.matchmakerEmail } : x)) : [next, ...prev]))
+  }, [femaleProfiles, maleProfiles, session])
 
   const stats = useMemo(() => {
     const all = [...femaleProfiles, ...maleProfiles]
@@ -407,6 +435,8 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
             currentUserEmail={currentEmail}
             locale={locale}
             onStageUpdate={handleStageUpdate}
+            onMatchSaved={handleMatchSaved}
+            people={[...femaleProfiles.map((x) => ({ id: x.id, name: `${x.firstName} ${x.lastName}`, gender: 'female' as const })), ...maleProfiles.map((x) => ({ id: x.id, name: `${x.firstName} ${x.lastName}`, gender: 'male' as const }))]}
           />
         </section>
 

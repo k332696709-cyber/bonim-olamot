@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import type { MatchProgress, MatchStage } from '@/types/hub'
 import { MATCH_STAGES } from '@/types/hub'
 
@@ -71,17 +73,92 @@ function ProgressBar({ stage, locale }: { stage: MatchStage; locale: string }) {
   )
 }
 
+const FEE_MIN = 5000
+const FEE_MAX = 10000
+
+async function sendFee(payload: Record<string, unknown>): Promise<{ ok: boolean; message?: string; match?: any; emailed?: number }> {
+  try {
+    const { data } = await createClient().auth.getSession()
+    const res = await fetch('/api/matchmaker/match-fee', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token ?? ''}` },
+      body: JSON.stringify(payload),
+    })
+    const json = await res.json().catch(() => ({}))
+    return res.ok ? { ok: true, match: json.match, emailed: json.emailed } : { ok: false, message: json.message }
+  } catch {
+    return { ok: false, message: 'השליחה נכשלה. בדקו את החיבור ונסו שוב.' }
+  }
+}
+
+/** Amount field + send button. The amount goes to both candidates (email and personal area). */
+function FeeEditor({
+  isHe, initial, label, onSend,
+}: {
+  isHe: boolean
+  initial?: number | null
+  label: string
+  onSend: (amount: number) => Promise<string | null>
+}) {
+  const [value, setValue] = useState(initial ? String(initial) : '')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
+  const [err, setErr] = useState('')
+
+  const submit = async () => {
+    setErr(''); setMsg('')
+    const n = Number(value.replace(/[^0-9]/g, ''))
+    if (!Number.isInteger(n) || n < FEE_MIN || n > FEE_MAX) {
+      setErr(isHe ? `הסכום חייב להיות בין ${FEE_MIN.toLocaleString('he-IL')} ל-${FEE_MAX.toLocaleString('he-IL')} ש"ח` : `Amount must be between ${FEE_MIN} and ${FEE_MAX} NIS`)
+      return
+    }
+    setBusy(true)
+    const problem = await onSend(n)
+    setBusy(false)
+    if (problem) setErr(problem)
+    else setMsg(isHe ? 'נשלח למיועד ולמיועדת.' : 'Sent to both candidates.')
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center gap-2 flex-wrap">
+        <input
+          inputMode="numeric"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder={isHe ? 'סכום בש"ח' : 'Amount, NIS'}
+          aria-label={isHe ? 'סכום דמי שידוך' : 'Matchmaking fee amount'}
+          className="h-9 w-32 rounded-lg border border-gray-200 bg-[#f1f1f1] px-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-400"
+        />
+        <button
+          type="button"
+          onClick={submit}
+          disabled={busy}
+          className="h-9 px-4 rounded-lg bg-burgundy-500 hover:bg-burgundy-600 disabled:opacity-60 text-white text-xs font-bold"
+        >
+          {busy ? (isHe ? 'שולח...' : 'Sending…') : label}
+        </button>
+      </div>
+      {err && <p className="text-xs text-burgundy-500" role="alert">{err}</p>}
+      {msg && <p className="text-xs text-green-700" role="status">{msg}</p>}
+    </div>
+  )
+}
+
 function MatchCard({
   match,
   locale,
   canEdit,
   onAdvance,
+  onMatchSaved,
 }: {
   match: MatchProgress
   locale: string
   canEdit: boolean
   onAdvance: (id: string, next: MatchStage) => void
+  onMatchSaved: (m: any) => void
 }) {
+  const [editingFee, setEditingFee] = useState(false)
   const isHe = locale === 'he'
   const labels = isHe ? STAGE_LABELS_HE : STAGE_LABELS_EN
   const currentIdx = MATCH_STAGES.indexOf(match.stage)
@@ -108,6 +185,47 @@ function MatchCard({
 
       <ProgressBar stage={match.stage} locale={locale} />
 
+      {/* Matchmaking fee */}
+      <div className="mt-3 border-t border-gray-100 pt-3" dir={isHe ? 'rtl' : 'ltr'}>
+        {match.feeAmount && !editingFee ? (
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div>
+              <p className="text-xs text-gray-500">
+                {isHe ? 'דמי שידוך שנשלחו: ' : 'Fee sent: '}
+                <span className="font-bold text-navy-700 tabular-nums">{match.feeAmount.toLocaleString(isHe ? 'he-IL' : 'en-GB')} {isHe ? 'ש"ח' : 'NIS'}</span>
+              </p>
+              <p className="text-[11px] text-gray-400 mt-0.5">
+                {isHe ? 'אישור קריאה: ' : 'Confirmed: '}
+                <span className={match.femaleAck ? 'text-green-700 font-semibold' : ''}>{isHe ? 'מיועדת' : 'woman'} {match.femaleAck ? '✓' : '—'}</span>
+                {' · '}
+                <span className={match.maleAck ? 'text-green-700 font-semibold' : ''}>{isHe ? 'מיועד' : 'man'} {match.maleAck ? '✓' : '—'}</span>
+              </p>
+            </div>
+            {canEdit && (
+              <button type="button" onClick={() => setEditingFee(true)}
+                className="text-xs font-medium text-navy-600 hover:text-navy-800 border border-navy-200 rounded-lg px-3 py-1 hover:bg-navy-50">
+                {isHe ? 'עדכון סכום' : 'Change amount'}
+              </button>
+            )}
+          </div>
+        ) : canEdit ? (
+          <FeeEditor
+            isHe={isHe}
+            initial={match.feeAmount}
+            label={match.feeAmount ? (isHe ? 'שליחת הסכום החדש' : 'Send new amount') : (isHe ? 'שליחת דמי שידוך' : 'Send matchmaking fee')}
+            onSend={async (amount) => {
+              const r = await sendFee({ matchId: match.id, amount })
+              if (!r.ok) return r.message ?? (isHe ? 'השליחה נכשלה.' : 'Sending failed.')
+              onMatchSaved(r.match)
+              setEditingFee(false)
+              return null
+            }}
+          />
+        ) : (
+          <p className="text-xs text-gray-400">{isHe ? 'דמי שידוך עוד לא נשלחו' : 'Fee not sent yet'}</p>
+        )}
+      </div>
+
       {canEdit && nextStage && (
         <button
           type="button"
@@ -129,6 +247,8 @@ interface MatchProgressSectionProps {
   currentUserEmail: string
   locale: string
   onStageUpdate: (matchId: string, newStage: MatchStage) => void
+  onMatchSaved: (m: any) => void
+  people: { id: string; name: string; gender: 'female' | 'male' }[]
 }
 
 export function MatchProgressSection({
@@ -137,8 +257,13 @@ export function MatchProgressSection({
   currentUserEmail,
   locale,
   onStageUpdate,
+  onMatchSaved,
+  people,
 }: MatchProgressSectionProps) {
   const isHe = locale === 'he'
+  const [opening, setOpening] = useState(false)
+  const [femaleId, setFemaleId] = useState('')
+  const [maleId, setMaleId] = useState('')
   const visible = isAdmin ? matches : matches.filter(m => m.matchmakerEmail === currentUserEmail)
 
   const labels = isHe ? STAGE_LABELS_HE : STAGE_LABELS_EN
@@ -156,6 +281,51 @@ export function MatchProgressSection({
         <span className="text-xs text-gray-400">
           {isHe ? `${visible.length} שידוכים פעילים` : `${visible.length} active matches`}
         </span>
+      </div>
+
+      <div className="mb-4">
+        {!opening ? (
+          <button type="button" onClick={() => setOpening(true)}
+            className="h-10 px-5 rounded-full bg-navy-800 hover:bg-navy-700 text-white text-sm font-semibold">
+            {isHe ? 'פתיחת שידוך חדש' : 'Open a new match'}
+          </button>
+        ) : (
+          <div className="rounded-2xl bg-[#f1f1f1] p-4 flex flex-col gap-3">
+            <p className="text-sm font-bold text-navy-700">{isHe ? 'שידוך חדש ושליחת דמי השידוך' : 'New match and fee'}</p>
+            <p className="text-xs text-gray-500">
+              {isHe
+                ? 'בחרו מיועדת ומיועד והזינו את הסכום שאתם לוקחים. הסכום נשלח לשניהם במייל ובאזור האישי, והם מאשרים שקראו. הסכום משולם רק לאחר סגירת האירוסין.'
+                : 'Pick a woman and a man and enter your fee. It is sent to both by email and in their personal area, and they confirm they read it. It is paid only after the engagement.'}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <select value={femaleId} onChange={(e) => setFemaleId(e.target.value)}
+                className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm" aria-label={isHe ? 'מיועדת' : 'Woman'}>
+                <option value="">{isHe ? 'מיועדת...' : 'Woman…'}</option>
+                {people.filter((x) => x.gender === 'female').map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+              </select>
+              <select value={maleId} onChange={(e) => setMaleId(e.target.value)}
+                className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm" aria-label={isHe ? 'מיועד' : 'Man'}>
+                <option value="">{isHe ? 'מיועד...' : 'Man…'}</option>
+                {people.filter((x) => x.gender === 'male').map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+              </select>
+            </div>
+            <FeeEditor
+              isHe={isHe}
+              label={isHe ? 'פתיחת שידוך ושליחת הסכום' : 'Open match and send fee'}
+              onSend={async (amount) => {
+                if (!femaleId || !maleId) return isHe ? 'יש לבחור מיועדת ומיועד.' : 'Pick a woman and a man.'
+                const r = await sendFee({ femaleId, maleId, amount })
+                if (!r.ok) return r.message ?? (isHe ? 'השליחה נכשלה.' : 'Sending failed.')
+                onMatchSaved(r.match)
+                setFemaleId(''); setMaleId(''); setOpening(false)
+                return null
+              }}
+            />
+            <button type="button" onClick={() => setOpening(false)} className="self-start text-xs text-gray-500 underline">
+              {isHe ? 'ביטול' : 'Cancel'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Stage summary pills */}
@@ -187,6 +357,7 @@ export function MatchProgressSection({
               locale={locale}
               canEdit={isAdmin || match.matchmakerEmail === currentUserEmail}
               onAdvance={onStageUpdate}
+              onMatchSaved={onMatchSaved}
             />
           ))}
         </div>
