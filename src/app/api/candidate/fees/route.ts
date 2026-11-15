@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
   const col = w.gender === 'female' ? 'female_id' : 'male_id'
   const { data: rows } = await w.admin
     .from('matches')
-    .select('id, fee_amount, fee_sent_at, fee_female_ack_at, fee_male_ack_at, matchmakers(first_name, last_name)')
+    .select('id, fee_amount, fee_sent_at, fee_female_ack_at, fee_male_ack_at, matchmakers!matches_matchmaker_id_fkey(first_name, last_name)')
     .eq(col, w.profileId)
     .not('fee_sent_at', 'is', null)
     .order('fee_sent_at', { ascending: false })

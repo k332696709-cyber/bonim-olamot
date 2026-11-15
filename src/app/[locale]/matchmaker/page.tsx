@@ -185,7 +185,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
       // 3. Matches
       const { data: matchesData } = await supabase
         .from('matches')
-        .select('id, female_id, male_id, matchmaker_id, stage, updated_at, fee_amount, fee_sent_at, fee_female_ack_at, fee_male_ack_at, matchmakers(first_name, last_name, email)')
+        .select('id, female_id, male_id, matchmaker_id, stage, updated_at, fee_amount, fee_sent_at, fee_female_ack_at, fee_male_ack_at, co_matchmaker_id, matchmakers!matches_matchmaker_id_fkey(first_name, last_name, email), co:matchmakers!matches_co_matchmaker_id_fkey(first_name, last_name, email)')
         .order('updated_at', { ascending: false })
 
       if (matchesData) {
@@ -205,6 +205,10 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
             : '',
           matchmakerEmail: row.matchmakers?.email ?? '',
           updatedAt: new Date(row.updated_at),
+          matchmakerId: row.matchmaker_id ?? null,
+          coId: row.co_matchmaker_id ?? null,
+          coName: row.co ? `${row.co.first_name} ${row.co.last_name}`.trim() : '',
+          coEmail: row.co?.email ?? '',
           feeAmount: row.fee_amount ?? null,
           feeSentAt: row.fee_sent_at ?? null,
           femaleAck: !!row.fee_female_ack_at,
@@ -254,6 +258,11 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
 
   // A match was opened or its fee was sent from the tracker: show it without reloading.
   const handleMatchSaved = useCallback((m: any) => {
+    // A small change to one match (for example the colleague working on it).
+    if (m.patch) {
+      setMatchProgress((prev) => prev.map((x) => (x.id === m.id ? { ...x, ...m.patch } : x)))
+      return
+    }
     const nameOf = (id: string) => {
       const p = [...femaleProfiles, ...maleProfiles].find((x) => x.id === id)
       return p ? `${p.firstName} ${p.lastName}` : ''
@@ -371,6 +380,9 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
           <div className="rounded-[28px] bg-white shadow-card px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-4 flex-wrap">
               {isAdmin && <AdminLinks locale={locale} />}
+              <Link href={`/${locale}/matchmaker/colleagues`} className="inline-flex items-center rounded-full border border-navy-200 text-navy-700 hover:bg-navy-50 text-sm font-semibold px-5 h-10 transition-colors">
+                {isHe ? 'צוות השדכנים' : 'The matchmakers'}
+              </Link>
               {session && <UserBadge session={session} locale={locale} onLogout={handleLogout} />}
             </div>
             <div className="flex items-center gap-4 flex-wrap">

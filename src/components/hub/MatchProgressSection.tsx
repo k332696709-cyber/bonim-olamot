@@ -145,21 +145,132 @@ function FeeEditor({
   )
 }
 
+interface Colleague { id: string; name: string; isMe: boolean }
+let colleaguesCache: Colleague[] | null = null
+
+async function loadColleagues(): Promise<Colleague[]> {
+  if (colleaguesCache) return colleaguesCache
+  try {
+    const { data } = await createClient().auth.getSession()
+    const res = await fetch('/api/matchmaker/team', { headers: { Authorization: `Bearer ${data.session?.access_token ?? ''}` } })
+    if (!res.ok) return []
+    const json = await res.json()
+    colleaguesCache = (json.members ?? []).map((m: any) => ({ id: m.id, name: m.name, isMe: !!m.isMe }))
+    return colleaguesCache ?? []
+  } catch {
+    return []
+  }
+}
+
+async function setCollaborator(matchId: string, coMatchmakerId: string | null): Promise<{ ok: boolean; message?: string; co?: { id: string; name: string; email: string } | null }> {
+  try {
+    const { data } = await createClient().auth.getSession()
+    const res = await fetch('/api/matchmaker/match-collab', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token ?? ''}` },
+      body: JSON.stringify({ matchId, coMatchmakerId }),
+    })
+    const json = await res.json().catch(() => ({}))
+    return res.ok ? { ok: true, co: json.co } : { ok: false, message: json.message }
+  } catch {
+    return { ok: false, message: 'השמירה נכשלה. בדקו את החיבור ונסו שוב.' }
+  }
+}
+
+/** Optional: a second matchmaker can work on the same match. */
+function Collaboration({
+  match, isHe, isOwner, isAdmin, isCo, onChange,
+}: {
+  match: MatchProgress
+  isHe: boolean
+  isOwner: boolean
+  isAdmin: boolean
+  isCo: boolean
+  onChange: (patch: Partial<MatchProgress>) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [list, setList] = useState<Colleague[]>([])
+  const [pick, setPick] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+
+  const openPicker = async () => {
+    setOpen(true)
+    setList(await loadColleagues())
+  }
+  const save = async (id: string | null) => {
+    setBusy(true); setErr('')
+    const r = await setCollaborator(match.id, id)
+    setBusy(false)
+    if (!r.ok) { setErr(r.message ?? (isHe ? 'השמירה נכשלה.' : 'Saving failed.')); return }
+    onChange(id && r.co ? { coId: r.co.id, coName: r.co.name, coEmail: r.co.email } : { coId: null, coName: '', coEmail: '' })
+    setOpen(false); setPick('')
+  }
+
+  const canAdd = isOwner || isAdmin
+  const choices = list.filter((c) => !c.isMe && c.id !== match.matchmakerId)
+
+  return (
+    <div className="mt-3 border-t border-gray-100 pt-3 text-xs" dir={isHe ? 'rtl' : 'ltr'}>
+      {match.coId ? (
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <p className="text-gray-500">
+            {isHe ? 'שותף/ה לשידוך: ' : 'Working with: '}
+            <span className="font-bold text-navy-700">{isCo ? (match.matchmakerName || (isHe ? 'השדכן/ית המטפל/ת' : 'the matchmaker')) : match.coName}</span>
+          </p>
+          {(isOwner || isAdmin || isCo) && (
+            <button type="button" disabled={busy} onClick={() => save(null)}
+              className="font-medium text-navy-600 hover:text-navy-800 border border-navy-200 rounded-lg px-3 py-1 hover:bg-navy-50 disabled:opacity-60">
+              {isCo ? (isHe ? 'יציאה מהשידוך' : 'Leave this match') : (isHe ? 'הסרת השותף/ה' : 'Remove')}
+            </button>
+          )}
+        </div>
+      ) : canAdd ? (
+        !open ? (
+          <button type="button" onClick={openPicker} className="font-medium text-navy-600 hover:text-navy-800 underline">
+            {isHe ? 'הוספת שדכן/ית נוסף/ת לשידוך' : 'Add another matchmaker'}
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 flex-wrap">
+            <select value={pick} onChange={(e) => setPick(e.target.value)}
+              className="h-9 rounded-lg border border-gray-200 bg-[#f1f1f1] px-3 text-xs" aria-label={isHe ? 'בחירת שדכן/ית' : 'Choose a matchmaker'}>
+              <option value="">{isHe ? 'בחרו שדכן/ית...' : 'Choose…'}</option>
+              {choices.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            <button type="button" disabled={!pick || busy} onClick={() => save(pick)}
+              className="h-9 px-4 rounded-lg bg-navy-800 hover:bg-navy-700 disabled:opacity-60 text-white font-bold">
+              {isHe ? 'הוספה' : 'Add'}
+            </button>
+            <button type="button" onClick={() => setOpen(false)} className="text-gray-500 underline">{isHe ? 'ביטול' : 'Cancel'}</button>
+          </div>
+        )
+      ) : null}
+      {err && <p className="text-burgundy-500 mt-1" role="alert">{err}</p>}
+    </div>
+  )
+}
+
 function MatchCard({
   match,
   locale,
   canEdit,
   onAdvance,
   onMatchSaved,
+  isAdmin,
+  currentUserEmail,
 }: {
   match: MatchProgress
   locale: string
   canEdit: boolean
   onAdvance: (id: string, next: MatchStage) => void
   onMatchSaved: (m: any) => void
+  isAdmin: boolean
+  currentUserEmail: string
 }) {
   const [editingFee, setEditingFee] = useState(false)
   const isHe = locale === 'he'
+  // Only the matchmaker who opened the match (or an admin) sets and sends the fee; a colleague added to it cannot.
+  const canSetFee = isAdmin || match.matchmakerEmail === currentUserEmail
   const labels = isHe ? STAGE_LABELS_HE : STAGE_LABELS_EN
   const currentIdx = MATCH_STAGES.indexOf(match.stage)
   const hasNext = currentIdx < MATCH_STAGES.length - 1
@@ -201,14 +312,14 @@ function MatchCard({
                 <span className={match.maleAck ? 'text-green-700 font-semibold' : ''}>{isHe ? 'מיועד' : 'man'} {match.maleAck ? '✓' : '—'}</span>
               </p>
             </div>
-            {canEdit && (
+            {canSetFee && (
               <button type="button" onClick={() => setEditingFee(true)}
                 className="text-xs font-medium text-navy-600 hover:text-navy-800 border border-navy-200 rounded-lg px-3 py-1 hover:bg-navy-50">
                 {isHe ? 'עדכון סכום' : 'Change amount'}
               </button>
             )}
           </div>
-        ) : canEdit ? (
+        ) : canSetFee ? (
           <FeeEditor
             isHe={isHe}
             initial={match.feeAmount}
@@ -222,9 +333,18 @@ function MatchCard({
             }}
           />
         ) : (
-          <p className="text-xs text-gray-400">{isHe ? 'דמי שידוך עוד לא נשלחו' : 'Fee not sent yet'}</p>
+          <p className="text-xs text-gray-400">{isHe ? 'דמי השידוך נקבעים ונשלחים על ידי השדכן/ית שפתח/ה את השידוך' : 'The fee is set and sent by the matchmaker who opened the match'}</p>
         )}
       </div>
+
+      <Collaboration
+        match={match}
+        isHe={isHe}
+        isAdmin={isAdmin}
+        isOwner={match.matchmakerEmail === currentUserEmail}
+        isCo={!!match.coEmail && match.coEmail === currentUserEmail}
+        onChange={(patch) => onMatchSaved({ id: match.id, patch })}
+      />
 
       {canEdit && nextStage && (
         <button
@@ -264,7 +384,7 @@ export function MatchProgressSection({
   const [opening, setOpening] = useState(false)
   const [femaleId, setFemaleId] = useState('')
   const [maleId, setMaleId] = useState('')
-  const visible = isAdmin ? matches : matches.filter(m => m.matchmakerEmail === currentUserEmail)
+  const visible = isAdmin ? matches : matches.filter(m => m.matchmakerEmail === currentUserEmail || (!!m.coEmail && m.coEmail === currentUserEmail))
 
   const labels = isHe ? STAGE_LABELS_HE : STAGE_LABELS_EN
   const stageCounts = MATCH_STAGES.reduce(
@@ -355,7 +475,9 @@ export function MatchProgressSection({
               key={match.id}
               match={match}
               locale={locale}
-              canEdit={isAdmin || match.matchmakerEmail === currentUserEmail}
+              canEdit={isAdmin || match.matchmakerEmail === currentUserEmail || (!!match.coEmail && match.coEmail === currentUserEmail)}
+              isAdmin={isAdmin}
+              currentUserEmail={currentUserEmail}
               onAdvance={onStageUpdate}
               onMatchSaved={onMatchSaved}
             />

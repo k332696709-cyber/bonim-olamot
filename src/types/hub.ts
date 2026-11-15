@@ -47,6 +47,11 @@ export interface MatchProgress {
   feeSentAt?: string | null
   femaleAck?: boolean
   maleAck?: boolean
+  /** The matchmaker who opened the match, and an optional colleague working on it with them. */
+  matchmakerId?: string | null
+  coId?: string | null
+  coName?: string
+  coEmail?: string
 }
 
 export interface MatchmakerLeaderboardEntry {
