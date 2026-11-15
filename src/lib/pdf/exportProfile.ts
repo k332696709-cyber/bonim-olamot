@@ -94,7 +94,7 @@ const UI: Record<LangKey, Record<string, string>> = {
   he: {
     fullResume:         'קורות חיים מלאים',
     brand:              'בונים עולמות',
-    confidential:       'סודי – לשימוש פנימי בלבד',
+    confidential:       'סודי ביותר – אין להעביר הלאה. לשימוש פנימי בין שדכני הארגון בלבד',
     personalDetails:    'פרטים אישיים',
     firstName:          'שם פרטי',
     fullName:           'שם מלא',
@@ -135,7 +135,7 @@ const UI: Record<LangKey, Record<string, string>> = {
   en: {
     fullResume:         'Full Resume',
     brand:              'Bonim Olamot',
-    confidential:       'Confidential – Internal Use Only',
+    confidential:       'Strictly confidential – do not pass on. For internal use between the matchmakers of the organization only',
     personalDetails:    'Personal Details',
     firstName:          'First Name',
     fullName:           'Full Name',

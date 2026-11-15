@@ -59,7 +59,12 @@ export function FullResumeButton({
       </Button>
 
       <p className="text-[11px] text-gray-400 max-w-[220px] leading-tight">
-        {isHe ? 'כל הפרטים והתשובות, כולל שם משפחה וטלפון. לשימוש פנימי.' : 'Every detail and answer, including surname and phone. Internal use.'}
+        {isHe ? 'כל הפרטים והתשובות, כולל שם משפחה וטלפון.' : 'Every detail and answer, including surname and phone.'}
+      </p>
+      <p className="text-[11px] font-bold text-burgundy-600 max-w-[220px] leading-tight">
+        {isHe
+          ? 'סודי ביותר. אין להעביר הלאה. לשימוש פנימי בין שדכני הארגון בלבד.'
+          : 'Strictly confidential. Do not pass on. For internal use between the organization\'s matchmakers only.'}
       </p>
 
       {errorMsg && (
