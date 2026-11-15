@@ -226,6 +226,7 @@ export function validateField(f: TallyField, value: string): string | null {
   if (f.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'כתובת אימייל לא תקינה'
   if (f.type === 'tel' && !/^[0-9+\-\s()]{7,20}$/.test(v)) return 'מספר טלפון לא תקין'
   if (f.numeric && !/^\d{1,3}$/.test(v)) return 'נא להזין מספר'
+  if (f.id === 'age' && Number(v) < 18) return 'ההרשמה מגיל 18 ומעלה'
   if (f.type === 'select' && f.custom) {
     const items = parseChoices(v)
     if (f.max && items.length > f.max) return `אפשר לבחור עד ${f.max}`

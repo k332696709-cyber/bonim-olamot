@@ -5,7 +5,12 @@ export default function TermsPage({ params: { locale } }: { params: { locale: st
 
   const generalTerms = isHe
     ? [
+        'ההרשמה מיועדת למי שמלאו לו 18 שנים ומעלה.',
         'המועמד/ת מתחייב/ת שכל המידע שמסר/ה בטופס ההרשמה הוא אמיתי, מדויק ומלא.',
+        'הכניסה לאזור האישי היא אישית. המועמד/ת אחראי/ת לשמירת הסיסמה ולא להעבירה לאחר.',
+        'התמונות שמועלות הן של המועמד/ת עצמו/ה. כל תמונה נבדקת על ידי מנהל המערכת לפני שהיא מוצגת לאחרים, והארגון רשאי לדחות תמונה שאינה מתאימה.',
+        'בהצעות באתר מוצגים פרטים בסיסיים בלבד, ללא שם משפחה וללא טלפון. סימון "מעוניין/ת" נשמר במערכת ואינו גלוי לצד השני. רק כששני הצדדים מסמנים עניין, שדכן/ית יוצר/ת קשר ופרטי הקשר נמסרים בליווי.',
+        'אסור לפרסם, לצלם או להעביר הלאה פרטים או תמונות של מועמדים אחרים שהוצגו באתר.',
         'חל איסור מוחלט להעביר פרטים של מועמדים אחרים לגורמים שלישיים ללא אישור הארגון.',
         'המועמד/ת מתחייב/ת לנהוג בכבוד ובאדיבות כלפי כל הנוגעים בתהליך השידוך.',
         'שינויים בפרטים האישיים (מגורים, מצב אישי, תעסוקה) יעודכנו בהקדם האפשרי.',
@@ -13,7 +18,12 @@ export default function TermsPage({ params: { locale } }: { params: { locale: st
         'השתתפות בתהליך השידוך מותנית בקבלת תנאים אלו במלואם.',
       ]
     : [
+        'Registration is for people aged 18 and over.',
         'The candidate commits that all information provided in the registration form is truthful, accurate, and complete.',
+        'Access to the personal area is personal. The candidate is responsible for keeping the password safe and not sharing it.',
+        'Uploaded photos must be of the candidate. Every photo is reviewed by the administrator before it is shown to others, and the organization may reject a photo that is not suitable.',
+        'Proposals on the site show basic details only, without surname or phone. Marking "Interested" is saved in the system and is not visible to the other side. Only when both sides mark interest does a matchmaker get in touch and contact details are passed on with guidance.',
+        'Details or photos of other candidates shown on the site must not be published, photographed or passed on.',
         'It is strictly forbidden to pass other candidates\' details to third parties without the organization\'s approval.',
         'The candidate commits to acting with respect and courtesy toward all parties involved in the matchmaking process.',
         'Changes in personal details (residence, marital status, occupation) must be updated as soon as possible.',
@@ -23,16 +33,32 @@ export default function TermsPage({ params: { locale } }: { params: { locale: st
 
   const privacyPoints = isHe
     ? [
-        'פרטים אישיים נשמרים במערכת מאובטחת ואינם נחשפים לציבור.',
-        'מידע על מועמד/ת יועבר לצד שני רק במסגרת הצעת שידוך ובהסכמת שני הצדדים.',
-        'הארגון לא ימכור, ישכיר או ישתף מידע אישי עם גורמים מסחריים.',
-        'מועמד/ת רשאי/ת לבקש מחיקת כל מידעם מהמערכת בכל עת.',
+        'פרטים אישיים נשמרים במערכת עם הרשאות לפי תפקיד ואינם נחשפים לציבור.',
+        'לצד השני מוצגים רק פרטים בסיסיים במסגרת הצעה (בלי שם משפחה ובלי טלפון). פרטי קשר נמסרים רק לאחר עניין הדדי ובליווי שדכן/ית.',
+        'הארגון לא ימכור, ישכיר או ישתף מידע אישי לצרכי פרסום. ספקי תשתית (אחסון ושירותי בינה מלאכותית) מעבדים מידע בשם הארגון, כמפורט במדיניות הפרטיות.',
+        'מועמד/ת רשאי/ת לבקש לעיין במידע, לתקן אותו או למחוק אותו בכל עת.',
       ]
     : [
-        'Personal details are stored in a secure system and are not exposed to the public.',
-        'Information about a candidate will be passed to another party only as part of a match proposal and with both parties\' consent.',
-        'The organization will not sell, rent, or share personal information with commercial entities.',
-        'Candidates may request deletion of all their data from the system at any time.',
+        'Personal details are stored in a system with role-based access and are not exposed to the public.',
+        'The other side sees only basic details in a proposal (no surname, no phone). Contact details are passed on only after mutual interest, with a matchmaker\'s involvement.',
+        'The organization will not sell, rent, or share personal information for advertising. Infrastructure providers (hosting and AI services) process data on its behalf, as set out in the privacy policy.',
+        'Candidates may ask to see, correct or delete their data at any time.',
+      ]
+
+  const feeTerms = isHe
+    ? [
+        'ההרשמה לאתר והשימוש הרגיל בו ללא עלות.',
+        'דמי השידוך משולמים רק לאחר סגירת האירוסין, ולא בשלבים קודמים.',
+        'גובה דמי השידוך משתנה לפי מורכבות השידוך ולפי השדכן/ית המטפל/ת, והוא נע בין 5,000 ל-10,000 ש"ח.',
+        'לפני שהשידוך נפתח, השדכן/ית המטפל/ת מעדכן/ת את המיועד ואת המיועדת בסכום שהוא/היא מבקש/ת.',
+        'ככל שיוצע בעתיד מנוי פרימיום, דמי השידוך שלאחר סגירת האירוסין אינם כלולים בו.',
+      ]
+    : [
+        'Registering and using the site as usual is free of charge.',
+        'The matchmaking fee is paid only after the engagement is finalized, and not at earlier stages.',
+        'The fee depends on how complex the match is and on the matchmaker handling it, and ranges from NIS 5,000 to NIS 10,000.',
+        'Before the match begins, the matchmaker handling it informs both the man and the woman of the amount requested.',
+        'If a premium subscription is offered in the future, the matchmaking fee due after the engagement is not included in it.',
       ]
 
   const charterPoints = isHe
@@ -60,7 +86,7 @@ export default function TermsPage({ params: { locale } }: { params: { locale: st
         {
           icon: '',
           title: 'שכר טרחה',
-          body: 'דמי השידוך משולמים בהתאם לנהלי הארגון, ואך ורק במועד האירוסין. אין לדרוש תשלום כלשהו בשלבים קודמים לכך.',
+          body: 'דמי השידוך משולמים ואך ורק לאחר סגירת האירוסין. השדכן/ית מעדכן/ת את המיועד ואת המיועדת בסכום לפני שהשידוך נפתח. אין לדרוש תשלום כלשהו בשלבים קודמים לכך.',
         },
         {
           icon: '',
@@ -92,7 +118,7 @@ export default function TermsPage({ params: { locale } }: { params: { locale: st
         {
           icon: '',
           title: 'Matchmaking Fees',
-          body: 'Matchmaking fees are paid in accordance with organizational policy, and only upon engagement (Eirusin). No payment of any kind may be requested at prior stages.',
+          body: 'Matchmaking fees are paid only after the engagement (Eirusin) is finalized. The matchmaker informs both candidates of the amount before the match begins. No payment of any kind may be requested at prior stages.',
         },
         {
           icon: '',
@@ -122,7 +148,7 @@ export default function TermsPage({ params: { locale } }: { params: { locale: st
             : 'This document outlines the organization\'s operating rules, candidates\' rights, and the matchmakers\' code of ethics.'}
         </p>
         <p className="text-gray-500 text-xs mt-4">
-          {isHe ? 'עדכון אחרון: ינואר 2026' : 'Last updated: January 2026'}
+          {isHe ? 'עדכון אחרון: נובמבר 2026' : 'Last updated: November 2026'}
         </p>
       </div>
 
@@ -162,13 +188,33 @@ export default function TermsPage({ params: { locale } }: { params: { locale: st
                 </li>
               ))}
             </ul>
+            <Link href={`/${locale}/privacy`} className="inline-block mt-5 text-sm underline text-navy-700">
+              {isHe ? 'למדיניות הפרטיות המלאה' : 'Read the full privacy policy'}
+            </Link>
           </div>
         </section>
 
-        {/* ── Section 3: Matchmaker Charter ─────────────────────── */}
+        {/* ── Section 3: Matchmaking fee ────────────────────────── */}
         <section>
           <SectionTitle>
-            {isHe ? '3. אמנת השדכניות' : '3. Matchmaker Code of Ethics'}
+            {isHe ? '3. דמי שידוך' : '3. Matchmaking Fee'}
+          </SectionTitle>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+            <ul className="flex flex-col gap-4">
+              {feeTerms.map((t, i) => (
+                <li key={i} className="flex gap-3 text-sm text-gray-600 leading-relaxed">
+                  <span className="text-navy-500 font-bold shrink-0 mt-0.5">✓</span>
+                  <span>{t}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* ── Section 4: Matchmaker Charter ─────────────────────── */}
+        <section>
+          <SectionTitle>
+            {isHe ? '4. אמנת השדכניות' : '4. Matchmaker Code of Ethics'}
           </SectionTitle>
 
           {/* Intro callout */}
@@ -196,7 +242,7 @@ export default function TermsPage({ params: { locale } }: { params: { locale: st
         {/* ── Section 4: Disclaimer ─────────────────────────────── */}
         <section>
           <SectionTitle>
-            {isHe ? '4. הגבלת אחריות' : '4. Limitation of Liability'}
+            {isHe ? '5. הגבלת אחריות' : '5. Limitation of Liability'}
           </SectionTitle>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8
             text-sm text-gray-500 leading-relaxed flex flex-col gap-3">
