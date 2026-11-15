@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Turnstile, TURNSTILE_ENABLED } from '@/components/forms/Turnstile'
 
 interface Props {
   locale: string
@@ -11,6 +12,8 @@ export function ContactForm({ locale }: Props) {
 
   const [form, setForm] = useState({ name: '', phone: '', subject: '', message: '', website: '' })
   const [errorMsg, setErrorMsg] = useState('')
+  const [token, setToken] = useState('')
+  const [resetSignal, setResetSignal] = useState(0)
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
   const labels = {
@@ -36,9 +39,10 @@ export function ContactForm({ locale }: Props) {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, turnstileToken: token }),
       })
       const data = await res.json().catch(() => ({}))
+      setResetSignal((n) => n + 1)
       if (!res.ok) {
         setErrorMsg(data?.message ?? '')
         setStatus('error')
@@ -125,6 +129,8 @@ export function ContactForm({ locale }: Props) {
         />
       </div>
 
+      <Turnstile onToken={setToken} resetSignal={resetSignal} locale={locale} />
+
       {status === 'error' && (
         <p className="text-sm text-red-600 text-center" role="alert">
           {errorMsg || labels.error}{' '}
@@ -134,7 +140,7 @@ export function ContactForm({ locale }: Props) {
 
       <button
         type="submit"
-        disabled={status === 'sending'}
+        disabled={status === 'sending' || (TURNSTILE_ENABLED && !token)}
         className="mt-1 w-full sm:w-auto sm:self-end px-8 py-3 rounded-full bg-burgundy-500 text-white
           text-sm font-semibold hover:bg-burgundy-600 active:bg-burgundy-700
           disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-150"

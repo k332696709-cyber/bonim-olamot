@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { notifyOwner } from '@/lib/server/notify'
+import { verifyTurnstile, TURNSTILE_FAILED_MESSAGE } from '@/lib/server/turnstile'
 
 export const runtime = 'nodejs'
 
@@ -32,6 +33,10 @@ export async function POST(req: NextRequest) {
 
   // Honeypot: real visitors never fill this hidden field. Pretend success to bots.
   if (clean(body.website, 50)) return NextResponse.json({ ok: true })
+
+  if (!(await verifyTurnstile(body.turnstileToken, ip))) {
+    return NextResponse.json({ message: TURNSTILE_FAILED_MESSAGE }, { status: 400 })
+  }
 
   const name = clean(body.name, 100)
   const phone = clean(body.phone, 30)

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { notifyOwner } from '@/lib/server/notify'
+import { verifyTurnstile, TURNSTILE_FAILED_MESSAGE } from '@/lib/server/turnstile'
 import { createClient } from '@supabase/supabase-js'
 import { MAX_PHOTO_BYTES, MIN_AGE, SPECIALTY_VALUES } from '@/constants/matchmakerForm'
 
@@ -45,6 +46,9 @@ export async function POST(req: NextRequest) {
   }
 
   if (clean(fd.get('website'), 50)) return NextResponse.json({ ok: true }) // honeypot
+  if (!(await verifyTurnstile(fd.get('turnstileToken'), ip))) {
+    return NextResponse.json({ message: TURNSTILE_FAILED_MESSAGE }, { status: 400 })
+  }
 
   const gender = clean(fd.get('gender'), 10)
   const firstName = clean(fd.get('firstName'), 60)

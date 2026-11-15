@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import Link from 'next/link'
+import { Turnstile, TURNSTILE_ENABLED } from '@/components/forms/Turnstile'
 import { MAX_PHOTO_BYTES, MIN_AGE, SPECIALTIES } from '@/constants/matchmakerForm'
 
 type Gender = 'male' | 'female' | ''
@@ -21,6 +22,8 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [token, setToken] = useState('')
+  const [resetSignal, setResetSignal] = useState(0)
   const [done, setDone] = useState(false)
   const [consent, setConsent] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -96,9 +99,11 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
       specialties.forEach((s) => fd.append('specialties', s))
       if (photo) fd.append('photo', photo)
       fd.append('consent', '1')
+      fd.append('turnstileToken', token)
       fd.append('website', (document.getElementById('mm-website') as HTMLInputElement | null)?.value ?? '')
       const res = await fetch('/api/register/matchmaker', { method: 'POST', body: fd })
       const json = await res.json().catch(() => ({}))
+      setResetSignal((n) => n + 1)
       if (!res.ok) {
         if (json?.fields) setErrors(json.fields)
         setServerError(json?.message ?? t('השליחה נכשלה. נסו שוב.', 'Submission failed. Please try again.'))
@@ -352,8 +357,10 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
         </div>
       )}
 
+      <Turnstile onToken={setToken} resetSignal={resetSignal} locale={locale} />
+
       <div className="flex justify-center">
-        <button type="submit" disabled={submitting} className="h-12 min-w-52 px-9 rounded-full bg-burgundy-500 hover:bg-burgundy-600 disabled:opacity-60 text-white text-sm font-bold transition-colors">
+        <button type="submit" disabled={submitting || (TURNSTILE_ENABLED && !token)} className="h-12 min-w-52 px-9 rounded-full bg-burgundy-500 hover:bg-burgundy-600 disabled:opacity-60 text-white text-sm font-bold transition-colors">
           {submitting ? t('שולח...', 'Submitting…') : t('שליחת בקשה', 'Submit request')}
         </button>
       </div>

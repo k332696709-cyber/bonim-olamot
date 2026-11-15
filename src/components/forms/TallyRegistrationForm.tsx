@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { Turnstile, TURNSTILE_ENABLED } from '@/components/forms/Turnstile'
 import {
   allFields, MAX_PHOTO_BYTES, MAX_PHOTOS, validateField, withOther, parseChoices, CHOICE_SEP, OTHER,
   type RegistrationForm, type TallyField,
@@ -30,6 +31,8 @@ export function TallyRegistrationForm({
   const [previews, setPreviews] = useState<string[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
+  const [token, setToken] = useState('')
+  const [resetSignal, setResetSignal] = useState(0)
   const [serverError, setServerError] = useState('')
   const [done, setDone] = useState(false)
   const [consent, setConsent] = useState(false)
@@ -139,9 +142,11 @@ export function TallyRegistrationForm({
         for (const f of photos) fd.append('photo', f)
         fd.append('consent', '1')
         fd.append('password', password)
+        fd.append('turnstileToken', token)
       }
       const res = await fetch(endpoint, { method: editing ? 'PUT' : 'POST', headers, body: fd })
       const data = await res.json().catch(() => ({}))
+      if (!editing) setResetSignal((n) => n + 1)
       if (!res.ok) {
         if (data?.fields) {
           setErrors(data.fields)
@@ -466,6 +471,8 @@ export function TallyRegistrationForm({
         </div>
       )}
 
+      {last && !editing && <Turnstile onToken={setToken} resetSignal={resetSignal} />}
+
       <div className="flex items-center justify-between gap-3">
         {page > 0 ? (
           <button type="button" onClick={goBack}
@@ -478,7 +485,7 @@ export function TallyRegistrationForm({
             ביטול
           </button>
         ) : <span />}
-        <button type="submit" disabled={submitting}
+        <button type="submit" disabled={submitting || (last && !editing && TURNSTILE_ENABLED && !token)}
           className="h-12 min-w-40 px-9 rounded-full bg-burgundy-500 hover:bg-burgundy-600 disabled:opacity-60 text-white text-sm font-bold transition-colors">
           {last ? (submitting ? (editing ? 'שומר...' : 'שולח...') : editing ? 'שמירת השינויים' : 'פרסם') : 'הבא'}
         </button>

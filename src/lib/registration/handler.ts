@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { allFields, MAX_PHOTO_BYTES, MAX_PHOTOS, validateField, type RegistrationForm } from '@/constants/registrationForms'
 import { registrationToProfileRow } from '@/lib/registration/toProfile'
 import { notifyOwner } from '@/lib/server/notify'
+import { verifyTurnstile, TURNSTILE_FAILED_MESSAGE } from '@/lib/server/turnstile'
 
 const hits = new Map<string, number[]>()
 function limited(ip: string) {
@@ -31,6 +32,10 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
     fd = await req.formData()
   } catch {
     return NextResponse.json({ message: 'בקשה לא תקינה.' }, { status: 400 })
+  }
+
+  if (!(await verifyTurnstile(fd.get('turnstileToken'), ip))) {
+    return NextResponse.json({ message: TURNSTILE_FAILED_MESSAGE }, { status: 400 })
   }
 
   const answers: Record<string, string> = {}
