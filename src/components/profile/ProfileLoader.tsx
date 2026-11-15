@@ -24,7 +24,7 @@ export function ProfileLoader({ locale, id }: { locale: string; id: string }) {
   const [gender, setGender] = useState<'male' | 'female'>('female')
   const [profile, setProfile] = useState<FemaleProfile | MaleProfile | null>(null)
   const [candidates, setCandidates] = useState<(FemaleProfile | MaleProfile)[]>([])
-  const [photoUrl, setPhotoUrl] = useState('')
+  const [photoUrls, setPhotoUrls] = useState<string[]>([])
   const [fromDb, setFromDb] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [error, setError] = useState('')
@@ -46,13 +46,13 @@ export function ProfileLoader({ locale, id }: { locale: string; id: string }) {
           setProfile(p)
           setCandidates((others ?? []).map(mapProfileRow))
           setFromDb(true)
-          const path = (p.photos as string[])?.[0]
-          if (path && !/^https?:/.test(path)) {
+          const urls: string[] = []
+          for (const path of (p.photos as string[]) ?? []) {
+            if (/^https?:/.test(path)) { urls.push(path); continue }
             const { data: signed } = await db.storage.from('registration-photos').createSignedUrl(path, 3600)
-            if (signed?.signedUrl && alive) setPhotoUrl(signed.signedUrl)
-          } else if (path && alive) {
-            setPhotoUrl(path)
+            if (signed?.signedUrl) urls.push(signed.signedUrl)
           }
+          if (alive) setPhotoUrls(urls)
           setState('ready')
           return
         }
@@ -91,13 +91,13 @@ export function ProfileLoader({ locale, id }: { locale: string; id: string }) {
   return (
     <div className="flex flex-col gap-6">
       {dialog}
-      {(photoUrl || (isAdmin && fromDb)) && (
+      {(photoUrls.length > 0 || (isAdmin && fromDb)) && (
         <div className="flex items-center gap-4 flex-wrap">
-          {photoUrl && (
+          {photoUrls.map((u) => (
             // Signed URL from private storage, so next/image is not used.
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={photoUrl} alt="" className="w-28 h-28 rounded-3xl object-cover bg-white shadow-card" />
-          )}
+            <img key={u} src={u} alt="" className="w-28 h-28 rounded-3xl object-cover bg-white shadow-card" />
+          ))}
           {isAdmin && fromDb && (
             <button onClick={remove} className="h-10 px-5 rounded-full border border-burgundy-300 text-burgundy-600 hover:bg-burgundy-50 text-sm font-semibold ms-auto">
               {he ? 'מחיקת הפרופיל' : 'Delete profile'}

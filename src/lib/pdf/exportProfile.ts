@@ -97,6 +97,9 @@ const UI: Record<LangKey, Record<string, string>> = {
     confidential:       'סודי – לשימוש פנימי בלבד',
     personalDetails:    'פרטים אישיים',
     firstName:          'שם פרטי',
+    fullName:           'שם מלא',
+    phone:              'טלפון',
+    email:              'אימייל',
     age:                'גיל',
     hebrewBirthday:     'תאריך לידה עברי',
     status:             'מצב משפחתי',
@@ -135,6 +138,9 @@ const UI: Record<LangKey, Record<string, string>> = {
     confidential:       'Confidential – Internal Use Only',
     personalDetails:    'Personal Details',
     firstName:          'First Name',
+    fullName:           'Full Name',
+    phone:              'Phone',
+    email:              'Email',
     age:                'Age',
     hebrewBirthday:     'Hebrew Birthday',
     status:             'Marital Status',
@@ -453,11 +459,11 @@ export function buildFullResumePdf(profile: FemaleProfile, lang: LangKey = 'he')
   ensureHeebo()
   const styles = makeStyles(lang)
   const L = UI[lang]
-  const { lastName: _ln, phone: _ph, email: _em, ...safe } = profile
+  // The full resume is the internal one: it keeps the surname, phone and email.
+  const safe = profile
 
   const traitLabels  = safe.traits.map((t) => getLabel(TRAIT_OPTIONS_FEMALE, t, lang))
   const bringsLabels = safe.brings.map((b) => getLabel(BRINGS_FEMALE, b, lang))
-  const rvLabels     = getLabels(RELATIONSHIP_VALUES_FEMALE, safe.relationshipValues, lang)
 
   return React.createElement(
     Document,
@@ -476,7 +482,7 @@ export function buildFullResumePdf(profile: FemaleProfile, lang: LangKey = 'he')
         React.createElement(
           Text,
           { style: styles.headerSub },
-          `${safe.firstName}  ·  ${L.age}: ${safe.age}  ·  ${safe.city}`,
+          `${safe.firstName} ${safe.lastName}  ·  ${L.age}: ${safe.age}  ·  ${safe.city}`,
         ),
         React.createElement(Text, { style: styles.headerConfidential }, L.confidential),
       ),
@@ -495,7 +501,7 @@ export function buildFullResumePdf(profile: FemaleProfile, lang: LangKey = 'he')
           React.createElement(
             View,
             { style: styles.grid },
-            React.createElement(GridRow, { label: L.firstName,  value: safe.firstName, styles }),
+            React.createElement(GridRow, { label: L.fullName, value: `${safe.firstName} ${safe.lastName}`, styles }),
             React.createElement(GridRow, { label: L.age,        value: String(safe.age), styles }),
             React.createElement(GridRow, { label: L.hebrewBirthday, value: safe.hebrewBirthday, styles }),
             React.createElement(GridRow, { label: L.status,     value: getLabel(MARITAL_STATUS_FEMALE, safe.status, lang), styles }),
@@ -507,20 +513,9 @@ export function buildFullResumePdf(profile: FemaleProfile, lang: LangKey = 'he')
               : []),
             React.createElement(GridRow, { label: L.community,  value: safe.community, styles }),
             React.createElement(GridRow, { label: L.city,       value: safe.city,      styles }),
-            React.createElement(GridRow, { label: L.occupation, value: safe.occupation, last: true, styles }),
-          ),
-        ),
-
-        // ── 2. Educational Background ───────────────────────────────────
-        React.createElement(
-          View,
-          { style: styles.section, wrap: false },
-          React.createElement(SectionHeader, { title: L.education, styles }),
-          React.createElement(View, { style: styles.sectionDivider }),
-          React.createElement(
-            View,
-            { style: styles.grid },
-            React.createElement(GridRow, { label: L.preferredStream, value: safe.preferredStream || '—', last: true, styles }),
+            React.createElement(GridRow, { label: L.occupation, value: safe.occupation, styles }),
+            React.createElement(GridRow, { label: L.phone, value: safe.phone, styles }),
+            React.createElement(GridRow, { label: L.email, value: safe.email, last: true, styles }),
           ),
         ),
 
@@ -533,9 +528,7 @@ export function buildFullResumePdf(profile: FemaleProfile, lang: LangKey = 'he')
           React.createElement(
             View,
             { style: styles.grid },
-            React.createElement(GridRow, { label: L.style,              value: getLabel(FEMALE_STYLE_OPTIONS, safe.style, lang), styles }),
-            React.createElement(GridRow, { label: L.flexibility,        value: getLabel(FLEXIBILITY_OPTIONS,  safe.flexibility, lang), styles }),
-            React.createElement(GridRow, { label: L.relationshipValues, value: rvLabels, last: true, styles }),
+            React.createElement(GridRow, { label: L.style,              value: getLabel(FEMALE_STYLE_OPTIONS, safe.style, lang), last: true, styles }),
           ),
         ),
 
@@ -628,11 +621,11 @@ export function buildMaleFullResumePdf(profile: MaleProfile, lang: LangKey = 'he
   ensureHeebo()
   const styles = makeStyles(lang)
   const L = UI[lang]
-  const { lastName: _ln, phone: _ph, email: _em, ...safe } = profile
+  // The full resume is the internal one: it keeps the surname, phone and email.
+  const safe = profile
 
   const traitLabels  = safe.traits.map((t) => getLabel(TRAIT_OPTIONS_MALE, t, lang))
   const bringsLabels = safe.brings.map((b) => getLabel(BRINGS_MALE, b, lang))
-  const rvLabels     = getLabels(RELATIONSHIP_VALUES_MALE, safe.relationshipValues, lang)
 
   return React.createElement(
     Document,
@@ -651,7 +644,7 @@ export function buildMaleFullResumePdf(profile: MaleProfile, lang: LangKey = 'he
         React.createElement(
           Text,
           { style: styles.headerSub },
-          `${safe.firstName}  ·  ${L.age}: ${safe.age}  ·  ${safe.city}`,
+          `${safe.firstName} ${safe.lastName}  ·  ${L.age}: ${safe.age}  ·  ${safe.city}`,
         ),
         React.createElement(Text, { style: styles.headerConfidential }, L.confidential),
       ),
@@ -670,7 +663,7 @@ export function buildMaleFullResumePdf(profile: MaleProfile, lang: LangKey = 'he
           React.createElement(
             View,
             { style: styles.grid },
-            React.createElement(GridRow, { label: L.firstName,  value: safe.firstName, styles }),
+            React.createElement(GridRow, { label: L.fullName, value: `${safe.firstName} ${safe.lastName}`, styles }),
             React.createElement(GridRow, { label: L.age,        value: String(safe.age), styles }),
             React.createElement(GridRow, { label: L.hebrewBirthday, value: safe.hebrewBirthday, styles }),
             React.createElement(GridRow, { label: L.status,     value: getLabel(MARITAL_STATUS_MALE, safe.status, lang), styles }),
@@ -682,20 +675,9 @@ export function buildMaleFullResumePdf(profile: MaleProfile, lang: LangKey = 'he
               : []),
             React.createElement(GridRow, { label: L.community,  value: safe.community, styles }),
             React.createElement(GridRow, { label: L.city,       value: safe.city,      styles }),
-            React.createElement(GridRow, { label: L.occupation, value: safe.occupation, last: true, styles }),
-          ),
-        ),
-
-        // ── 2. Educational Background ───────────────────────────────────
-        React.createElement(
-          View,
-          { style: styles.section, wrap: false },
-          React.createElement(SectionHeader, { title: L.education, styles }),
-          React.createElement(View, { style: styles.sectionDivider }),
-          React.createElement(
-            View,
-            { style: styles.grid },
-            React.createElement(GridRow, { label: L.preferredStream, value: safe.preferredStream || '—', last: true, styles }),
+            React.createElement(GridRow, { label: L.occupation, value: safe.occupation, styles }),
+            React.createElement(GridRow, { label: L.phone, value: safe.phone, styles }),
+            React.createElement(GridRow, { label: L.email, value: safe.email, last: true, styles }),
           ),
         ),
 
@@ -708,9 +690,7 @@ export function buildMaleFullResumePdf(profile: MaleProfile, lang: LangKey = 'he
           React.createElement(
             View,
             { style: styles.grid },
-            React.createElement(GridRow, { label: L.style,              value: getLabel(MALE_STYLE_OPTIONS,  safe.style,       lang), styles }),
-            React.createElement(GridRow, { label: L.flexibility,        value: getLabel(FLEXIBILITY_OPTIONS, safe.flexibility,  lang), styles }),
-            React.createElement(GridRow, { label: L.relationshipValues, value: rvLabels, last: true, styles }),
+            React.createElement(GridRow, { label: L.style,              value: getLabel(MALE_STYLE_OPTIONS,  safe.style,       lang), last: true, styles }),
           ),
         ),
 
@@ -882,7 +862,7 @@ const legacyStyles = StyleSheet.create({
 
 export function buildProfilePdf(profile: FemaleProfile) {
   ensureHeebo()
-  const { lastName: _lastName, phone: _phone, ...safeProfile } = profile
+  const { lastName: _lastName, phone: _phone, email: _email, ...safeProfile } = profile
 
   return React.createElement(
     Document,
@@ -928,14 +908,6 @@ export function buildProfilePdf(profile: FemaleProfile) {
         React.createElement(View, { style: legacyStyles.row },
           React.createElement(Text, { style: legacyStyles.rowLabel }, 'עיר:'),
           React.createElement(Text, { style: legacyStyles.rowValue }, safeProfile.city),
-        ),
-        React.createElement(View, { style: legacyStyles.row },
-          React.createElement(Text, { style: legacyStyles.rowLabel }, 'טלפון:'),
-          React.createElement(Text, { style: legacyStyles.hiddenValue }, '***'),
-        ),
-        React.createElement(View, { style: legacyStyles.row },
-          React.createElement(Text, { style: legacyStyles.rowLabel }, 'דוא"ל:'),
-          React.createElement(Text, { style: legacyStyles.rowValue }, safeProfile.email),
         ),
       ),
       React.createElement(
@@ -981,7 +953,7 @@ export function buildProfilePdf(profile: FemaleProfile) {
 
 export function buildMaleProfilePdf(profile: MaleProfile) {
   ensureHeebo()
-  const { lastName: _lastName, phone: _phone, ...safeProfile } = profile
+  const { lastName: _lastName, phone: _phone, email: _email, ...safeProfile } = profile
 
   return React.createElement(
     Document,
@@ -1027,14 +999,6 @@ export function buildMaleProfilePdf(profile: MaleProfile) {
         React.createElement(View, { style: legacyStyles.row },
           React.createElement(Text, { style: legacyStyles.rowLabel }, 'עיר:'),
           React.createElement(Text, { style: legacyStyles.rowValue }, safeProfile.city),
-        ),
-        React.createElement(View, { style: legacyStyles.row },
-          React.createElement(Text, { style: legacyStyles.rowLabel }, 'טלפון:'),
-          React.createElement(Text, { style: legacyStyles.hiddenValue }, '***'),
-        ),
-        React.createElement(View, { style: legacyStyles.row },
-          React.createElement(Text, { style: legacyStyles.rowLabel }, 'דוא"ל:'),
-          React.createElement(Text, { style: legacyStyles.rowValue }, safeProfile.email),
         ),
       ),
       React.createElement(

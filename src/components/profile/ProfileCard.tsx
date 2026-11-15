@@ -105,10 +105,7 @@ export function ProfileCard({ profile, locale = 'he' }: ProfileCardProps) {
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="text-white text-xl font-serif font-bold">
-                {profile.firstName}
-                <span className="text-navy-200 text-base font-normal ms-2">
-                  {T.profile.lastNameHidden}
-                </span>
+                {profile.firstName} {profile.lastName}
               </h1>
               <p className="text-navy-200 text-sm mt-1">
                 {T.profile.age}: {profile.age}
@@ -150,7 +147,11 @@ export function ProfileCard({ profile, locale = 'he' }: ProfileCardProps) {
           <FieldRow label={T.profile.email} value={profile.email} />
           <FieldRow
             label={T.profile.phone}
-            value={<span className="text-gray-400 italic">{T.profile.phoneHidden}</span>}
+            value={
+              profile.phone
+                ? <a href={`tel:${profile.phone.replace(/[^+d]/g, '')}`} dir="ltr" className="text-navy-700 underline">{profile.phone}</a>
+                : <span className="text-gray-400">—</span>
+            }
           />
         </div>
       </div>
@@ -193,6 +194,12 @@ export function ProfileCard({ profile, locale = 'he' }: ProfileCardProps) {
           label={T.profile.phoneType}
           value={getLabel(PHONE_TYPE_OPTIONS, profile.phoneType, locale)}
         />
+        {profile.doesntSuit && (
+          <FieldRow
+            label={locale === 'he' ? 'מה לא מתאים בכלל' : "What doesn't suit"}
+            value={<span className="whitespace-pre-wrap break-words">{profile.doesntSuit}</span>}
+          />
+        )}
       </div>
 
       {/* AI Summary */}
