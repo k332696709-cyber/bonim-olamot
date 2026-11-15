@@ -41,7 +41,6 @@ export function Footer({ locale }: FooterProps) {
             <span className="font-serif text-2xl font-bold text-white leading-tight">
               {T.brand.name}
             </span>
-            <p className="text-navy-300 text-sm leading-relaxed">{T.brand.tagline}</p>
             <p className="text-navy-400 text-xs leading-relaxed">{T.brand.subtitle}</p>
           </div>
 

@@ -11,7 +11,6 @@ export const translations = {
     brand: {
       name: 'בונים עולמות',
       orgName: 'ארגון בונים עולמות',
-      tagline: 'שידוכים בדרך האמת',
       subtitle: 'אתר שידוכים מתקדם לקהילה החרדית',
     },
     home: {
@@ -295,7 +294,6 @@ export const translations = {
     brand: {
       name: 'Bonim Olamot',
       orgName: 'Bonim Olamot Organization',
-      tagline: 'Matchmaking with integrity',
       subtitle: 'Advanced matchmaking platform for the Haredi community',
     },
     home: {

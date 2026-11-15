@@ -94,7 +94,6 @@ const UI: Record<LangKey, Record<string, string>> = {
   he: {
     fullResume:         'קורות חיים מלאים',
     brand:              'בונים עולמות',
-    tagline:            'שידוכים בדרך האמת',
     confidential:       'סודי – לשימוש פנימי בלבד',
     personalDetails:    'פרטים אישיים',
     firstName:          'שם פרטי',
@@ -133,7 +132,6 @@ const UI: Record<LangKey, Record<string, string>> = {
   en: {
     fullResume:         'Full Resume',
     brand:              'Bonim Olamot',
-    tagline:            'Matchmaking with Truth',
     confidential:       'Confidential – Internal Use Only',
     personalDetails:    'Personal Details',
     firstName:          'First Name',
@@ -445,7 +443,6 @@ function PageFooter(
     View,
     { style: styles.footer, fixed: true },
     React.createElement(Text, { style: styles.footerBrand }, L.brand),
-    React.createElement(Text, { style: styles.footerTagline }, L.tagline),
     React.createElement(Text, { style: styles.footerDate }, dateStr),
   )
 }
@@ -975,7 +972,7 @@ export function buildProfilePdf(profile: FemaleProfile) {
       React.createElement(
         View,
         { style: legacyStyles.footer },
-        React.createElement(Text, { style: legacyStyles.footerText }, 'בונים עולמות – שידוכים בדרך האמת'),
+        React.createElement(Text, { style: legacyStyles.footerText }, 'בונים עולמות'),
         React.createElement(Text, { style: legacyStyles.footerText }, new Date().toLocaleDateString('he-IL')),
       ),
     )
@@ -1070,7 +1067,7 @@ export function buildMaleProfilePdf(profile: MaleProfile) {
       React.createElement(
         View,
         { style: legacyStyles.footer },
-        React.createElement(Text, { style: legacyStyles.footerText }, 'בונים עולמות – שידוכים בדרך האמת'),
+        React.createElement(Text, { style: legacyStyles.footerText }, 'בונים עולמות'),
         React.createElement(Text, { style: legacyStyles.footerText }, new Date().toLocaleDateString('he-IL')),
       ),
     )

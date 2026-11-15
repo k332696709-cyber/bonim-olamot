@@ -5,7 +5,7 @@ import { Footer } from '@/components/layout/Footer'
 
 export const metadata: Metadata = {
   title: 'בונים עולמות – שידוכים',
-  description: 'פלטפורמת שידוכים בדרך האמת',
+  description: 'אתר שידוכים לקהילה החרדית',
 }
 
 export default function LocaleLayout({
