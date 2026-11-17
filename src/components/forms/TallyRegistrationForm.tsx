@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { compressImage, MAX_UPLOAD_BYTES } from '@/lib/images/compress'
 import { GoogleButton } from '@/components/forms/GoogleButton'
 import { questionnaireProgress } from '@/lib/registration/completion'
+import { clearDraft, clearPhotos, loadDraft, loadPhotos, saveDraft, savePhotos } from '@/lib/forms/draft'
 import { ChoiceDropdown } from '@/components/forms/ChoiceDropdown'
 import { currentGoogleEmail } from '@/lib/auth/google'
 import { ageFromBirthDate, hebrewDate, parseBirthDate } from '@/lib/registration/birthDate'
@@ -72,6 +73,61 @@ export function TallyRegistrationForm({
     return form.pages.filter((pg) => pg.stage === 'register')
   }, [form, editing, questionnaire])
   const last = page === pages.length - 1
+
+  // A half-filled form survives a refresh, a closed tab or a trip to Google and back.
+  const draftKey = `form-draft:${form.gender}:${mode}`
+  const hydrated = useRef(false)
+  const photosReady = useRef(false)
+  const [restored, setRestored] = useState(false)
+
+  useEffect(() => {
+    const d = loadDraft(draftKey, isCreate)
+    if (d) {
+      // For a signed-in form the server copy wins if it is newer than the draft.
+      const onServer = Date.parse(initialValues?.updatedAt ?? '') || 0
+      if (isCreate || d.savedAt > onServer) {
+        const clean = { ...d.values }
+        delete clean.password
+        delete clean.confirmPassword
+        setValues((v) => ({ ...v, ...clean }))
+        setPage(Math.max(0, Math.min(d.page, pages.length - 1)))
+        setRestored(true)
+      }
+    }
+    if (isCreate) {
+      loadPhotos(draftKey).then((files) => {
+        if (files.length > 0) {
+          const kept = files.slice(0, MAX_PHOTOS)
+          setPhotos(kept)
+          setPreviews(kept.map((f) => URL.createObjectURL(f)))
+          setRestored(true)
+        }
+        photosReady.current = true
+      })
+    }
+    hydrated.current = true
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (!hydrated.current || done) return
+    if (!Object.values(values).some((v) => (v ?? '').trim() !== '')) return
+    const t = setTimeout(() => saveDraft(draftKey, isCreate, { values, page, savedAt: Date.now() }), 400)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values, page, done])
+
+  useEffect(() => {
+    if (!isCreate || !photosReady.current || done) return
+    savePhotos(draftKey, photos)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photos, done])
+
+  const startOver = () => {
+    clearDraft(draftKey)
+    clearPhotos(draftKey)
+    window.location.reload()
+  }
 
   const setVal = (id: string, v: string) => {
     setValues((s) => ({ ...s, [id]: v }))
@@ -229,6 +285,8 @@ export function TallyRegistrationForm({
         setServerError(data?.message ?? 'השליחה נכשלה. נסו שוב בעוד רגע.')
         return
       }
+      clearDraft(draftKey)
+      clearPhotos(draftKey)
       if (editing) {
         onSaved?.()
         return
@@ -538,6 +596,12 @@ export function TallyRegistrationForm({
     <form onSubmit={submit} noValidate dir="rtl" className="flex flex-col gap-6 pb-10">
       <div ref={topRef} className="scroll-mt-28" />
 
+      {restored && (
+        <p className="self-center rounded-full bg-white shadow-card px-4 py-2 text-sm text-navy-700 text-center" role="status">
+          שחזרנו את מה שמילאתם קודם. אפשר להמשיך מאותה נקודה.{' '}
+          <button type="button" onClick={startOver} className="underline font-semibold text-navy-800">התחלה מחדש</button>
+        </p>
+      )}
       {isCreate && googleEmail && (
         <p className="self-center rounded-full bg-white shadow-card px-4 py-2 text-sm text-navy-700">
           מחוברים עם גוגל: <span dir="ltr" className="font-semibold">{googleEmail}</span>. אין צורך בסיסמה.
