@@ -159,7 +159,6 @@ export const MALE_FORM: RegistrationForm = {
           id: 'styleSelf', label: 'איך אתה מגדיר את הסגנון שלך?', type: 'select', multi: true, required: true, sectionBefore: 'פרטים ממוקדים',
           options: ['שמור ישיבתי', 'שמור עובד', 'פתוח', 'פתוח במידה', 'מודרני', 'מודרני מאוד'],
         },
-        { id: 'styleSelfDetail', label: 'במה זה מתבטא בעיקר? (בלבוש, גישה לטכנולוגיה, רמת חיים, סגנון)', type: 'textarea', required: true },
         {
           id: 'clothingSelf', label: 'סגנון לבוש שלך?', type: 'select', multi: true, required: true,
           options: ['(פשוט) רק שחור לבן', 'שחור לבן, עדכני/אלגנטי', 'שבת, אירועים ש"לב, יום חול צבעוני', 'רק צבעוני', 'אחר'],
@@ -171,7 +170,6 @@ export const MALE_FORM: RegistrationForm = {
           id: 'styleSought', label: 'איזה סגנון אתה מחפש?', type: 'select', multi: true, required: true,
           options: ['פשוטה/קלאסית', 'פתוחה', 'פתוחה במידה', 'מודרנית', 'מודרנית מאוד'],
         },
-        { id: 'styleSoughtDetail', label: 'במה זה מתבטא בעיקר? (בלבוש, גישה לטכנולוגיה, רמת חיים/סגנון)', type: 'textarea', required: true },
         {
           id: 'clothingHer', label: 'סגנון לבוש שלה', type: 'select', multi: true, required: true,
           options: ['פשוט', 'קלאסי', 'עדכני בסטייל', 'מכובד', 'מודרני', 'מודרני מאוד'],
@@ -219,7 +217,6 @@ export const FEMALE_FORM: RegistrationForm = {
           id: 'styleSelf', label: 'איך את מגדירה את הסגנון שלך?', type: 'select', multi: true, required: true,
           options: ['שמורה', 'פתוחה', 'פתוחה במידה', 'מודרנית', 'מודרנית מאוד'],
         },
-        { id: 'styleSelfDetail', label: 'במה זה מתבטא בעיקר? (בלבוש/גישה לטכנולוגיה/רמת חיים/סגנון)', type: 'textarea', required: true },
         {
           id: 'clothingSelf', label: 'סגנון לבוש שלך', type: 'select', multi: true, required: true,
           options: ['פשוט', 'קלאסי', 'עדכני בסטייל', 'מכובד', 'מודרני', 'מודרני מאוד'],
@@ -232,7 +229,6 @@ export const FEMALE_FORM: RegistrationForm = {
           options: ['שמור/ישיבתי', 'שמור/עובד', 'פתוח', 'פתוח במידה', 'מודרני', 'מודרני מאוד'],
         },
         // Tally's original is missing the closing parenthesis here; added.
-        { id: 'styleSoughtDetail', label: 'במה זה מתבטא בעיקר? (בלבוש/גישה לטכנולוגיה/רמת חיים, סגנון)', type: 'textarea', required: true },
         {
           id: 'clothingHim', label: 'סגנון לבוש שלו', type: 'select', multi: true, required: true,
           options: ['רק שחור לבן', 'שחור לבן. אלגנטי/עדכני', 'שחור לבן שבת ואירועים, יום חול צבעוני', 'רק צבעוני'],

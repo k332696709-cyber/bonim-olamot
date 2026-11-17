@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { compressImage, MAX_UPLOAD_BYTES } from '@/lib/images/compress'
 import { GoogleButton } from '@/components/forms/GoogleButton'
+import { ChoiceDropdown } from '@/components/forms/ChoiceDropdown'
 import { currentGoogleEmail } from '@/lib/auth/google'
 import { ageFromBirthDate, hebrewDate, parseBirthDate } from '@/lib/registration/birthDate'
 import {
@@ -71,6 +72,10 @@ export function TallyRegistrationForm({
   }
 
   const isVisible = (f: TallyField) => isFieldVisible(f, values)
+
+  /** Short lists stay as buttons; long lists open as a dropdown; own entries use a search-and-add list. */
+  const SHORT_LISTS = ['maritalStatus', 'community', 'housing']
+  const asDropdown = (f: TallyField) => f.type === 'select' && !!f.options && (!SHORT_LISTS.includes(f.id) && (f.custom || f.options.length >= 4 || f.multi))
 
   const validatePage = (index: number) => {
     const next: Record<string, string> = {}
@@ -277,7 +282,21 @@ export function TallyRegistrationForm({
             />
           )}
 
-          {f.type === 'select' && (() => {
+          {f.type === 'select' && asDropdown(f) && (
+            <ChoiceDropdown
+              id={id}
+              options={f.options ?? []}
+              value={values[f.id] ?? ''}
+              onChange={(v) => setVal(f.id, v)}
+              multi={!!f.multi}
+              custom={!!f.custom}
+              search={!!f.custom || (f.options?.length ?? 0) > 12}
+              max={f.max}
+              hasError={!!err}
+            />
+          )}
+
+          {f.type === 'select' && !asDropdown(f) && (() => {
             const chosen = parseChoices(values[f.id] ?? '')
             const listed = f.custom ? f.options! : withOther(f.options!)
             const otherItem = f.custom ? undefined : chosen.find((x) => x === OTHER || x.startsWith(OTHER + ': '))
