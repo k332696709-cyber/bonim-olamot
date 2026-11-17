@@ -266,6 +266,18 @@ const REGISTER_IDS = [
 
 const g = (gender: 'male' | 'female', m: string, f: string) => (gender === 'male' ? m : f)
 
+/** Asked first: sometimes a parent or a matchmaker fills in the card for the candidate. */
+function whoFills(gender: 'male' | 'female'): TallyField[] {
+  return [
+    {
+      id: 'filledBy', label: 'מי מילא את הכרטיס עכשיו?', hint: 'אפשר שההורים או אדם אחר ימלאו בשם ' + g(gender, 'המיועד', 'המיועדת') + '. כך נדע למי לפנות.',
+      type: 'select', required: true, chips: true, noOther: true,
+      options: ['אני בעצמי', 'אחד ההורים', 'אדם אחר (שדכן/ית, קרוב/ת משפחה, מכר/ה)'],
+    },
+    { id: 'fillerContact', label: 'שם וטלפון של מי שממלא', hint: 'לא חובה. כך נוכל ליצור קשר גם איתו.', type: 'text', required: false, visibleWhen: { id: 'filledBy', includes: ['הורים', 'אדם אחר'] } },
+  ]
+}
+
 /** Questions that look past the resume. Same for both, with wording for each. */
 function newQuestions(gender: 'male' | 'female'): Record<string, TallyField[]> {
   return {
@@ -314,7 +326,7 @@ function buildForm(base: RegistrationForm): RegistrationForm {
   const used = new Set<string>()
   const pick = (ids: string[]) => ids.map((id) => byId.get(id)).filter((f): f is TallyField => !!f).map((f) => { used.add(f.id); return f })
 
-  const registerFields = pick(REGISTER_IDS)
+  const registerFields = [...whoFills(base.gender), ...pick(REGISTER_IDS)]
   const extras = newQuestions(base.gender)
   const steps: TallyPage[] = STEPS.map((st) => ({
     stage: 'questionnaire' as const,

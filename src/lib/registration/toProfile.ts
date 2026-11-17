@@ -33,6 +33,7 @@ export function registrationToProfileRow(
     a.aboutMe?.trim() ?? '',
     '',
     line('כינוי', a.nickname),
+    line('מי מילא את הכרטיס', [pretty(a.filledBy), (a.fillerContact ?? '').trim()].filter(Boolean).join(' - ')),
     line('עדה', pretty(a.edah)),
     line('מגורים', pretty(a.housing)),
     line('לימודי מקצוע', a.professionalStudies),
