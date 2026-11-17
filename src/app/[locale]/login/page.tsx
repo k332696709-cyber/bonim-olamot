@@ -7,6 +7,7 @@ import { PageHero } from '@/components/layout/PageHero'
 import { restoreSession, setSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
 import { loadCandidate } from '@/lib/auth/candidate'
+import { GoogleButton } from '@/components/forms/GoogleButton'
 
 export default function LoginPage({ params: { locale } }: { params: { locale: string } }) {
   const router = useRouter()
@@ -17,7 +18,9 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
     restoreSession().then(async (s) => {
       if (s) return router.replace(`/${locale}/matchmaker`)
       const c = await loadCandidate()
-      if (c.status === 'pending' || c.status === 'approved') router.replace(`/${locale}/personal`)
+      if (c.status === 'pending' || c.status === 'approved') return router.replace(`/${locale}/personal`)
+      // Signed in (for example with Google) but never registered.
+      if (c.status === 'not_candidate') setNeedsRegistration(true)
     })
   }, [locale, router])
 
@@ -27,6 +30,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
   const [loading, setLoading] = useState(false)
   const [forgot, setForgot] = useState(false)
   const [resetSent, setResetSent] = useState(false)
+  const [needsRegistration, setNeedsRegistration] = useState(false)
 
   // Asks Supabase to email a reset link. The answer is always the same, so nobody can use this
   // form to find out which emails have an account.
@@ -136,6 +140,16 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
               </button>
             </form>
           ) : (
+          <div className="flex flex-col gap-4" dir={isHe ? 'rtl' : 'ltr'}>
+          {needsRegistration && (
+            <div className="rounded-2xl bg-navy-50 border border-navy-100 px-4 py-3 text-sm text-navy-700 leading-relaxed" role="status">
+              {isHe ? 'לחשבון הזה עדיין אין הרשמה. אפשר להירשם עכשיו: ' : 'This account has no registration yet. You can register now: '}
+              <Link href={`/${locale}/register/male`} className="underline font-semibold">{isHe ? 'מיועדים' : 'men'}</Link>
+              {' · '}
+              <Link href={`/${locale}/register/female`} className="underline font-semibold">{isHe ? 'מיועדות' : 'women'}</Link>
+            </div>
+          )}
+          <GoogleButton label={isHe ? 'כניסה עם גוגל' : 'Sign in with Google'} nextPath={`/${locale}/login`} />
           <form onSubmit={handleLogin} className="flex flex-col gap-4" dir={isHe ? 'rtl' : 'ltr'}>
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-gray-700">
@@ -190,6 +204,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
               {isHe ? 'שכחתי סיסמה' : 'Forgot password?'}
             </button>
           </form>
+          </div>
           )}
         </div>
 

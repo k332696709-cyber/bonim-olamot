@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { allFields, isFieldVisible, MAX_PHOTO_BYTES, MAX_PHOTOS, validateField, type RegistrationForm } from '@/constants/registrationForms'
 import { registrationToProfileRow } from '@/lib/registration/toProfile'
 import { notifyOwner } from '@/lib/server/notify'
+import { findRegistration } from '@/lib/server/photos'
 import { withDerivedAge } from '@/lib/registration/birthDate'
 import { HASIDIC } from '@/constants/communityLists'
 
@@ -55,8 +56,10 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
 
   if (String(fd.get('consent') ?? '') !== '1') fields.consent = 'יש לאשר את ההסכמה'
 
+  // A person who first signed in with Google sends their access token instead of choosing a password.
+  const bearer = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? ''
   const password = String(fd.get('password') ?? '')
-  if (password.length < 10 || password.length > 72) fields.password = 'הסיסמה חייבת להכיל לפחות 10 תווים'
+  if (!bearer && (password.length < 10 || password.length > 72)) fields.password = 'הסיסמה חייבת להכיל לפחות 10 תווים'
 
   const photos = fd.getAll('photo').filter((x): x is File => x instanceof File && x.size > 0)
   if (photos.length === 0) fields.photo = 'שדה חובה'
@@ -79,10 +82,35 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
   const admin = createAdminClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } })
   const email = answers.email.toLowerCase()
   let userId: string | null = null
+  // Only a login created here is removed again if something fails; a Google login was there before.
+  let createdHere = false
+  const dropUser = async () => {
+    if (createdHere && userId) await admin.auth.admin.deleteUser(userId).catch(() => {})
+  }
+
+  try {
+    if (bearer) {
+      // 1a. Signed in with Google: use that login (no password), and register it only once.
+      const { data: gu } = await admin.auth.getUser(bearer)
+      const user = gu?.user
+      if (!user) return NextResponse.json({ message: 'ההתחברות עם גוגל פגה. התחברו שוב ונסו שוב.' }, { status: 401 })
+      if (!(user.identities ?? []).some((i) => i.provider === 'google') || !user.email) {
+        return NextResponse.json({ message: 'ההתחברות לא תקינה.' }, { status: 403 })
+      }
+      if (await findRegistration(admin, user.id)) {
+        return NextResponse.json({ message: 'כבר קיימת הרשמה לחשבון הזה. אפשר להיכנס דרך "כניסה".' }, { status: 409 })
+      }
+      userId = user.id
+      answers.email = user.email.toLowerCase()
+    }
+  } catch (e) {
+    console.error('registration: google login check failed', e)
+    return NextResponse.json({ message: 'אירעה שגיאה. נסו שוב.' }, { status: 500 })
+  }
 
   try {
     // 1. The candidate's login.
-    const { data: created, error: userErr } = await admin.auth.admin.createUser({
+    const { data: created, error: userErr } = bearer ? { data: { user: { id: userId as string } }, error: null } : await admin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
@@ -99,6 +127,7 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
       )
     }
     userId = created.user.id
+    createdHere = !bearer
 
     // 2. Photos + registration row.
     const supabase = createClient()
@@ -112,7 +141,7 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
       if (upErr) {
         console.error('registration photo upload failed:', upErr.message)
         if (paths.length) await supabase.storage.from('registration-photos').remove(paths)
-        await admin.auth.admin.deleteUser(userId)
+        await dropUser()
         return NextResponse.json({ message: 'העלאת התמונה נכשלה. נסו שוב.' }, { status: 502 })
       }
       paths.push(p)
@@ -129,7 +158,7 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
     if (error || !reg) {
       console.error(`${table} insert failed:`, error?.message)
       await supabase.storage.from('registration-photos').remove(paths)
-      await admin.auth.admin.deleteUser(userId)
+      await dropUser()
       return NextResponse.json({ message: 'שמירת השאלון נכשלה. נסו שוב.' }, { status: 502 })
     }
 
@@ -141,7 +170,7 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
       console.error('registration: candidate_photos insert failed', phErr.message)
       await (admin as any).from(table).delete().eq('id', reg.id)
       await admin.storage.from('registration-photos').remove(paths)
-      await admin.auth.admin.deleteUser(userId)
+      await dropUser()
       return NextResponse.json({ message: 'שמירת התמונות נכשלה. נסו שוב.' }, { status: 502 })
     }
 
@@ -153,7 +182,7 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
       console.error('registration: profile creation failed', profErr?.message)
       await (admin as any).from(table).delete().eq('id', reg.id)
       await admin.storage.from('registration-photos').remove(paths)
-      await admin.auth.admin.deleteUser(userId)
+      await dropUser()
       return NextResponse.json({ message: 'שמירת הפרופיל נכשלה. נסו שוב.' }, { status: 502 })
     }
     await (admin as any).from(table).update({ profile_id: profile.id }).eq('id', reg.id)
@@ -168,7 +197,7 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error(`${table} error:`, e)
-    if (userId) await admin.auth.admin.deleteUser(userId).catch(() => {})
+    await dropUser()
     return NextResponse.json({ message: 'אירעה שגיאה. נסו שוב.' }, { status: 500 })
   }
 }

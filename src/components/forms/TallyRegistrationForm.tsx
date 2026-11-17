@@ -1,9 +1,11 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { compressImage, MAX_UPLOAD_BYTES } from '@/lib/images/compress'
+import { GoogleButton } from '@/components/forms/GoogleButton'
+import { currentGoogleEmail } from '@/lib/auth/google'
 import { ageFromBirthDate, hebrewDate, parseBirthDate } from '@/lib/registration/birthDate'
 import {
   allFields, isFieldVisible, MAX_PHOTOS, validateField, withOther, parseChoices, CHOICE_SEP, OTHER,
@@ -46,6 +48,8 @@ export function TallyRegistrationForm({
   const [submitting, setSubmitting] = useState(false)
   const [otherDraft, setOtherDraft] = useState<Record<string, string>>({})
   const [showPw, setShowPw] = useState(false)
+  // Set when the person came back from Google: then there is no password and the email is theirs.
+  const [googleEmail, setGoogleEmail] = useState<string | null>(null)
   const [serverError, setServerError] = useState('')
   const [done, setDone] = useState(false)
   const [consent, setConsent] = useState(false)
@@ -82,6 +86,15 @@ export function TallyRegistrationForm({
     setErrors((e) => ({ ...e, ...next }))
     return Object.keys(next).length === 0
   }
+
+  useEffect(() => {
+    if (editing) return
+    currentGoogleEmail().then((email) => {
+      if (!email) return
+      setGoogleEmail(email)
+      setValues((v) => ({ ...v, email }))
+    })
+  }, [editing])
 
   const scrollTop = () => topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
@@ -133,8 +146,8 @@ export function TallyRegistrationForm({
     if (!last) return goNext()
     const acct: Record<string, string> = {}
     if (!editing) {
-      if (password.length < 10) acct.password = 'הסיסמה חייבת להכיל לפחות 10 תווים'
-      if (confirmPassword !== password) acct.confirmPassword = 'הסיסמאות אינן תואמות'
+      if (!googleEmail && password.length < 10) acct.password = 'הסיסמה חייבת להכיל לפחות 10 תווים'
+      if (!googleEmail && confirmPassword !== password) acct.confirmPassword = 'הסיסמאות אינן תואמות'
       if (!consent) acct.consent = 'יש לאשר את ההסכמה כדי להמשיך'
     }
     if (Object.keys(acct).length > 0) {
@@ -160,7 +173,12 @@ export function TallyRegistrationForm({
       } else {
         for (const f of photos) fd.append('photo', f)
         fd.append('consent', '1')
-        fd.append('password', password)
+        if (googleEmail) {
+          const { data: sess } = await createClient().auth.getSession()
+          headers = { Authorization: `Bearer ${sess.session?.access_token ?? ''}` }
+        } else {
+          fd.append('password', password)
+        }
       }
       const res = await fetch(endpoint, { method: editing ? 'PUT' : 'POST', headers, body: fd })
       const data = await res.json().catch(() => ({}))
@@ -192,10 +210,10 @@ export function TallyRegistrationForm({
         <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-3xl mb-5">✓</div>
         <h2 className="text-2xl font-bold text-navy-800 mb-2">תודה, ההרשמה התקבלה!</h2>
         <p className="text-navy-500 max-w-md mx-auto">
-          אפשר להיכנס עכשיו עם המייל והסיסמה שבחרת ולראות את הפרופיל שלך. התמונה תיבדק ותופיע למשתמשים אחרי שתאושר, ועד אז רק אתה רואה אותה.
+          {googleEmail ? 'אתם כבר מחוברים עם גוגל, ואפשר לראות את הפרופיל באזור האישי.' : 'אפשר להיכנס עכשיו עם המייל והסיסמה שבחרת ולראות את הפרופיל שלך.'} התמונה תיבדק ותופיע למשתמשים אחרי שתאושר, ועד אז רק אתה רואה אותה.
         </p>
-        <Link href="/he/login" className="inline-flex mt-6 h-12 items-center px-8 rounded-full bg-burgundy-500 hover:bg-burgundy-600 text-white text-sm font-bold">
-          כניסה
+        <Link href={googleEmail ? '/he/personal' : '/he/login'} className="inline-flex mt-6 h-12 items-center px-8 rounded-full bg-burgundy-500 hover:bg-burgundy-600 text-white text-sm font-bold">
+          {googleEmail ? 'לאזור האישי' : 'כניסה'}
         </Link>
       </div>
     )
@@ -355,8 +373,8 @@ export function TallyRegistrationForm({
               dir={f.type === 'tel' || f.type === 'email' ? 'ltr' : undefined}
               value={values[f.id] ?? ''} onChange={(e) => setVal(f.id, e.target.value)}
               maxLength={f.type === 'text' ? 200 : 100}
-              readOnly={editing && f.id === 'email'}
-              className={`${inputBase} ${border} ${f.type === 'tel' || f.type === 'email' ? 'text-end' : ''} ${editing && f.id === 'email' ? 'bg-[#f1f1f1] text-navy-400' : ''}`}
+              readOnly={(editing || !!googleEmail) && f.id === 'email'}
+              className={`${inputBase} ${border} ${f.type === 'tel' || f.type === 'email' ? 'text-end' : ''} ${(editing || !!googleEmail) && f.id === 'email' ? 'bg-[#f1f1f1] text-navy-400' : ''}`}
               aria-invalid={!!err} aria-required={f.required}
               autoComplete={f.type === 'email' ? 'email' : f.type === 'tel' ? 'tel' : 'off'}
             />
@@ -456,6 +474,17 @@ export function TallyRegistrationForm({
     <form onSubmit={submit} noValidate dir="rtl" className="flex flex-col gap-6 pb-10">
       <div ref={topRef} className="scroll-mt-28" />
 
+      {!editing && googleEmail && (
+        <p className="self-center rounded-full bg-white shadow-card px-4 py-2 text-sm text-navy-700">
+          מחוברים עם גוגל: <span dir="ltr" className="font-semibold">{googleEmail}</span>. אין צורך בסיסמה.
+        </p>
+      )}
+      {!editing && !googleEmail && page === 0 && (
+        <div className="rounded-[32px] bg-white shadow-card p-5 sm:p-6 flex flex-col gap-3 empty:hidden">
+          <GoogleButton label="הרשמה מהירה עם גוגל" nextPath={typeof window !== 'undefined' ? window.location.pathname : '/he'} />
+        </div>
+      )}
+
       <p className="self-center rounded-full bg-white shadow-card px-4 py-1.5 text-xs text-navy-500">שדות המסומנים ב-* הם חובה</p>
 
       <div aria-label={`עמוד ${page + 1} מתוך ${pages.length}`}>
@@ -469,7 +498,7 @@ export function TallyRegistrationForm({
         {pages[page].fields.filter(isVisible).map(renderField)}
       </div>
 
-      {last && !editing && (
+      {last && !editing && !googleEmail && (
         <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-9 flex flex-col gap-4">
           <div>
             <h2 className="text-xl font-bold text-navy-800">סיסמה לכניסה</h2>
