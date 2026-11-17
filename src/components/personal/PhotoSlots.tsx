@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { MAX_PHOTO_BYTES } from '@/constants/registrationForms'
+import { compressImage, MAX_UPLOAD_BYTES } from '@/lib/images/compress'
 import type { CandidatePhoto } from '@/lib/auth/candidate'
 
 const SLOTS = [0, 1, 2, 3, 4]
@@ -38,12 +38,14 @@ export function PhotoSlots({ photos, he, onChanged }: { photos: CandidatePhoto[]
     if (!file) return
     setMsg('')
     if (!file.type.startsWith('image/')) return setMsg(he ? 'יש לבחור קובץ תמונה.' : 'Please choose an image file.')
-    if (file.size > MAX_PHOTO_BYTES) return setMsg(he ? 'הקובץ גדול מדי (עד 10 מגה-בייט).' : 'File too large (max 10 MB).')
     setBusy(slot)
     try {
+      // Shrink the photo first: the upload has a size limit and phone photos are large.
+      const small = await compressImage(file)
+      if (small.size > MAX_UPLOAD_BYTES) throw new Error(he ? 'לא הצלחנו להקטין את התמונה. נסו תמונה אחרת.' : 'Could not shrink the photo. Try another one.')
       const fd = new FormData()
       fd.append('slot', String(slot))
-      fd.append('photo', file)
+      fd.append('photo', small)
       await call({ method: 'POST', body: fd })
       setMsg(he ? 'התמונה הועלתה וממתינה לאישור.' : 'Photo uploaded and waiting for approval.')
       await onChanged()

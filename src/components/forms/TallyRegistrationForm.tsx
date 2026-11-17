@@ -3,9 +3,10 @@
 import { useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Turnstile, TURNSTILE_ENABLED } from '@/components/forms/Turnstile'
+import { compressImage, MAX_UPLOAD_BYTES } from '@/lib/images/compress'
+import { ageFromBirthDate, hebrewDate, parseBirthDate } from '@/lib/registration/birthDate'
 import {
-  allFields, MAX_PHOTO_BYTES, MAX_PHOTOS, validateField, withOther, parseChoices, CHOICE_SEP, OTHER,
+  allFields, isFieldVisible, MAX_PHOTOS, validateField, withOther, parseChoices, CHOICE_SEP, OTHER,
   type RegistrationForm, type TallyField,
 } from '@/constants/registrationForms'
 
@@ -26,13 +27,25 @@ export function TallyRegistrationForm({
 }) {
   const editing = mode === 'edit'
   const [page, setPage] = useState(0)
-  const [values, setValues] = useState<Record<string, string>>(initialValues ?? {})
+  const [values, setValues] = useState<Record<string, string>>(() => {
+    const v = { ...(initialValues ?? {}) }
+    // Older answers were typed freely; keep them as "other" so they still validate.
+    for (const f of allFields(form)) {
+      if (f.type !== 'select' || f.custom || !f.options || !v[f.id]) continue
+      const known = withOther(f.options)
+      v[f.id] = parseChoices(v[f.id])
+        .filter((x) => !(f.id === 'maritalStatus' && x === 'אלמנה'))
+        .map((x) => (known.includes(x) || x.startsWith(OTHER + ': ') ? x : `${OTHER}: ${x}`))
+        .join(CHOICE_SEP)
+    }
+    return v
+  })
   const [photos, setPhotos] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
-  const [token, setToken] = useState('')
-  const [resetSignal, setResetSignal] = useState(0)
+  const [otherDraft, setOtherDraft] = useState<Record<string, string>>({})
+  const [showPw, setShowPw] = useState(false)
   const [serverError, setServerError] = useState('')
   const [done, setDone] = useState(false)
   const [consent, setConsent] = useState(false)
@@ -53,9 +66,12 @@ export function TallyRegistrationForm({
     if (errors[id]) setErrors((e) => ({ ...e, [id]: '' }))
   }
 
+  const isVisible = (f: TallyField) => isFieldVisible(f, values)
+
   const validatePage = (index: number) => {
     const next: Record<string, string> = {}
     for (const f of pages[index].fields) {
+      if (!isVisible(f)) continue
       if (f.type === 'file') {
         if (f.required && photos.length === 0) next[f.id] = 'שדה חובה'
         continue
@@ -79,16 +95,19 @@ export function TallyRegistrationForm({
     setTimeout(scrollTop, 30)
   }
 
-  const addPhotos = (list: FileList | File[] | null) => {
+  const addPhotos = async (list: FileList | File[] | null) => {
     if (!list) return
-    const incoming = Array.from(list)
-    if (incoming.length === 0) return
-    if (incoming.some((f) => !f.type.startsWith('image/'))) {
+    const picked = Array.from(list)
+    if (picked.length === 0) return
+    if (picked.some((f) => !f.type.startsWith('image/'))) {
       setErrors((e) => ({ ...e, photo: 'יש לבחור קבצי תמונה' }))
       return
     }
-    if (incoming.some((f) => f.size > MAX_PHOTO_BYTES)) {
-      setErrors((e) => ({ ...e, photo: 'קובץ גדול מדי (עד 10 מגה-בייט לתמונה)' }))
+    // A phone photo can be many megabytes; the upload has a size limit, so shrink it here first.
+    const incoming = await Promise.all(picked.map((f) => compressImage(f)))
+    if (incoming.some((f) => f.size > MAX_UPLOAD_BYTES)) {
+      setErrors((e) => ({ ...e, photo: 'לא הצלחנו להקטין את אחת התמונות. נסו תמונה אחרת או צלמו אותה מחדש.' }))
+      if (fileRef.current) fileRef.current.value = ''
       return
     }
     const merged = [...photos, ...incoming]
@@ -142,11 +161,9 @@ export function TallyRegistrationForm({
         for (const f of photos) fd.append('photo', f)
         fd.append('consent', '1')
         fd.append('password', password)
-        fd.append('turnstileToken', token)
       }
       const res = await fetch(endpoint, { method: editing ? 'PUT' : 'POST', headers, body: fd })
       const data = await res.json().catch(() => ({}))
-      if (!editing) setResetSignal((n) => n + 1)
       if (!res.ok) {
         if (data?.fields) {
           setErrors(data.fields)
@@ -211,7 +228,9 @@ export function TallyRegistrationForm({
     setVal(f.id, parseChoices(values[f.id] ?? '').filter((x) => x !== item).join(CHOICE_SEP))
   }
   const setOtherText = (f: TallyField, text: string) => {
-    const clean = text.replace(/\|/g, '/')
+    // The box shows what was typed (so a space between words is kept); the stored answer is trimmed.
+    setOtherDraft((d) => ({ ...d, [f.id]: text }))
+    const clean = text.replace(/\|/g, '/').trim()
     const current = parseChoices(values[f.id] ?? '').filter((x) => !(x === OTHER || x.startsWith(OTHER + ': ')))
     setVal(f.id, [...current, clean.trim() ? `${OTHER}: ${clean}` : OTHER].join(CHOICE_SEP))
   }
@@ -316,7 +335,7 @@ export function TallyRegistrationForm({
                 {otherItem && (
                   <input
                     type="text"
-                    value={otherItem.startsWith(OTHER + ': ') ? otherItem.slice(OTHER.length + 2) : ''}
+                    value={otherDraft[f.id] ?? (otherItem.startsWith(OTHER + ': ') ? otherItem.slice(OTHER.length + 2) : '')}
                     onChange={(e) => setOtherText(f, e.target.value)}
                     maxLength={120}
                     placeholder="פרטו (לא חובה)"
@@ -343,6 +362,43 @@ export function TallyRegistrationForm({
             />
           )}
 
+          {f.type === 'birthdate' && (() => {
+            const v = values[f.id] ?? ''
+            const parsed = parseBirthDate(v)
+            const newest = new Date(); newest.setFullYear(newest.getFullYear() - 18)
+            const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+            return (
+              <>
+                <input
+                  id={id} type="date" dir="ltr" value={parsed ? v : ''} min="1930-01-01" max={iso(newest)}
+                  onChange={(e) => setVal(f.id, e.target.value)}
+                  className={`${inputBase} ${border} text-end`}
+                  aria-invalid={!!err} aria-required={f.required}
+                />
+                {parsed && (
+                  <p className="text-sm text-navy-600">
+                    <span className="font-semibold">תאריך עברי:</span> {hebrewDate(v)}
+                    {' · '}
+                    <span className="font-semibold">גיל:</span> {ageFromBirthDate(v)}
+                  </p>
+                )}
+              </>
+            )
+          })()}
+
+          {f.type === 'combo' && (
+            <>
+              <input
+                id={id} type="text" list={`${id}-list`} value={values[f.id] ?? ''} onChange={(e) => setVal(f.id, e.target.value)}
+                maxLength={80} autoComplete="off" className={`${inputBase} ${border}`}
+                aria-invalid={!!err} aria-required={f.required}
+              />
+              <datalist id={`${id}-list`}>
+                {(f.options ?? []).map((o) => <option key={o} value={o} />)}
+              </datalist>
+            </>
+          )}
+
           {f.type === 'file' && (
             <>
               <input
@@ -362,7 +418,7 @@ export function TallyRegistrationForm({
                     {photos.length === 0 ? 'לחץ כדי לבחור תמונות או גרור לכאן' : 'הוספת תמונה נוספת'}
                   </span>
                   <span className="block text-sm text-navy-400 mt-1">
-                    {photos.length} מתוך {MAX_PHOTOS} · עד 10 מגה-בייט לתמונה
+                    {photos.length} מתוך {MAX_PHOTOS} · התמונות מוקטנות אוטומטית
                   </span>
                 </button>
               )}
@@ -410,7 +466,7 @@ export function TallyRegistrationForm({
       </div>
 
       <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-9 flex flex-col gap-6">
-        {pages[page].fields.map(renderField)}
+        {pages[page].fields.filter(isVisible).map(renderField)}
       </div>
 
       {last && !editing && (
@@ -423,9 +479,10 @@ export function TallyRegistrationForm({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="f-password" className="text-[15px] font-semibold text-navy-800">סיסמה (לפחות 10 תווים)<span className="text-burgundy-500 ms-1" aria-hidden>*</span></label>
+              <label htmlFor="f-password" className="text-[15px] font-semibold text-navy-800">סיסמה<span className="text-burgundy-500 ms-1" aria-hidden>*</span></label>
+              <p className="text-sm text-navy-400 -mt-0.5">לפחות 10 תווים. אפשר אותיות באנגלית, מספרים וסימנים.</p>
               <input
-                id="f-password" type="password" dir="ltr" autoComplete="new-password" maxLength={72} value={password}
+                id="f-password" type={showPw ? 'text' : 'password'} dir="ltr" autoComplete="new-password" maxLength={72} value={password}
                 onChange={(e) => { setPassword(e.target.value); if (errors.password) setErrors((er) => ({ ...er, password: '' })) }}
                 className={`w-full rounded-2xl border bg-white px-4 py-3 text-[15px] text-navy-800 focus:outline-none focus:ring-2 focus:ring-navy-400 ${errors.password ? 'border-burgundy-400' : 'border-navy-100 hover:border-navy-300'}`}
               />
@@ -434,13 +491,17 @@ export function TallyRegistrationForm({
             <div className="flex flex-col gap-1.5">
               <label htmlFor="f-confirm" className="text-[15px] font-semibold text-navy-800">אימות סיסמה<span className="text-burgundy-500 ms-1" aria-hidden>*</span></label>
               <input
-                id="f-confirm" type="password" dir="ltr" autoComplete="new-password" maxLength={72} value={confirmPassword}
+                id="f-confirm" type={showPw ? 'text' : 'password'} dir="ltr" autoComplete="new-password" maxLength={72} value={confirmPassword}
                 onChange={(e) => { setConfirmPassword(e.target.value); if (errors.confirmPassword) setErrors((er) => ({ ...er, confirmPassword: '' })) }}
                 className={`w-full rounded-2xl border bg-white px-4 py-3 text-[15px] text-navy-800 focus:outline-none focus:ring-2 focus:ring-navy-400 ${errors.confirmPassword ? 'border-burgundy-400' : 'border-navy-100 hover:border-navy-300'}`}
               />
               {errors.confirmPassword && <p className="text-sm text-burgundy-500" role="alert">{errors.confirmPassword}</p>}
             </div>
           </div>
+          <label className="flex items-center gap-2 text-sm text-navy-600 cursor-pointer">
+            <input type="checkbox" checked={showPw} onChange={(e) => setShowPw(e.target.checked)} className="w-4 h-4 accent-burgundy-500" />
+            הצגת הסיסמה
+          </label>
         </div>
       )}
 
@@ -471,8 +532,6 @@ export function TallyRegistrationForm({
         </div>
       )}
 
-      {last && !editing && <Turnstile onToken={setToken} resetSignal={resetSignal} />}
-
       <div className="flex items-center justify-between gap-3">
         {page > 0 ? (
           <button type="button" onClick={goBack}
@@ -485,7 +544,7 @@ export function TallyRegistrationForm({
             ביטול
           </button>
         ) : <span />}
-        <button type="submit" disabled={submitting || (last && !editing && TURNSTILE_ENABLED && !token)}
+        <button type="submit" disabled={submitting}
           className="h-12 min-w-40 px-9 rounded-full bg-burgundy-500 hover:bg-burgundy-600 disabled:opacity-60 text-white text-sm font-bold transition-colors">
           {last ? (submitting ? (editing ? 'שומר...' : 'שולח...') : editing ? 'שמירת השינויים' : 'פרסם') : 'הבא'}
         </button>

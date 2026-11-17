@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { allFields, FEMALE_FORM, MALE_FORM, validateField } from '@/constants/registrationForms'
+import { allFields, FEMALE_FORM, isFieldVisible, MALE_FORM, validateField } from '@/constants/registrationForms'
 import { registrationToProfileRow } from '@/lib/registration/toProfile'
 import { findRegistration } from '@/lib/server/photos'
+import { withDerivedAge } from '@/lib/registration/birthDate'
+import { HASIDIC } from '@/constants/communityLists'
 
 export const runtime = 'nodejs'
 
@@ -38,14 +40,20 @@ export async function PUT(req: NextRequest) {
   for (const f of allFields(form)) {
     if (f.type === 'file') continue
     // The email is the login: keep what is on record.
-    const v = f.id === 'email' ? String(existing.email ?? '') : String(fd.get(f.id) ?? '').trim()
-    answers[f.id] = v
-    const err = validateField(f, v)
+    answers[f.id] = f.id === 'email' ? String(existing.email ?? '') : String(fd.get(f.id) ?? '').trim()
+  }
+  for (const f of allFields(form)) {
+    if (f.type === 'file') continue
+    // A question that does not apply is skipped.
+    if (!isFieldVisible(f, answers)) { answers[f.id] = ''; continue }
+    const err = validateField(f, answers[f.id])
     if (err) fields[f.id] = err
   }
   if (Object.keys(fields).length > 0) {
     return NextResponse.json({ message: 'יש שדות שדורשים תיקון.', fields }, { status: 422 })
   }
+  withDerivedAge(answers)
+  if (!(answers.community ?? '').includes(HASIDIC)) answers.hasidut = ''
 
   const merged = { ...existing, ...answers, updatedAt: new Date().toISOString() }
   const { error: updErr } = await admin.from(found.table).update({ answers: merged }).eq('id', found.reg.id)

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
-import { allFields, MAX_PHOTO_BYTES, MAX_PHOTOS, validateField, type RegistrationForm } from '@/constants/registrationForms'
+import { allFields, isFieldVisible, MAX_PHOTO_BYTES, MAX_PHOTOS, validateField, type RegistrationForm } from '@/constants/registrationForms'
 import { registrationToProfileRow } from '@/lib/registration/toProfile'
 import { notifyOwner } from '@/lib/server/notify'
-import { verifyTurnstile, TURNSTILE_FAILED_MESSAGE } from '@/lib/server/turnstile'
+import { withDerivedAge } from '@/lib/registration/birthDate'
+import { HASIDIC } from '@/constants/communityLists'
 
 const hits = new Map<string, number[]>()
 function limited(ip: string) {
@@ -34,19 +35,23 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
     return NextResponse.json({ message: 'בקשה לא תקינה.' }, { status: 400 })
   }
 
-  if (!(await verifyTurnstile(fd.get('turnstileToken'), ip))) {
-    return NextResponse.json({ message: TURNSTILE_FAILED_MESSAGE }, { status: 400 })
-  }
-
   const answers: Record<string, string> = {}
   const fields: Record<string, string> = {}
   for (const f of allFields(form)) {
     if (f.type === 'file') continue
-    const v = String(fd.get(f.id) ?? '').trim()
-    answers[f.id] = v
-    const err = validateField(f, v)
+    answers[f.id] = String(fd.get(f.id) ?? '').trim()
+  }
+  for (const f of allFields(form)) {
+    if (f.type === 'file') continue
+    // A question that does not apply (for example the number of children of a single person) is skipped.
+    if (!isFieldVisible(f, answers)) { answers[f.id] = ''; continue }
+    const err = validateField(f, answers[f.id])
     if (err) fields[f.id] = err
   }
+
+  // Age comes from the birth date; the Hasidic court only counts for Hasidic candidates.
+  withDerivedAge(answers)
+  if (!(answers.community ?? '').includes(HASIDIC)) answers.hasidut = ''
 
   if (String(fd.get('consent') ?? '') !== '1') fields.consent = 'יש לאשר את ההסכמה'
 
