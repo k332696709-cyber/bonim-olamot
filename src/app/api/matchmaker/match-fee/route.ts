@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { sendMail } from '@/lib/server/notify'
+import { notifyCandidate } from '@/lib/server/candidateNotify'
 
 export const runtime = 'nodejs'
 
@@ -96,22 +96,12 @@ export async function POST(req: NextRequest) {
   }
 
   // Tell both candidates (their login email), without naming the other side.
-  const { data: people } = await admin.from('profiles').select('id, email').in('id', [saved.female_id, saved.male_id])
   const who = `${mm.first_name ?? ''} ${mm.last_name ?? ''}`.trim()
   const money = `${amount.toLocaleString('he-IL')} ש"ח`
   let emailed = 0
-  for (const p of people ?? []) {
-    const ok = await sendMail(
-      p.email,
-      'עדכון בנושא דמי שידוך',
-      [
-        `${who || 'השדכן/ית המטפל/ת'} עדכן/ה את סכום דמי השידוך להצעה שלך: ${money}.`,
-        'הסכום משולם רק לאחר סגירת האירוסין, ולא בשלבים קודמים.',
-        'נא להיכנס לאזור האישי כדי לראות ולאשר שקראת.',
-      ],
-      '/he/personal',
-    )
-    if (ok) emailed++
+  for (const id of [saved.female_id, saved.male_id]) {
+    const sent = await notifyCandidate(admin, id, 'fee', { who, money })
+    if (sent.email || sent.sms) emailed++
   }
 
   return NextResponse.json({

@@ -8,6 +8,7 @@ import { clearSession, restoreSession } from '@/lib/auth/session'
 import { loadCandidate, type CandidateState } from '@/lib/auth/candidate'
 import { PhotoSlots } from '@/components/personal/PhotoSlots'
 import { FeeNotices } from '@/components/personal/FeeNotices'
+import { NotificationSettings } from '@/components/personal/NotificationSettings'
 import { questionnaireProgress } from '@/lib/registration/completion'
 import { TallyRegistrationForm } from '@/components/forms/TallyRegistrationForm'
 import { FEMALE_FORM, MALE_FORM } from '@/constants/registrationForms'
@@ -145,6 +146,7 @@ export function CandidateArea({ locale }: { locale: string }) {
             {started ? (he ? 'המשך לשאלון' : 'Continue the questionnaire') : (he ? 'התחלת השאלון' : 'Start the questionnaire')}
           </Link>
         </div>
+        <NotificationSettings he={he} initialSms={a.notifySms === '1'} initialCalls={a.notifyCalls === '1'} />
         <div className="flex justify-center">
           <button onClick={signOut} className="h-11 px-6 rounded-full border border-navy-200 text-navy-700 hover:bg-navy-50 text-sm font-semibold">
             {he ? 'יציאה' : 'Sign out'}
@@ -251,6 +253,8 @@ export function CandidateArea({ locale }: { locale: string }) {
           <p className="whitespace-pre-wrap break-words text-sm text-navy-700 leading-relaxed">{p.aboutPartner}</p>
         </div>
       )}
+
+      <NotificationSettings he={he} initialSms={a.notifySms === '1'} initialCalls={a.notifyCalls === '1'} />
 
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <Link href={`/${locale}/smart-match`} className="h-12 px-8 rounded-full bg-burgundy-500 hover:bg-burgundy-600 text-white text-sm font-bold inline-flex items-center justify-center">

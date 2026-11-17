@@ -9,7 +9,7 @@
 import { COMMUNITY_OPTIONS, CITY_OPTIONS, EDAH_OPTIONS, HASIDIC, HASIDUT_OPTIONS, HOUSING_OPTIONS } from '@/constants/communityLists'
 import { ageFromBirthDate, parseBirthDate } from '@/lib/registration/birthDate'
 
-export type FieldType = 'text' | 'tel' | 'email' | 'textarea' | 'select' | 'file' | 'combo' | 'birthdate'
+export type FieldType = 'text' | 'tel' | 'email' | 'textarea' | 'select' | 'file' | 'combo' | 'birthdate' | 'toggle'
 
 export interface TallyField {
   id: string
@@ -270,7 +270,7 @@ const REGISTER_IDS = [
 
 const g = (gender: 'male' | 'female', m: string, f: string) => (gender === 'male' ? m : f)
 
-/** Whether the phone number has WhatsApp, and if not, which number does. */
+/** Whether the phone number has WhatsApp, so a matchmaker knows how to reach the person. */
 function whatsappFields(): TallyField[] {
   return [
     {
@@ -278,6 +278,21 @@ function whatsappFields(): TallyField[] {
       options: ['כן, יש וואטסאפ על המספר הזה', 'לא, יש וואטסאפ על מספר אחר', 'אין לי וואטסאפ בכלל'],
     },
     { id: 'whatsappNumber', label: 'מספר הוואטסאפ', type: 'tel', required: true, visibleWhen: { id: 'whatsapp', includes: 'מספר אחר' } },
+  ]
+}
+
+/** Whether updates may also come by SMS and by phone call. Off until the person switches them on. */
+function notifyFields(): TallyField[] {
+  return [
+    {
+      id: 'notifySms', label: 'קבלת מסרונים (SMS)', type: 'toggle', required: false,
+      sectionBefore: 'הודעות בטלפון ובמסרון',
+      hint: 'פעיל: יישלח אליך מסרון כשיש עדכון בתיק שלך, למשל עניין הדדי או הצעות חדשות. עדכונים יגיעו גם במייל.',
+    },
+    {
+      id: 'notifyCalls', label: 'קבלת שיחות טלפון', type: 'toggle', required: false,
+      hint: 'פעיל: ייתכן שנתקשר אליך כדי לעדכן על התיק שלך.',
+    },
   ]
 }
 
@@ -343,7 +358,7 @@ function buildForm(base: RegistrationForm): RegistrationForm {
 
   const reg = pick(REGISTER_IDS)
   const phoneAt = reg.findIndex((f) => f.id === 'phone')
-  reg.splice(phoneAt + 1, 0, ...whatsappFields())
+  reg.splice(phoneAt + 1, 0, ...whatsappFields(), ...notifyFields())
   const registerFields = [...whoFills(base.gender), ...reg]
   const extras = newQuestions(base.gender)
   const steps: TallyPage[] = STEPS.map((st) => ({
@@ -386,6 +401,7 @@ export function validateField(f: TallyField, value: string): string | null {
     if (age > 99) return 'נא לבדוק את תאריך הלידה'
   }
   if (f.type === 'combo' && v.length > 80) return 'הטקסט ארוך מדי'
+  if (f.type === 'toggle' && v !== '1' && v !== '0') return 'בחירה לא תקינה'
   if (f.type === 'select' && f.custom) {
     const items = parseChoices(v)
     if (f.max && items.length > f.max) return `אפשר לבחור עד ${f.max}`

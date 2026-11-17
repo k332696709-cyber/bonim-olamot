@@ -35,6 +35,8 @@ export function registrationToProfileRow(
     line('כינוי', a.nickname),
     line('מי מילא את הכרטיס', [pretty(a.filledBy), (a.fillerContact ?? '').trim()].filter(Boolean).join(' - ')),
     line('וואטסאפ', (a.whatsapp ?? '').includes('מספר אחר') ? `על מספר אחר: ${(a.whatsappNumber ?? '').trim()}` : (a.whatsapp ?? '').includes('בכלל') ? 'אין וואטסאפ' : (a.whatsapp ?? '').startsWith('כן') ? 'יש על מספר הטלפון' : ''),
+    line('מסרונים', a.notifySms === '1' ? 'מאשר/ת קבלת עדכונים במסרון' : ''),
+    line('שיחות טלפון', a.notifyCalls === '1' ? 'מאשר/ת שיחות טלפון בנושא התיק' : ''),
     line('עדה', pretty(a.edah)),
     line('מגורים', pretty(a.housing)),
     line('לימודי מקצוע', a.professionalStudies),

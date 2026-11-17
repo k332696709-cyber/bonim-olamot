@@ -369,6 +369,23 @@ export function TallyRegistrationForm({
         {f.sectionBefore && (
           <h2 className="text-xl font-bold text-navy-800 border-b border-navy-50 pb-3 pt-2">{f.sectionBefore}</h2>
         )}
+        {f.type === 'toggle' && (
+          <div className="flex items-start justify-between gap-4 rounded-2xl border border-navy-100 p-4">
+            <div className="flex flex-col gap-1">
+              <span id={`${id}-label`} className="text-[15px] font-semibold text-navy-800">{f.label}</span>
+              {f.hint && <p className="text-sm text-navy-400">{f.hint}</p>}
+            </div>
+            <button
+              type="button" role="switch" id={id}
+              aria-checked={values[f.id] === '1'} aria-labelledby={`${id}-label`}
+              onClick={() => setVal(f.id, values[f.id] === '1' ? '0' : '1')}
+              className={`relative mt-1 h-7 w-12 shrink-0 rounded-full transition-colors ${values[f.id] === '1' ? 'bg-navy-800' : 'bg-navy-200'}`}
+            >
+              <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${values[f.id] === '1' ? 'start-1' : 'end-1'}`} />
+            </button>
+          </div>
+        )}
+        {f.type !== 'toggle' && (
         <div className="flex flex-col gap-1.5">
           <label id={`${id}-label`} htmlFor={f.type === 'select' ? undefined : id} className="text-[15px] font-semibold text-navy-800">
             {f.label}
@@ -613,6 +630,7 @@ export function TallyRegistrationForm({
 
           {err && <p className="text-sm text-burgundy-500" role="alert">{err}</p>}
         </div>
+        )}
       </div>
     )
   }
@@ -715,7 +733,7 @@ export function TallyRegistrationForm({
             />
             <span className="text-sm text-navy-700 leading-relaxed">
               קראתי ואני מסכים/ה ל<Link href="/he/privacy" target="_blank" className="underline text-navy-800">מדיניות הפרטיות</Link> ול<Link href="/he/terms" target="_blank" className="underline text-navy-800">תקנון</Link>,
-              ומאשר/ת מסירת המידע שמילאתי, כולל מידע רגיש (מצב רפואי/נפשי ומצב ההורים) ותמונה, לצורך שידוך בלבד. אישרתי שיש לי הסכמה של האנשים שפרטיהם מסרתי לבירורים. <span className="text-burgundy-500">*</span>
+              ומאשר/ת מסירת המידע שמילאתי, כולל מידע רגיש (מצב רפואי/נפשי ומצב ההורים) ותמונה, לצורך שידוך בלבד. אישרתי שיש לי הסכמה של האנשים שפרטיהם מסרתי לבירורים. אני מסכים/ה לקבל עדכונים על הצעות במייל, ובמסרון או בשיחה אם הפעלתי זאת. <span className="text-burgundy-500">*</span>
             </span>
           </label>
           {errors.consent && <p className="text-sm text-burgundy-500 mt-2" role="alert">{errors.consent}</p>}

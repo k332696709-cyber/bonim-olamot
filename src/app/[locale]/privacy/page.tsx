@@ -47,6 +47,7 @@ const HE: Section[] = [
     body: [
       'המידע נשמר אצל ספקי תשתית: Supabase (בסיס נתונים ואחסון קבצים) ו-Vercel (אירוח האתר). הגישה לנתונים מוגבלת בהרשאות לפי תפקיד, והתמונות נשמרות באחסון פרטי.',
       'הודעות שנכתבות לעוזר בצ׳אט ולעוזר החכם עשויות להישלח לשירות בינה מלאכותית (Anthropic) לצורך מענה. אל תכתבו שם מלא, טלפון או פרטים מזהים בצ׳אט.',
+      'עדכונים על הצעות ועל עניין הדדי נשלחים במייל דרך שירות הדואר של גוגל, ובמסרון (SMS) רק למי שהפעיל זאת בהרשמה או באזור האישי, למספר הטלפון שמסר. מי שהפעיל שיחות טלפון עשוי לקבל שיחה מהשדכנים בנושא התיק. אפשר לבטל בכל עת באזור האישי. מספר הטלפון משמש להודעות האלה ולקשר בנושא השידוך בלבד.',
       'אף מערכת אינה חסינה לחלוטין. אנו נוקטים אמצעים סבירים להגנה על המידע, אך איננו יכולים להבטיח הגנה מוחלטת.',
     ],
   },
@@ -112,6 +113,7 @@ const EN: Section[] = [
     body: [
       'Data is stored with infrastructure providers: Supabase (database and file storage) and Vercel (site hosting). Access is limited by role, and photos are kept in private storage.',
       'Messages typed to the chat assistant and the smart assistant may be sent to an AI service (Anthropic) to produce a reply. Do not write your full name, phone or identifying details in the chat.',
+      'Updates about suggestions and mutual interest are sent by email through Google’s mail service, and by SMS only to people who switched this on at registration or in their personal area, to the phone number they gave. Someone who allowed phone calls may get a call from the matchmakers about their file. This can be switched off at any time in the personal area. The phone number is used for these messages and for contact about the match only.',
       'No system is completely secure. We take reasonable measures but cannot guarantee absolute protection.',
     ],
   },

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { findRegistration } from '@/lib/server/photos'
 import { notifyOwner } from '@/lib/server/notify'
+import { notifyCandidate } from '@/lib/server/candidateNotify'
 
 export const runtime = 'nodejs'
 
@@ -58,6 +59,8 @@ export async function POST(req: NextRequest) {
         [`${mine?.first_name ?? ''} ו${target.first_name ?? ''}`, 'שניהם סימנו עניין. אפשר ליצור קשר ולהתחיל תהליך.'],
         '/he/matchmaker',
       )
+      // Both sides are told: email, and SMS for whoever switched it on.
+      await Promise.all([notifyCandidate(admin, me, 'mutual'), notifyCandidate(admin, to, 'mutual')])
     }
   }
   return NextResponse.json({ ok: true, state: kind === 'passed' ? 'passed' : mutual ? 'mutual' : 'interested' })
