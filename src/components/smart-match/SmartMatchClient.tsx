@@ -45,19 +45,19 @@ export function SmartMatchClient({ locale }: { locale: string }) {
           <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-2xl mb-5">{pending ? '' : ''}</div>
           <h2 className="text-2xl font-bold text-navy-800 mb-2">
             {pending
-              ? (he ? 'ההרשמה שלך ממתינה לאישור' : 'Your registration is waiting for approval')
+              ? (he ? 'צריך להשלים את השאלון' : 'Please complete the questionnaire')
               : (he ? 'העוזר החכם נפתח אחרי הרשמה ואישור' : 'The Smart Assistant opens after registration and approval')}
           </h2>
           <p className="text-navy-500 mb-8">
             {pending
-              ? (he ? 'אחרי שהמנהל יאשר את ההרשמה תוכלו לראות הצעות התאמה מדורגות ולדייק אותן עם העוזר.' : 'Once the administrator approves it you can see ranked match suggestions and refine them with the assistant.')
+              ? (he ? 'אחרי שתשלימו את שאלון ההיכרות עד 100%, תוכלו לראות הצעות התאמה מדורגות ולדייק אותן עם העוזר.' : 'Once you complete the questionnaire to 100% you can see ranked match suggestions and refine them with the assistant.')
               : (he ? 'אחרי שתמלאו את שאלון ההכרות והמנהל יאשר, תוכלו לראות הצעות התאמה מדורגות ולדייק אותן עם העוזר.' : 'Once you complete the registration questionnaire and the administrator approves it, you can see ranked match suggestions and refine them with the assistant.')}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             {pending ? (
-              <Link href={`/${locale}/personal`}
+              <Link href={`/${locale}/personal/questionnaire`}
                 className="h-12 px-8 rounded-full bg-burgundy-500 hover:bg-burgundy-600 text-white font-bold text-sm inline-flex items-center justify-center transition-colors">
-                {he ? 'לאזור האישי' : 'My area'}
+                {he ? 'לשאלון' : 'To the questionnaire'}
               </Link>
             ) : (
               <>

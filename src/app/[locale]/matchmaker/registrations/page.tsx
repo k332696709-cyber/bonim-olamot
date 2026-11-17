@@ -9,6 +9,7 @@ import { useConfirm } from '@/components/ui/useConfirm'
 import { FEMALE_FORM, MALE_FORM, allFields, prettyChoices, type RegistrationForm } from '@/constants/registrationForms'
 import { registrationToProfileRow } from '@/lib/registration/toProfile'
 import { birthDateDisplay } from '@/lib/registration/birthDate'
+import { questionnaireProgress } from '@/lib/registration/completion'
 
 interface Row {
   id: string
@@ -200,6 +201,11 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
                   {r.answers.fullName} {r.answers.lastName}
                   {r.profile_id && (
                     <span className="ms-2 text-[10px] bg-navy-800 text-white px-2 py-0.5 rounded-full align-middle">{he ? 'בפרופילים' : 'In profiles'}</span>
+                  )}
+                  {!r.profile_id && (
+                    <span className="ms-2 text-[10px] bg-burgundy-50 text-burgundy-600 border border-burgundy-100 px-2 py-0.5 rounded-full align-middle">
+                      {he ? `שאלון ${questionnaireProgress(FORMS[gender], r.answers).percent}%` : `Questionnaire ${questionnaireProgress(FORMS[gender], r.answers).percent}%`}
+                    </span>
                   )}
                 </p>
                 <p className="text-xs text-navy-400 truncate">{r.answers.age} · {r.answers.city} · {r.answers.community} · {r.answers.phone}</p>

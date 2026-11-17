@@ -42,6 +42,10 @@ export function isFieldVisible(f: TallyField, answers: Record<string, string>): 
 
 export interface TallyPage {
   fields: TallyField[]
+  /** The short registration, or a step of the questionnaire that follows it. */
+  stage?: 'register' | 'questionnaire'
+  title?: string
+  intro?: string
 }
 
 export interface RegistrationForm {
@@ -128,7 +132,7 @@ const page2 = (partnerLabel: string): TallyPage => ({
   ],
 })
 
-export const MALE_FORM: RegistrationForm = {
+const BASE_MALE: RegistrationForm = {
   gender: 'male',
   title: "שאלון הכרות 'בונים עולמות' מיועדים",
   pages: [
@@ -187,7 +191,7 @@ export const MALE_FORM: RegistrationForm = {
   ],
 }
 
-export const FEMALE_FORM: RegistrationForm = {
+const BASE_FEMALE: RegistrationForm = {
   gender: 'female',
   title: "שאלון הכרות 'בונים עולמות' מיועדות",
   pages: [
@@ -246,7 +250,83 @@ export const FEMALE_FORM: RegistrationForm = {
   ],
 }
 
+/**
+ * The site now asks in two stages. The short registration (name, birth date, status, background,
+ * where they live, contact, photos) opens the account. The questionnaire that follows gets to know the
+ * person beyond the resume; the profile is shown to matchmakers only once it is 100% complete.
+ */
+const REGISTER_IDS = [
+  'fullName', 'nickname', 'lastName', 'birthDate', 'maritalStatus', 'childrenCount', 'edah', 'community',
+  'hasidut', 'city', 'housing', 'occupation', 'phone', 'email', 'photo',
+]
+
+const g = (gender: 'male' | 'female', m: string, f: string) => (gender === 'male' ? m : f)
+
+/** Questions that look past the resume. Same for both, with wording for each. */
+function newQuestions(gender: 'male' | 'female'): Record<string, TallyField[]> {
+  return {
+    lifestyle: [
+      { id: 'weekend', label: 'איך נראה סוף שבוע אצלך?', type: 'select', required: true, options: ['בבית בשקט', 'אצל המשפחה', 'מארחים ומתארחים', 'טיולים', 'מעורב'] },
+      { id: 'vacations', label: 'חופשות', type: 'select', required: true, options: ['פעם בשנה בחו"ל', 'חופשה בארץ', 'יציאות קצרות', 'לא מרבים לצאת', 'לא חשוב'] },
+      { id: 'outings', label: 'יציאות', type: 'select', multi: true, required: true, options: ['מסעדות', 'טיולים', 'בבית', 'תרבות ומוזיקה', 'לא מרבים'] },
+      { id: 'hobbies', label: 'תחביבים', hint: 'אפשר לבחור כמה שרוצים, ולהוסיף משלכם', type: 'select', multi: true, custom: true, required: true, options: ['ספורט', 'קריאה', 'מוזיקה', 'בישול', 'טיולים', 'יצירה', 'התנדבות', 'לימוד', 'צילום', 'גינון'] },
+      { id: 'money', label: g(gender, 'איך אתה מתנהל עם כסף?', 'איך את מתנהלת עם כסף?'), type: 'select', required: true, options: ['חסכוני', 'מאוזן', 'נוח', 'לא חשוב'] },
+      { id: 'torahAfter', label: g(gender, 'לימוד תורה אחרי החתונה', 'לימוד התורה של בן הזוג אחרי החתונה'), type: 'select', required: true, options: ['קביעות מלאה', 'חלקי', 'ערבים', 'לא רלוונטי'] },
+      { id: 'livePlace', label: g(gender, 'איפה תרצה לגור אחרי החתונה?', 'איפה תרצי לגור אחרי החתונה?'), type: 'select', required: true, options: ['עיר בארץ', 'בכל מקום', 'בחו"ל', 'פתוח'] },
+      { id: 'homeValues', label: 'מה הכי חשוב לך בבית שלכם?', type: 'select', multi: true, required: true, options: ['שקט', 'אירוח', 'מסורת', 'צחוק ואווירה', 'סדר'] },
+      { id: 'kidsWanted', label: 'כמה ילדים בערך?', type: 'select', required: true, options: ['1 עד 2', '3 עד 4', '5 ומעלה', "כמה שה' ייתן", 'פתוח', 'מעדיפ/ה לא לענות'] },
+    ],
+    personality: [
+      { id: 'personalityMix', label: 'מה יותר מתאר אותך?', type: 'select', multi: true, required: true, options: ['מוחצן', 'מופנם', 'מסודר', 'ספונטני', 'רציני', 'מצחיק', 'שקט', 'חברותי'] },
+    ],
+    more: [
+      { id: 'friendsWords', label: g(gender, 'איך חברים היו מתארים אותך בשלוש מילים?', 'איך חברות היו מתארות אותך בשלוש מילים?'), type: 'text', required: true },
+      { id: 'mustKnow', label: 'מה חשוב לך שהצד השני ידע עליך?', type: 'textarea', required: false },
+    ],
+  }
+}
+
+const STEPS: { title: string; intro?: string; ids: string[]; extra?: 'lifestyle' | 'personality' | 'more' }[] = [
+  { title: 'קצת עליך', intro: 'לימודים, עיסוק ומסגרת.', ids: ['professionalStudies', 'yeshivaKtana', 'yeshivaGdola', 'yeshivaGvoha', 'highSchool', 'seminary', 'midrasha', 'framework', 'phoneType'] },
+  { title: 'הסגנון שלך', intro: 'איך אתם מגדירים את עצמכם.', ids: ['styleSelf', 'clothingSelf', 'hatAfterWedding', 'headcoverSelf', 'techSelf', 'livingSelf'] },
+  { title: 'מה מאפיין אותך', intro: 'האופי שלך ומה אתם מביאים.', ids: ['traits', 'brings'], extra: 'personality' },
+  { title: 'אורח חיים', intro: 'איך נראים החיים שלכם ומה חשוב לכם בבית.', ids: [], extra: 'lifestyle' },
+  { title: 'מה אתם מחפשים', intro: 'הצד השני שאתם מחפשים.', ids: ['styleSought', 'clothingHer', 'clothingHim', 'headcoverHer', 'hatHim', 'techHer', 'techHim', 'livingHer', 'livingHim', 'edahSought', 'ageRange', 'country', 'notSuitable', 'aboutPartner'] },
+  { title: 'עוד עליך', intro: 'כמה דברים אחרונים, ומספרים לבירורים.', ids: ['medical', 'medicalDetail', 'parents', 'houseStyle', 'aboutMe', 'ref1Name', 'ref1Phone', 'ref2Name', 'ref2Phone', 'ref3Name', 'ref3Phone'], extra: 'more' },
+]
+
+function buildForm(base: RegistrationForm): RegistrationForm {
+  const all = base.pages.flatMap((p) => p.fields)
+  const byId = new Map(all.map((f) => [f.id, f]))
+  const used = new Set<string>()
+  const pick = (ids: string[]) => ids.map((id) => byId.get(id)).filter((f): f is TallyField => !!f).map((f) => { used.add(f.id); return f })
+
+  const registerFields = pick(REGISTER_IDS)
+  const extras = newQuestions(base.gender)
+  const steps: TallyPage[] = STEPS.map((st) => ({
+    stage: 'questionnaire' as const,
+    title: st.title,
+    intro: st.intro,
+    fields: [...pick(st.ids), ...(st.extra ? extras[st.extra] : [])],
+  }))
+  // Anything not placed above still shows up, in the last step.
+  const leftover = all.filter((f) => !used.has(f.id))
+  if (leftover.length) steps[steps.length - 1].fields.push(...leftover)
+
+  return {
+    gender: base.gender,
+    title: base.title,
+    pages: [{ stage: 'register', title: 'הרשמה', fields: registerFields }, ...steps],
+  }
+}
+
+export const MALE_FORM: RegistrationForm = buildForm(BASE_MALE)
+export const FEMALE_FORM: RegistrationForm = buildForm(BASE_FEMALE)
+
 export const allFields = (form: RegistrationForm): TallyField[] => form.pages.flatMap((p) => p.fields)
+export const registerFields = (form: RegistrationForm): TallyField[] =>
+  form.pages.filter((p) => p.stage === 'register').flatMap((p) => p.fields)
+export const questionnairePages = (form: RegistrationForm): TallyPage[] => form.pages.filter((p) => p.stage === 'questionnaire')
 
 /** Shared by the form and the API route. Returns an error message or null. */
 export function validateField(f: TallyField, value: string): string | null {

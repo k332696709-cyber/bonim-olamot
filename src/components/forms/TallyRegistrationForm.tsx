@@ -5,11 +5,12 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { compressImage, MAX_UPLOAD_BYTES } from '@/lib/images/compress'
 import { GoogleButton } from '@/components/forms/GoogleButton'
+import { questionnaireProgress } from '@/lib/registration/completion'
 import { ChoiceDropdown } from '@/components/forms/ChoiceDropdown'
 import { currentGoogleEmail } from '@/lib/auth/google'
 import { ageFromBirthDate, hebrewDate, parseBirthDate } from '@/lib/registration/birthDate'
 import {
-  allFields, isFieldVisible, MAX_PHOTOS, validateField, withOther, parseChoices, CHOICE_SEP, OTHER,
+  allFields, isFieldVisible, MAX_PHOTOS, questionnairePages, validateField, withOther, parseChoices, CHOICE_SEP, OTHER,
   type RegistrationForm, type TallyField,
 } from '@/constants/registrationForms'
 
@@ -22,13 +23,18 @@ export function TallyRegistrationForm({
 }: {
   form: RegistrationForm
   endpoint: string
-  /** "edit": a signed-in candidate updates their answers (no password, consent or photos here). */
-  mode?: 'create' | 'edit'
+  /**
+   * "create": the short registration. "questionnaire": the steps that follow, saved as the person goes.
+   * "edit": a signed-in candidate updates their answers (no password, consent or photos here).
+   */
+  mode?: 'create' | 'edit' | 'questionnaire'
   initialValues?: Record<string, string>
-  onSaved?: () => void
+  onSaved?: (result?: { percent?: number; complete?: boolean }) => void
   onCancel?: () => void
 }) {
   const editing = mode === 'edit'
+  const isCreate = mode === 'create'
+  const questionnaire = mode === 'questionnaire'
   const [page, setPage] = useState(0)
   const [values, setValues] = useState<Record<string, string>>(() => {
     const v = { ...(initialValues ?? {}) }
@@ -60,10 +66,11 @@ export function TallyRegistrationForm({
   const topRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const pages = useMemo(
-    () => (editing ? form.pages.map((pg) => ({ fields: pg.fields.filter((f) => f.type !== 'file') })) : form.pages),
-    [form, editing],
-  )
+  const pages = useMemo(() => {
+    if (questionnaire) return questionnairePages(form)
+    if (editing) return form.pages.map((pg) => ({ ...pg, fields: pg.fields.filter((f) => f.type !== 'file') }))
+    return form.pages.filter((pg) => pg.stage === 'register')
+  }, [form, editing, questionnaire])
   const last = page === pages.length - 1
 
   const setVal = (id: string, v: string) => {
@@ -85,7 +92,7 @@ export function TallyRegistrationForm({
         if (f.required && photos.length === 0) next[f.id] = 'שדה חובה'
         continue
       }
-      const err = validateField(f, values[f.id] ?? '')
+      const err = validateField(questionnaire ? { ...f, required: false } : f, values[f.id] ?? '')
       if (err) next[f.id] = err
     }
     setErrors((e) => ({ ...e, ...next }))
@@ -93,18 +100,43 @@ export function TallyRegistrationForm({
   }
 
   useEffect(() => {
-    if (editing) return
+    if (!isCreate) return
     currentGoogleEmail().then((email) => {
       if (!email) return
       setGoogleEmail(email)
       setValues((v) => ({ ...v, email }))
     })
-  }, [editing])
+  }, [isCreate])
 
   const scrollTop = () => topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
-  const goNext = () => {
+  const [saving, setSaving] = useState(false)
+  const [signedIn, setSignedIn] = useState(false)
+
+  /** Sends the given fields to the questionnaire route. Returns the response (or null if offline). */
+  const saveFields = async (fields: TallyField[]) => {
+    const fd = new FormData()
+    for (const f of fields) if (f.type !== 'file') fd.append(f.id, (values[f.id] ?? '').trim())
+    const { data: sess } = await createClient().auth.getSession()
+    try {
+      return await fetch(endpoint, { method: 'PUT', headers: { Authorization: `Bearer ${sess.session?.access_token ?? ''}` }, body: fd })
+    } catch {
+      return null
+    }
+  }
+
+  const goNext = async () => {
     if (!validatePage(page)) return
+    if (questionnaire) {
+      setSaving(true)
+      setServerError('')
+      const res = await saveFields(pages[page].fields)
+      setSaving(false)
+      if (!res || !res.ok) {
+        setServerError('השמירה נכשלה. בדקו את החיבור ונסו שוב.')
+        return
+      }
+    }
     setPage((p) => p + 1)
     setTimeout(scrollTop, 30)
   }
@@ -150,7 +182,7 @@ export function TallyRegistrationForm({
     e.preventDefault()
     if (!last) return goNext()
     const acct: Record<string, string> = {}
-    if (!editing) {
+    if (isCreate) {
       if (!googleEmail && password.length < 10) acct.password = 'הסיסמה חייבת להכיל לפחות 10 תווים'
       if (!googleEmail && confirmPassword !== password) acct.confirmPassword = 'הסיסמאות אינן תואמות'
       if (!consent) acct.consent = 'יש לאשר את ההסכמה כדי להמשיך'
@@ -170,9 +202,10 @@ export function TallyRegistrationForm({
     setServerError('')
     try {
       const fd = new FormData()
-      for (const f of allFields(form)) if (f.type !== 'file') fd.append(f.id, (values[f.id] ?? '').trim())
+      const sendFields = questionnaire ? pages.flatMap((p) => p.fields) : isCreate ? pages.flatMap((p) => p.fields) : allFields(form)
+      for (const f of sendFields) if (f.type !== 'file') fd.append(f.id, (values[f.id] ?? '').trim())
       let headers: Record<string, string> | undefined
-      if (editing) {
+      if (editing || questionnaire) {
         const { data: sess } = await createClient().auth.getSession()
         headers = { Authorization: `Bearer ${sess.session?.access_token ?? ''}` }
       } else {
@@ -185,7 +218,7 @@ export function TallyRegistrationForm({
           fd.append('password', password)
         }
       }
-      const res = await fetch(endpoint, { method: editing ? 'PUT' : 'POST', headers, body: fd })
+      const res = await fetch(endpoint, { method: editing || questionnaire ? 'PUT' : 'POST', headers, body: fd })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
         if (data?.fields) {
@@ -200,6 +233,17 @@ export function TallyRegistrationForm({
         onSaved?.()
         return
       }
+      if (questionnaire) {
+        onSaved?.({ percent: data?.percent, complete: data?.complete })
+        return
+      }
+      // Registered: sign in right away so the questionnaire can start without another password.
+      if (!googleEmail) {
+        const { error: signErr } = await createClient().auth.signInWithPassword({ email: (values.email ?? '').trim().toLowerCase(), password })
+        setSignedIn(!signErr)
+      } else {
+        setSignedIn(true)
+      }
       setDone(true)
       setTimeout(scrollTop, 30)
     } catch {
@@ -213,12 +257,12 @@ export function TallyRegistrationForm({
     return (
       <div ref={topRef} dir="rtl" className="rounded-[32px] bg-white shadow-card px-6 py-16 text-center">
         <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-3xl mb-5">✓</div>
-        <h2 className="text-2xl font-bold text-navy-800 mb-2">תודה, ההרשמה התקבלה!</h2>
+        <h2 className="text-2xl font-bold text-navy-800 mb-2">תודה, החשבון נפתח!</h2>
         <p className="text-navy-500 max-w-md mx-auto">
-          {googleEmail ? 'אתם כבר מחוברים עם גוגל, ואפשר לראות את הפרופיל באזור האישי.' : 'אפשר להיכנס עכשיו עם המייל והסיסמה שבחרת ולראות את הפרופיל שלך.'} התמונה תיבדק ותופיע למשתמשים אחרי שתאושר, ועד אז רק אתה רואה אותה.
+          הצעד הבא הוא שאלון היכרות קצר, כדי שנכיר אתכם מעבר לרזומה. הפרופיל שלכם יוצג לשדכנים רק אחרי שתמלאו אותו עד 100%. אפשר למלא בשלבים, והכול נשמר.
         </p>
-        <Link href={googleEmail ? '/he/personal' : '/he/login'} className="inline-flex mt-6 h-12 items-center px-8 rounded-full bg-burgundy-500 hover:bg-burgundy-600 text-white text-sm font-bold">
-          {googleEmail ? 'לאזור האישי' : 'כניסה'}
+        <Link href={signedIn ? '/he/personal/questionnaire' : '/he/login'} className="inline-flex mt-6 h-12 items-center px-8 rounded-full bg-burgundy-500 hover:bg-burgundy-600 text-white text-sm font-bold">
+          {signedIn ? 'להמשך לשאלון' : 'כניסה'}
         </Link>
       </div>
     )
@@ -487,18 +531,19 @@ export function TallyRegistrationForm({
     )
   }
 
-  const progress = ((page + 1) / pages.length) * 100
+  const overall = questionnaire ? questionnaireProgress(form, values) : null
+  const progress = overall ? overall.percent : ((page + 1) / pages.length) * 100
 
   return (
     <form onSubmit={submit} noValidate dir="rtl" className="flex flex-col gap-6 pb-10">
       <div ref={topRef} className="scroll-mt-28" />
 
-      {!editing && googleEmail && (
+      {isCreate && googleEmail && (
         <p className="self-center rounded-full bg-white shadow-card px-4 py-2 text-sm text-navy-700">
           מחוברים עם גוגל: <span dir="ltr" className="font-semibold">{googleEmail}</span>. אין צורך בסיסמה.
         </p>
       )}
-      {!editing && !googleEmail && page === 0 && (
+      {isCreate && !googleEmail && page === 0 && (
         <div className="rounded-[32px] bg-white shadow-card p-5 sm:p-6 flex flex-col gap-3 empty:hidden">
           <GoogleButton label="הרשמה מהירה עם גוגל" nextPath={typeof window !== 'undefined' ? window.location.pathname : '/he'} />
         </div>
@@ -506,18 +551,28 @@ export function TallyRegistrationForm({
 
       <p className="self-center rounded-full bg-white shadow-card px-4 py-1.5 text-xs text-navy-500">שדות המסומנים ב-* הם חובה</p>
 
+      {pages.length > 1 && (
       <div aria-label={`עמוד ${page + 1} מתוך ${pages.length}`}>
         <div className="h-2 rounded-full bg-white overflow-hidden shadow-inner">
           <div className="h-full rounded-full bg-burgundy-500 transition-all duration-500" style={{ width: `${progress}%` }} />
         </div>
-        <p className="text-xs text-navy-400 mt-1.5 text-center">עמוד {page + 1} מתוך {pages.length}</p>
+        <p className="text-xs text-navy-400 mt-1.5 text-center">
+          {overall ? `השאלון מולא ב-${overall.percent}% · שלב ${page + 1} מתוך ${pages.length}` : `עמוד ${page + 1} מתוך ${pages.length}`}
+        </p>
       </div>
+      )}
 
       <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-9 flex flex-col gap-6">
+        {!isCreate && pages[page].title && (
+          <div className="flex flex-col gap-1">
+            <h2 className="text-2xl font-bold text-navy-800">{pages[page].title}</h2>
+            {pages[page].intro && <p className="text-sm text-navy-400">{pages[page].intro}</p>}
+          </div>
+        )}
         {pages[page].fields.filter(isVisible).map(renderField)}
       </div>
 
-      {last && !editing && !googleEmail && (
+      {last && isCreate && !googleEmail && (
         <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-9 flex flex-col gap-4">
           <div>
             <h2 className="text-xl font-bold text-navy-800">סיסמה לכניסה</h2>
@@ -553,7 +608,7 @@ export function TallyRegistrationForm({
         </div>
       )}
 
-      {last && !editing && (
+      {last && isCreate && (
         <div className="rounded-2xl bg-white shadow-card px-5 py-4">
           <label className="flex items-start gap-3 cursor-pointer">
             <input
@@ -592,9 +647,9 @@ export function TallyRegistrationForm({
             ביטול
           </button>
         ) : <span />}
-        <button type="submit" disabled={submitting}
+        <button type="submit" disabled={submitting || saving}
           className="h-12 min-w-40 px-9 rounded-full bg-burgundy-500 hover:bg-burgundy-600 disabled:opacity-60 text-white text-sm font-bold transition-colors">
-          {last ? (submitting ? (editing ? 'שומר...' : 'שולח...') : editing ? 'שמירת השינויים' : 'פרסם') : 'הבא'}
+          {saving ? 'שומר...' : last ? (submitting ? (editing || questionnaire ? 'שומר...' : 'שולח...') : questionnaire ? 'סיום ושמירה' : editing ? 'שמירת השינויים' : 'פתיחת חשבון') : 'הבא'}
         </button>
       </div>
     </form>

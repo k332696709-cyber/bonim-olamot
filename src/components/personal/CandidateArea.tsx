@@ -8,6 +8,7 @@ import { clearSession, restoreSession } from '@/lib/auth/session'
 import { loadCandidate, type CandidateState } from '@/lib/auth/candidate'
 import { PhotoSlots } from '@/components/personal/PhotoSlots'
 import { FeeNotices } from '@/components/personal/FeeNotices'
+import { questionnaireProgress } from '@/lib/registration/completion'
 import { TallyRegistrationForm } from '@/components/forms/TallyRegistrationForm'
 import { FEMALE_FORM, MALE_FORM } from '@/constants/registrationForms'
 import {
@@ -102,25 +103,53 @@ export function CandidateArea({ locale }: { locale: string }) {
     ? new Date(state.submittedAt).toLocaleDateString(he ? 'he-IL' : 'en-GB')
     : ''
 
-  // Registered, waiting for the administrator
+  // Registered, but the questionnaire is not finished: the profile is hidden from matchmakers until it is 100%.
   if (state.status === 'pending') {
+    const progress = questionnaireProgress(state.gender === 'female' ? FEMALE_FORM : MALE_FORM, a)
+    const started = progress.done > 0
     return shell(
-      <div className="rounded-[32px] bg-white shadow-card px-6 py-12 text-center">
-        <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-2xl mb-5">✓</div>
-        <h2 className="text-2xl font-bold text-navy-800 mb-2">
-          {he ? `שלום ${a.fullName ?? ''}` : `Hello ${a.fullName ?? ''}`}
-        </h2>
-        <p className="text-navy-600 mb-1">
-          {he ? 'ההרשמה שלך התקבלה וממתינה לאישור.' : 'Your registration was received and is waiting for approval.'}
-        </p>
-        <p className="text-navy-400 text-sm max-w-md mx-auto">
-          {he
-            ? `נשלחה בתאריך ${submitted}. אחרי שהמנהל יאשר אותה תראה כאן את הפרופיל המלא שלך, והשדכנים יוכלו לראות אותו.`
-            : `Submitted on ${submitted}. Once the administrator approves it you will see your full profile here, and matchmakers will be able to see it.`}
-        </p>
-        <button onClick={signOut} className="mt-8 h-11 px-6 rounded-full border border-navy-200 text-navy-700 hover:bg-navy-50 text-sm font-semibold">
-          {he ? 'יציאה' : 'Sign out'}
-        </button>
+      <div className="flex flex-col gap-5">
+        <div className="rounded-[32px] bg-white shadow-card px-6 py-10 sm:px-10 text-center">
+          <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-2xl mb-5">✓</div>
+          <h2 className="text-2xl font-bold text-navy-800 mb-2">
+            {he ? `שלום ${a.fullName ?? ''}` : `Hello ${a.fullName ?? ''}`}
+          </h2>
+          <p className="text-navy-600 mb-6">
+            {he
+              ? 'החשבון שלך נפתח. כדי שהפרופיל שלך יוצג לשדכנים צריך להשלים את שאלון ההיכרות עד 100%.'
+              : 'Your account is open. To show your profile to matchmakers, complete the questionnaire to 100%.'}
+          </p>
+          <div className="max-w-md mx-auto">
+            <div className="flex items-baseline justify-between mb-1.5">
+              <span className="text-sm font-semibold text-navy-700">{he ? 'השאלון מולא' : 'Questionnaire completed'}</span>
+              <span className="text-2xl font-bold text-burgundy-500 tabular-nums" dir="ltr">{progress.percent}%</span>
+            </div>
+            <div className="h-3 rounded-full bg-[#f1f1f1] overflow-hidden">
+              <div className="h-full rounded-full bg-gradient-to-l from-burgundy-400 to-burgundy-500 transition-all duration-500" style={{ width: `${progress.percent}%` }} />
+            </div>
+          </div>
+          <ul className="max-w-md mx-auto mt-6 flex flex-col gap-2 text-sm text-start">
+            {progress.steps.map((st) => (
+              <li key={st.title} className="flex items-center justify-between gap-3 rounded-2xl bg-[#f7f7f7] px-4 py-2.5">
+                <span className="text-navy-700">{st.title}</span>
+                <span className={st.total > 0 && st.done === st.total ? 'text-green-700 font-semibold' : 'text-navy-400 tabular-nums'}>
+                  {st.total > 0 && st.done === st.total ? '✓' : `${st.done}/${st.total}`}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <Link
+            href={`/${locale}/personal/questionnaire`}
+            className="inline-flex mt-8 h-12 items-center px-9 rounded-full bg-burgundy-500 hover:bg-burgundy-600 text-white text-sm font-bold"
+          >
+            {started ? (he ? 'המשך לשאלון' : 'Continue the questionnaire') : (he ? 'התחלת השאלון' : 'Start the questionnaire')}
+          </Link>
+        </div>
+        <div className="flex justify-center">
+          <button onClick={signOut} className="h-11 px-6 rounded-full border border-navy-200 text-navy-700 hover:bg-navy-50 text-sm font-semibold">
+            {he ? 'יציאה' : 'Sign out'}
+          </button>
+        </div>
       </div>,
     )
   }

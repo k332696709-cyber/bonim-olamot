@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
-import { allFields, isFieldVisible, MAX_PHOTO_BYTES, MAX_PHOTOS, validateField, type RegistrationForm } from '@/constants/registrationForms'
-import { registrationToProfileRow } from '@/lib/registration/toProfile'
+import { registerFields, isFieldVisible, MAX_PHOTO_BYTES, MAX_PHOTOS, validateField, type RegistrationForm } from '@/constants/registrationForms'
 import { notifyOwner } from '@/lib/server/notify'
 import { findRegistration } from '@/lib/server/photos'
 import { withDerivedAge } from '@/lib/registration/birthDate'
@@ -38,11 +37,13 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
 
   const answers: Record<string, string> = {}
   const fields: Record<string, string> = {}
-  for (const f of allFields(form)) {
+  // Only the short registration is asked here; the questionnaire follows after sign-in.
+  const asked = registerFields(form)
+  for (const f of asked) {
     if (f.type === 'file') continue
     answers[f.id] = String(fd.get(f.id) ?? '').trim()
   }
-  for (const f of allFields(form)) {
+  for (const f of asked) {
     if (f.type === 'file') continue
     // A question that does not apply (for example the number of children of a single person) is skipped.
     if (!isFieldVisible(f, answers)) { answers[f.id] = ''; continue }
@@ -174,22 +175,12 @@ export async function handleRegistration(req: NextRequest, form: RegistrationFor
       return NextResponse.json({ message: 'שמירת התמונות נכשלה. נסו שוב.' }, { status: 502 })
     }
 
-    // The profile is created right away: the candidate sees it at once and matchmakers can
-    // work with it. Photos join the profile one by one, as the administrator approves them.
-    const profileRow = { ...registrationToProfileRow(form.gender, answers, []), matchmaker_status: 'bright_red' }
-    const { data: profile, error: profErr } = await (admin as any).from('profiles').insert(profileRow).select('id').single()
-    if (profErr || !profile) {
-      console.error('registration: profile creation failed', profErr?.message)
-      await (admin as any).from(table).delete().eq('id', reg.id)
-      await admin.storage.from('registration-photos').remove(paths)
-      await dropUser()
-      return NextResponse.json({ message: 'שמירת הפרופיל נכשלה. נסו שוב.' }, { status: 502 })
-    }
-    await (admin as any).from(table).update({ profile_id: profile.id }).eq('id', reg.id)
+    // The profile is NOT created yet: matchmakers see the candidate only once the questionnaire that
+    // follows is 100% complete (see /api/candidate/questionnaire).
 
     // Tell the owner (first name, age and city only; the details are in the admin area).
     await notifyOwner(
-      form.gender === 'male' ? 'הרשמה חדשה: מיועד' : 'הרשמה חדשה: מיועדת',
+      form.gender === 'male' ? 'הרשמה חדשה: מיועד (השאלון עוד לא הושלם)' : 'הרשמה חדשה: מיועדת (השאלון עוד לא הושלם)',
       [`שם: ${answers.fullName ?? ''}`, `גיל: ${answers.age ?? ''}`, `עיר: ${answers.city ?? ''}`, `מספר תמונות: ${paths.length}`],
       '/he/matchmaker/registrations',
     )

@@ -47,6 +47,8 @@ export async function PUT(req: NextRequest) {
     // A question that does not apply is skipped.
     if (!isFieldVisible(f, answers)) { answers[f.id] = ''; continue }
     const err = validateField(f, answers[f.id])
+    // A question added after this person registered may stay empty until they get to it.
+    if (err === 'שדה חובה' && !(existing[f.id] ?? '').trim()) continue
     if (err) fields[f.id] = err
   }
   if (Object.keys(fields).length > 0) {
