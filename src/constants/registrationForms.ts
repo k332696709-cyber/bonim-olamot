@@ -22,6 +22,10 @@ export interface TallyField {
   multi?: boolean
   /** Highest number of choices (multi fields). */
   max?: number
+  /** Show the options as small tick boxes, even when the list could be a dropdown. */
+  chips?: boolean
+  /** The list is closed: no "other" choice is added. */
+  noOther?: boolean
   /** The person may add their own entries next to the listed options (no "other" chip then). */
   custom?: boolean
   /** Short numeric free-text answers (age, number of children). */
@@ -265,6 +269,12 @@ const g = (gender: 'male' | 'female', m: string, f: string) => (gender === 'male
 /** Questions that look past the resume. Same for both, with wording for each. */
 function newQuestions(gender: 'male' | 'female'): Record<string, TallyField[]> {
   return {
+    prof: [
+      { id: 'profWhen', label: 'לימודי מקצוע', hint: 'אפשר לבחור יותר מאחת. מי שלא למד מקצוע יכול לדלג.', type: 'select', multi: true, chips: true, noOther: true, required: false, options: ['עבר', 'כעת', 'בעתיד'] },
+      { id: 'profPast', label: 'לימודי מקצוע בעבר: איזה מקצוע?', type: 'text', required: true, visibleWhen: { id: 'profWhen', includes: 'עבר' } },
+      { id: 'profNow', label: 'לימודי מקצוע כעת: איזה מקצוע?', type: 'text', required: true, visibleWhen: { id: 'profWhen', includes: 'כעת' } },
+      { id: 'profFuture', label: 'לימודי מקצוע בעתיד: איזה מקצוע?', type: 'text', required: true, visibleWhen: { id: 'profWhen', includes: 'בעתיד' } },
+    ],
     lifestyle: [
       { id: 'weekend', label: 'איך נראה סוף שבוע אצלך?', type: 'select', required: true, options: ['בבית בשקט', 'אצל המשפחה', 'מארחים ומתארחים', 'טיולים', 'מעורב'] },
       { id: 'vacations', label: 'חופשות', type: 'select', required: true, options: ['פעם בשנה בחו"ל', 'חופשה בארץ', 'יציאות קצרות', 'לא מרבים לצאת', 'לא חשוב'] },
@@ -286,8 +296,8 @@ function newQuestions(gender: 'male' | 'female'): Record<string, TallyField[]> {
   }
 }
 
-const STEPS: { title: string; intro?: string; ids: string[]; extra?: 'lifestyle' | 'personality' | 'more' }[] = [
-  { title: 'קצת עליך', intro: 'לימודים, עיסוק ומסגרת.', ids: ['professionalStudies', 'yeshivaKtana', 'yeshivaGdola', 'yeshivaGvoha', 'highSchool', 'seminary', 'midrasha', 'framework', 'phoneType'] },
+const STEPS: { title: string; intro?: string; ids: string[]; lead?: 'prof'; extra?: 'lifestyle' | 'personality' | 'more' }[] = [
+  { title: 'קצת עליך', intro: 'לימודים, עיסוק ומסגרת.', lead: 'prof', ids: ['yeshivaKtana', 'yeshivaGdola', 'yeshivaGvoha', 'highSchool', 'seminary', 'midrasha', 'framework', 'phoneType'] },
   { title: 'הסגנון שלך', intro: 'איך אתם מגדירים את עצמכם.', ids: ['styleSelf', 'clothingSelf', 'hatAfterWedding', 'headcoverSelf', 'techSelf', 'livingSelf'] },
   { title: 'מה מאפיין אותך', intro: 'האופי שלך ומה אתם מביאים.', ids: ['traits', 'brings'], extra: 'personality' },
   { title: 'אורח חיים', intro: 'איך נראים החיים שלכם ומה חשוב לכם בבית.', ids: [], extra: 'lifestyle' },
@@ -295,8 +305,11 @@ const STEPS: { title: string; intro?: string; ids: string[]; extra?: 'lifestyle'
   { title: 'עוד עליך', intro: 'כמה דברים אחרונים, ומספרים לבירורים.', ids: ['medical', 'medicalDetail', 'parents', 'houseStyle', 'aboutMe', 'ref1Name', 'ref1Phone', 'ref2Name', 'ref2Phone', 'ref3Name', 'ref3Phone'], extra: 'more' },
 ]
 
+/** Questions that were replaced by newer ones (their old answers stay stored). */
+const RETIRED = new Set(['professionalStudies'])
+
 function buildForm(base: RegistrationForm): RegistrationForm {
-  const all = base.pages.flatMap((p) => p.fields)
+  const all = base.pages.flatMap((p) => p.fields).filter((f) => !RETIRED.has(f.id))
   const byId = new Map(all.map((f) => [f.id, f]))
   const used = new Set<string>()
   const pick = (ids: string[]) => ids.map((id) => byId.get(id)).filter((f): f is TallyField => !!f).map((f) => { used.add(f.id); return f })
@@ -307,7 +320,7 @@ function buildForm(base: RegistrationForm): RegistrationForm {
     stage: 'questionnaire' as const,
     title: st.title,
     intro: st.intro,
-    fields: [...pick(st.ids), ...(st.extra ? extras[st.extra] : [])],
+    fields: [...(st.lead ? extras[st.lead] : []), ...pick(st.ids), ...(st.extra ? extras[st.extra] : [])],
   }))
   // Anything not placed above still shows up, in the last step.
   const leftover = all.filter((f) => !used.has(f.id))
@@ -350,7 +363,7 @@ export function validateField(f: TallyField, value: string): string | null {
     return null
   }
   if (f.type === 'select' && f.options) {
-    const opts = withOther(f.options)
+    const opts = f.noOther ? f.options : withOther(f.options)
     const items = parseChoices(v)
     if (!f.multi && items.length > 1) return 'בחירה לא תקינה'
     for (const item of items) {

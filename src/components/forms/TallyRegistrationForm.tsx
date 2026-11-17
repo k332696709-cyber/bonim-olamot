@@ -138,7 +138,7 @@ export function TallyRegistrationForm({
 
   /** Short lists stay as buttons; long lists open as a dropdown; own entries use a search-and-add list. */
   const SHORT_LISTS = ['maritalStatus', 'community', 'housing']
-  const asDropdown = (f: TallyField) => f.type === 'select' && !!f.options && (!SHORT_LISTS.includes(f.id) && (f.custom || f.options.length >= 4 || f.multi))
+  const asDropdown = (f: TallyField) => f.type === 'select' && !!f.options && !f.chips && (!SHORT_LISTS.includes(f.id) && (f.custom || f.options.length >= 4 || f.multi))
 
   const validatePage = (index: number) => {
     const next: Record<string, string> = {}
@@ -400,7 +400,7 @@ export function TallyRegistrationForm({
 
           {f.type === 'select' && !asDropdown(f) && (() => {
             const chosen = parseChoices(values[f.id] ?? '')
-            const listed = f.custom ? f.options! : withOther(f.options!)
+            const listed = f.custom || f.noOther ? f.options! : withOther(f.options!)
             const otherItem = f.custom ? undefined : chosen.find((x) => x === OTHER || x.startsWith(OTHER + ': '))
             const ownItems = f.custom ? chosen.filter((x) => !f.options!.includes(x)) : []
             const full = !!f.max && chosen.length >= f.max
