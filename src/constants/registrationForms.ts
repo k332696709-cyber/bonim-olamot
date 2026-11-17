@@ -24,6 +24,8 @@ export interface TallyField {
   max?: number
   /** Show the options as small tick boxes, even when the list could be a dropdown. */
   chips?: boolean
+  /** Choices as a list of small circles that get a tick when chosen. */
+  circles?: boolean
   /** Shown in its own separate box above the other questions. */
   ownBox?: boolean
   /** The list is closed: no "other" choice is added. */
@@ -268,12 +270,23 @@ const REGISTER_IDS = [
 
 const g = (gender: 'male' | 'female', m: string, f: string) => (gender === 'male' ? m : f)
 
+/** Whether the phone number has WhatsApp, and if not, which number does. */
+function whatsappFields(): TallyField[] {
+  return [
+    {
+      id: 'whatsapp', label: 'יש וואטסאפ על המספר הזה?', type: 'select', required: true, chips: true, circles: true, noOther: true,
+      options: ['כן, יש וואטסאפ על המספר הזה', 'לא, יש וואטסאפ על מספר אחר', 'אין לי וואטסאפ בכלל'],
+    },
+    { id: 'whatsappNumber', label: 'מספר הוואטסאפ', type: 'tel', required: true, visibleWhen: { id: 'whatsapp', includes: 'מספר אחר' } },
+  ]
+}
+
 /** Asked first: sometimes a parent or a matchmaker fills in the card for the candidate. */
 function whoFills(gender: 'male' | 'female'): TallyField[] {
   return [
     {
       id: 'filledBy', label: 'מי ממלא את הכרטיס עכשיו?', hint: 'אפשר שההורים או אדם אחר ימלאו בשם ' + g(gender, 'המיועד', 'המיועדת') + '. כך נדע למי לפנות.',
-      type: 'select', required: true, chips: true, noOther: true, ownBox: true,
+      type: 'select', required: true, chips: true, circles: true, noOther: true, ownBox: true,
       options: ['אני בעצמי', 'אחד ההורים', 'אדם אחר (שדכן/ית, קרוב/ת משפחה, מכר/ה)'],
     },
     { id: 'fillerContact', label: 'שם וטלפון של מי שממלא', hint: 'לא חובה. כך נוכל ליצור קשר גם איתו.', type: 'text', required: false, ownBox: true, visibleWhen: { id: 'filledBy', includes: ['הורים', 'אדם אחר'] } },
@@ -328,7 +341,10 @@ function buildForm(base: RegistrationForm): RegistrationForm {
   const used = new Set<string>()
   const pick = (ids: string[]) => ids.map((id) => byId.get(id)).filter((f): f is TallyField => !!f).map((f) => { used.add(f.id); return f })
 
-  const registerFields = [...whoFills(base.gender), ...pick(REGISTER_IDS)]
+  const reg = pick(REGISTER_IDS)
+  const phoneAt = reg.findIndex((f) => f.id === 'phone')
+  reg.splice(phoneAt + 1, 0, ...whatsappFields())
+  const registerFields = [...whoFills(base.gender), ...reg]
   const extras = newQuestions(base.gender)
   const steps: TallyPage[] = STEPS.map((st) => ({
     stage: 'questionnaire' as const,

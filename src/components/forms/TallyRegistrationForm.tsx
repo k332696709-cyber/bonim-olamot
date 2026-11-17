@@ -412,6 +412,33 @@ export function TallyRegistrationForm({
                     {chosen.length} מתוך {f.max}{full ? ' · אפשר להסיר כדי לבחור אחר' : ''}
                   </p>
                 )}
+                {f.circles ? (
+                  <div className="flex flex-col gap-1">
+                    {listed.map((o) => {
+                      const on = o === OTHER ? !!otherItem : chosen.includes(o)
+                      return (
+                        <button
+                          key={o}
+                          type="button"
+                          role={f.multi ? 'checkbox' : 'radio'}
+                          aria-checked={on}
+                          onClick={() => toggleChoice(f, o)}
+                          className="flex items-center gap-3 rounded-2xl px-2 py-2.5 text-start text-[16px] text-navy-800 hover:bg-navy-50 transition-colors"
+                        >
+                          <span
+                            className={`w-7 h-7 shrink-0 rounded-full border-2 flex items-center justify-center text-sm font-bold text-white transition-colors ${
+                              on ? 'bg-burgundy-500 border-burgundy-500' : err ? 'bg-white border-burgundy-400' : 'bg-white border-navy-200'
+                            }`}
+                            aria-hidden
+                          >
+                            {on ? '\u2713' : ''}
+                          </span>
+                          {o}
+                        </button>
+                      )
+                    })}
+                  </div>
+                ) : (
                 <div className="flex flex-wrap gap-2">
                   {listed.map((o) => {
                     const on = o === OTHER ? !!otherItem : chosen.includes(o)
@@ -448,6 +475,7 @@ export function TallyRegistrationForm({
                     </button>
                   ))}
                 </div>
+                )}
                 {f.custom && (
                   <div className="flex gap-2">
                     <input
