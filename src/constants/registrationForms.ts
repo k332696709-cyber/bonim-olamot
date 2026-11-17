@@ -24,6 +24,8 @@ export interface TallyField {
   max?: number
   /** Show the options as small tick boxes, even when the list could be a dropdown. */
   chips?: boolean
+  /** Shown in its own separate box above the other questions. */
+  ownBox?: boolean
   /** The list is closed: no "other" choice is added. */
   noOther?: boolean
   /** The person may add their own entries next to the listed options (no "other" chip then). */
@@ -270,11 +272,11 @@ const g = (gender: 'male' | 'female', m: string, f: string) => (gender === 'male
 function whoFills(gender: 'male' | 'female'): TallyField[] {
   return [
     {
-      id: 'filledBy', label: 'מי מילא את הכרטיס עכשיו?', hint: 'אפשר שההורים או אדם אחר ימלאו בשם ' + g(gender, 'המיועד', 'המיועדת') + '. כך נדע למי לפנות.',
-      type: 'select', required: true, chips: true, noOther: true,
+      id: 'filledBy', label: 'מי ממלא את הכרטיס עכשיו?', hint: 'אפשר שההורים או אדם אחר ימלאו בשם ' + g(gender, 'המיועד', 'המיועדת') + '. כך נדע למי לפנות.',
+      type: 'select', required: true, chips: true, noOther: true, ownBox: true,
       options: ['אני בעצמי', 'אחד ההורים', 'אדם אחר (שדכן/ית, קרוב/ת משפחה, מכר/ה)'],
     },
-    { id: 'fillerContact', label: 'שם וטלפון של מי שממלא', hint: 'לא חובה. כך נוכל ליצור קשר גם איתו.', type: 'text', required: false, visibleWhen: { id: 'filledBy', includes: ['הורים', 'אדם אחר'] } },
+    { id: 'fillerContact', label: 'שם וטלפון של מי שממלא', hint: 'לא חובה. כך נוכל ליצור קשר גם איתו.', type: 'text', required: false, ownBox: true, visibleWhen: { id: 'filledBy', includes: ['הורים', 'אדם אחר'] } },
   ]
 }
 

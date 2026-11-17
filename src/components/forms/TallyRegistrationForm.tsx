@@ -596,25 +596,6 @@ export function TallyRegistrationForm({
     <form onSubmit={submit} noValidate dir="rtl" className="flex flex-col gap-6 pb-10">
       <div ref={topRef} className="scroll-mt-28" />
 
-      {isCreate && (
-        <div className="self-center flex items-center gap-2 rounded-full bg-white shadow-card p-1.5" role="group" aria-label="ההרשמה עבור">
-          <span className="text-sm text-navy-500 ps-3">ההרשמה עבור:</span>
-          <Link
-            href="/he/register/male"
-            aria-current={form.gender === 'male' ? 'page' : undefined}
-            className={`h-10 px-5 rounded-full text-sm font-semibold inline-flex items-center transition-colors ${form.gender === 'male' ? 'bg-navy-800 text-white' : 'text-navy-700 hover:bg-navy-50'}`}
-          >
-            מיועד (גבר)
-          </Link>
-          <Link
-            href="/he/register/female"
-            aria-current={form.gender === 'female' ? 'page' : undefined}
-            className={`h-10 px-5 rounded-full text-sm font-semibold inline-flex items-center transition-colors ${form.gender === 'female' ? 'bg-navy-800 text-white' : 'text-navy-700 hover:bg-navy-50'}`}
-          >
-            מיועדת (אשה)
-          </Link>
-        </div>
-      )}
       {restored && (
         <p className="self-center rounded-full bg-white shadow-card px-4 py-2 text-sm text-navy-700 text-center" role="status">
           שחזרנו את מה שמילאתם קודם. אפשר להמשיך מאותה נקודה.{' '}
@@ -645,6 +626,12 @@ export function TallyRegistrationForm({
       </div>
       )}
 
+      {pages[page].fields.some((f) => f.ownBox && isVisible(f)) && (
+        <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-9 flex flex-col gap-6">
+          {pages[page].fields.filter((f) => f.ownBox && isVisible(f)).map(renderField)}
+        </div>
+      )}
+
       <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-9 flex flex-col gap-6">
         {!isCreate && pages[page].title && (
           <div className="flex flex-col gap-1">
@@ -652,7 +639,7 @@ export function TallyRegistrationForm({
             {pages[page].intro && <p className="text-sm text-navy-400">{pages[page].intro}</p>}
           </div>
         )}
-        {pages[page].fields.filter(isVisible).map(renderField)}
+        {pages[page].fields.filter((f) => isVisible(f) && !f.ownBox).map(renderField)}
       </div>
 
       {last && isCreate && !googleEmail && (
