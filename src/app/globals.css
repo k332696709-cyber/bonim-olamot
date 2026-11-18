@@ -114,3 +114,10 @@
     .marquee-track, .animate-float, .animate-drift, .animate-sweep, .animate-fade-up { animation: none; }
   }
 }
+
+/* Hebrew letters are easy to confuse when thin (ג/מ, ו/ב, ה/ח), so no light weights in the Hebrew site. */
+html[lang="he"] .font-thin,
+html[lang="he"] .font-extralight,
+html[lang="he"] .font-light {
+  font-weight: 400;
+}

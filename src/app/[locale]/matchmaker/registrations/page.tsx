@@ -160,7 +160,7 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
   const form = FORMS[gender]
   const fields = allFields(form).filter((f) => f.type !== 'file')
   const labelOf = (id: string, label: string) => {
-    const m = id.match(/^ref(\d)(Name|Phone)$/)
+    const m = id.match(/^ref(\d+)(Name|Relation|Phone)$/)
     return m ? `${label.replace(':', '')} (${he ? 'בירור' : 'reference'} ${m[1]})` : label
   }
   const fmt = (iso: string) => new Date(iso).toLocaleString(he ? 'he-IL' : 'en-GB', { dateStyle: 'short', timeStyle: 'short' })

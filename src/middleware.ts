@@ -5,6 +5,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 const intlMiddleware = createIntlMiddleware({
   locales: ['he', 'en'],
   defaultLocale: 'he',
+  localeDetection: false,
 })
 
 export async function middleware(request: NextRequest) {

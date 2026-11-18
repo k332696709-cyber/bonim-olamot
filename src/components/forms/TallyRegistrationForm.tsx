@@ -554,8 +554,16 @@ export function TallyRegistrationForm({
           )}
 
           {f.type === 'agerange' && (() => {
-            const [from = '', to = ''] = (values[f.id] ?? '').split('-')
-            const set = (a: string, b: string) => setVal(f.id, a || b ? `${a}-${b}` : '')
+            const raw = (values[f.id] ?? '').trim()
+            const nums = raw.match(/[0-9]{2,3}/g) ?? []
+            // "18-" means only the first age is chosen so far; "-50" only the second.
+            const from = raw.startsWith('-') ? '' : nums[0] ?? ''
+            const to = raw.startsWith('-') ? nums[0] ?? '' : nums[1] ?? ''
+            const set = (a: string, b: string) => {
+              // If the second age ends up below the first, move it up so the pair stays valid.
+              const fixedTo = a && b && Number(b) < Number(a) ? a : b
+              setVal(f.id, a || fixedTo ? `${a}-${fixedTo}` : '')
+            }
             const ages = Array.from({ length: 73 }, (_, i) => String(i + 18))
             const sel = `${inputBase} ${border}`
             return (
@@ -571,7 +579,7 @@ export function TallyRegistrationForm({
                   עד גיל
                   <select value={to} onChange={(e) => set(from, e.target.value)} className={sel} aria-invalid={!!err}>
                     <option value="">בחירה</option>
-                    {ages.filter((a) => !from || Number(a) >= Number(from)).map((a) => <option key={a} value={a}>{a}</option>)}
+                    {ages.map((a) => <option key={a} value={a}>{a}</option>)}
                   </select>
                 </label>
               </div>

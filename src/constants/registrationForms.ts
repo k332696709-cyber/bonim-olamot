@@ -413,9 +413,9 @@ export function validateField(f: TallyField, value: string): string | null {
   if (f.type === 'combo' && v.length > 80) return 'הטקסט ארוך מדי'
   if (f.type === 'toggle' && v !== '1' && v !== '0') return 'בחירה לא תקינה'
   if (f.type === 'agerange') {
-    const m = /^(d{2})-(d{2})$/.exec(v)
-    if (!m) return 'נא לבחור מגיל ועד גיל'
-    if (Number(m[1]) > Number(m[2])) return 'הגיל הראשון צריך להיות קטן מהשני'
+    const nums = v.match(/[0-9]{2,3}/g) ?? []
+    if (nums.length < 2) return 'נא לבחור גם מגיל וגם עד גיל'
+    if (Number(nums[0]) > Number(nums[1])) return 'הגיל הראשון צריך להיות קטן מהשני'
   }
   if (f.type === 'select' && f.custom) {
     const items = parseChoices(v)
