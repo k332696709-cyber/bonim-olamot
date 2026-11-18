@@ -37,7 +37,7 @@ const HE: Section[] = [
     body: [
       'מנהל המערכת רואה את כל ההרשמות והפניות.',
       'שדכנים שאושרו על ידי מנהל המערכת רואים פרטי מועמדים במידה הנדרשת לשידוך.',
-      'מועמדים אחרים רואים בהצעות רק פרטים בסיסיים (אות ראשונה של השם, גיל, עיר, קהילה, עיסוק וסגנון), בלי שם משפחה ובלי טלפון. פרטי קשר נחשפים רק לאחר עניין הדדי ובליווי שדכן/ית.',
+      'מועמדים אחרים רואים בהצעות את השם הפרטי ושם המשפחה, תמונות (אלא אם בחרת להסתיר אותן עד עניין הדדי) וכרטיס היכרות, בלי הפירוט הרפואי והנפשי. טלפון וכתובת מייל אינם נחשפים למועמדים אחרים בשום שלב. שמות ומספרי טלפון של מי שאפשר לברר עליך אצלם נחשפים רק לאחר עניין הדדי.',
       'תמונת שדכן/ית עשויה להיות מוצגת למשתמשי האתר.',
       'תמונות המועמדים נבדקות על ידי מנהל המערכת. עד שהתמונה אושרה רק המועמד/ת ומנהל המערכת רואים אותה.',
     ],
@@ -103,7 +103,7 @@ const EN: Section[] = [
     body: [
       'The system administrator sees all registrations and messages.',
       'Matchmakers approved by the administrator see candidate details as needed for matchmaking.',
-      'Other candidates see only basic details in proposals (first initial, age, city, community, occupation and style), without surname or phone. Contact details are revealed only after mutual interest, with a matchmaker’s involvement.',
+      'Other candidates see your first and last name, photos (unless you chose to hide them until mutual interest) and your profile card, without the medical and psychological details, in proposals. Your phone number and email are never shown to other candidates. Names and phone numbers of people who can be asked about you are shown only after mutual interest.',
       'A matchmaker’s photo may be shown to users of the site.',
       'Candidates’ photos are reviewed by the system administrator. Until a photo is approved only the candidate and the administrator can see it.',
     ],

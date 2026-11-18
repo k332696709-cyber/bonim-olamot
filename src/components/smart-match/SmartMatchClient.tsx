@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { ProposalDetailModal } from '@/components/smart-match/ProposalDetailModal'
 import { loadCandidate, type CandidateState } from '@/lib/auth/candidate'
 import {
   MALE_STYLE_OPTIONS, FEMALE_STYLE_OPTIONS, TRAIT_OPTIONS_MALE, TRAIT_OPTIONS_FEMALE,
@@ -93,6 +94,7 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
   const [chat, setChat] = useState<Turn[]>([])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
+  const [openId, setOpenId] = useState<string | null>(null)
   const endRef = useRef<HTMLDivElement>(null)
 
   // The proposals are built on the server from real approved profiles; only anonymous fields arrive.
@@ -200,6 +202,7 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
           : (he ? `שלום ${me.firstName}, אלו הצעות של מיועדים` : `Hi ${me.firstName}, here are suggestions of men`)}
       </p>
 
+      {openId && <ProposalDetailModal id={openId} he={he} onClose={() => setOpenId(null)} />}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
         {/* ── Assistant ───────────────────────────────────────────── */}
         <aside className="lg:col-span-2 lg:sticky lg:top-24 rounded-[32px] bg-navy-800 text-[#f1f1f1] shadow-luxury overflow-hidden flex flex-col">
@@ -295,8 +298,8 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
 
           <p className="text-xs text-navy-500 bg-white rounded-full px-4 py-2 self-start shadow-sm">
             {he
-              ? 'מוצגים רק פרטים בסיסיים. שמות משפחה וטלפונים נחשפים רק אחרי עניין הדדי ואישור שדכנית.'
-              : 'Only basic details are shown. Surnames and phone numbers are revealed only after mutual interest and matchmaker approval.'}
+              ? 'בכרטיס המלא אפשר לראות תמונות ורזומה. טלפון ומייל אינם נחשפים, ומספרים לבירורים נחשפים רק אחרי עניין הדדי.'
+              : 'The full card shows photos and a resume. Phone and email are never shown, and inquiry contacts appear only after mutual interest.'}
           </p>
 
           {all === null && !loadError && (
@@ -333,7 +336,7 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-lg font-bold text-navy-800">
-                      {p.initial}. · {he ? `${p.gender === 'female' ? 'בת' : 'בן'} ${p.age}` : `Age ${p.age}`}
+                      {p.name || `${p.initial}.`} · {he ? `${p.gender === 'female' ? 'בת' : 'בן'} ${p.age}` : `Age ${p.age}`}
                     </p>
                     <p className="text-sm text-navy-500">{p.city} · {p.community}</p>
                     <p className="text-sm text-navy-500">{p.occupation} · {label(styleOpts, p.style, he)}</p>
@@ -378,6 +381,13 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
                     ))}
                   </div>
                 )}
+
+                <button
+                  type="button" onClick={() => setOpenId(p.id)}
+                  className="self-start h-11 px-6 rounded-full border border-navy-200 text-navy-700 hover:bg-navy-50 text-sm font-semibold"
+                >
+                  {he ? 'לכרטיס המלא ולתמונות' : 'Full card and photos'}
+                </button>
 
                 {/* Actions */}
                 {!st && (

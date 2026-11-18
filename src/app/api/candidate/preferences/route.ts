@@ -12,7 +12,7 @@ export async function PUT(req: NextRequest) {
   const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
   if (!token) return NextResponse.json({ message: 'נדרשת התחברות.' }, { status: 401 })
 
-  let body: { notifySms?: unknown; notifyCalls?: unknown }
+  let body: { notifySms?: unknown; notifyCalls?: unknown; photosPrivate?: unknown }
   try {
     body = await req.json()
   } catch {
@@ -26,7 +26,7 @@ export async function PUT(req: NextRequest) {
   if (!found) return NextResponse.json({ message: 'לא נמצאה הרשמה.' }, { status: 404 })
 
   const updates: Record<string, string> = {}
-  for (const k of ['notifySms', 'notifyCalls'] as const) {
+  for (const k of ['notifySms', 'notifyCalls', 'photosPrivate'] as const) {
     if (body[k] === undefined) continue
     if (typeof body[k] !== 'boolean') return NextResponse.json({ message: 'בקשה לא תקינה.' }, { status: 400 })
     updates[k] = body[k] ? '1' : '0'

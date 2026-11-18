@@ -8,6 +8,8 @@ export type AnyProfile = MaleProfile | FemaleProfile
 export interface Proposal {
   id: string
   initial: string
+  /** First and last name (shown to other candidates in proposals). */
+  name: string
   gender: 'male' | 'female'
   age: number
   city: string
@@ -54,6 +56,7 @@ export function buildProposals(me: AnyProfile, pool: AnyProfile[]): Proposal[] {
       return {
         id: other.id,
         initial: other.firstName.charAt(0),
+        name: `${other.firstName ?? ''} ${other.lastName ?? ''}`.trim(),
         gender: isMale(other) ? 'male' : 'female',
         age: other.age,
         city: other.city,
