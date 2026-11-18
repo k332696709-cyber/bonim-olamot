@@ -10,6 +10,7 @@ import {
 } from '@/constants/formOptions'
 import { applyPrefs, describePrefs, isMale, type AnyProfile, type Prefs, type Proposal } from '@/lib/matchmaking/assistant'
 import { loadPrefs, savePrefs } from '@/lib/matchmaking/prefsStore'
+import { PASS_REASONS } from '@/constants/passReasons'
 
 type Status = 'interested' | 'mutual' | 'passed'
 type LiveProposal = Proposal & { state: 'none' | Status }
@@ -31,6 +32,10 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
   const [loadError, setLoadError] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
   const [datesId, setDatesId] = useState<string | null>(null)
+  const [passFor, setPassFor] = useState<Proposal | null>(null)
+  const [reason, setReason] = useState('')
+  const [note, setNote] = useState('')
+  const [learned, setLearned] = useState<string[]>([])
 
   useEffect(() => { setPrefs(loadPrefs()) }, [])
 
@@ -45,6 +50,7 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
         if (!alive) return
         const list: LiveProposal[] = json.proposals ?? []
         setAll(list)
+        setLearned(json.learned ?? [])
         const st: Record<string, Status> = {}
         for (const p of list) if (p.state !== 'none') st[p.id] = p.state
         setStatus(st)
@@ -60,7 +66,7 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
   const visible = shown.filter((p) => status[p.id] !== 'passed')
   const waiting = visible.filter((p) => !status[p.id]).length
 
-  const record = async (p: Proposal, kind: 'interested' | 'passed') => {
+  const record = async (p: Proposal, kind: 'interested' | 'passed', why?: { reason: string; note: string }) => {
     const before = status[p.id]
     setStatus((s) => ({ ...s, [p.id]: kind }))
     try {
@@ -68,7 +74,7 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
       const res = await fetch('/api/candidate/interest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token ?? ''}` },
-        body: JSON.stringify({ to: p.id, kind }),
+        body: JSON.stringify({ to: p.id, kind, ...(why ?? {}) }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error('bad')
@@ -91,6 +97,48 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
     <section id="proposals" className="flex flex-col gap-5 scroll-mt-24">
       {openId && <ProposalDetailModal id={openId} he={he} onClose={() => setOpenId(null)} />}
       {datesId && <DateIdeasModal id={datesId} he={he} onClose={() => setDatesId(null)} />}
+      {passFor && (
+        <div className="fixed inset-0 z-[90] bg-black/60 flex items-end sm:items-center justify-center" onClick={() => setPassFor(null)} dir={he ? 'rtl' : 'ltr'}>
+          <div role="dialog" aria-modal="true" className="bg-white w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-[32px] sm:rounded-[32px] shadow-luxury p-6 flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-navy-800">{he ? 'למה זה לא מתאים?' : 'Why is this not a fit?'}</h3>
+            <p className="text-sm text-navy-500">
+              {he ? 'חובה לבחור סיבה. כך העוזר החכם ילמד להציע לך הצעות מתאימות יותר. הסיבה לא נחשפת לצד השני.' : 'Please choose a reason. It helps the assistant suggest better matches. It is not shown to the other side.'}
+            </p>
+            <div className="flex flex-col gap-2" role="radiogroup">
+              {PASS_REASONS.map((r) => (
+                <button
+                  key={r.code} type="button" role="radio" aria-checked={reason === r.code}
+                  onClick={() => setReason(r.code)}
+                  className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm text-start ${reason === r.code ? 'border-navy-800 bg-navy-50 font-semibold' : 'border-navy-100 hover:border-navy-300'}`}
+                >
+                  <span className={`w-5 h-5 shrink-0 rounded-full border-2 flex items-center justify-center ${reason === r.code ? 'border-navy-800 bg-navy-800 text-white text-xs' : 'border-navy-300'}`}>{reason === r.code ? '✓' : ''}</span>
+                  {he ? r.he : r.en}
+                </button>
+              ))}
+            </div>
+            {reason && (
+              <textarea
+                value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} rows={2}
+                placeholder={reason === 'other' ? (he ? 'כתבו למה (חובה)' : 'Explain why (required)') : (he ? 'אפשר להוסיף פרטים (לא חובה)' : 'Add details (optional)')}
+                className="rounded-2xl border border-navy-100 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-300"
+              />
+            )}
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                disabled={!reason || (reason === 'other' && note.trim().length < 2)}
+                onClick={() => { const p = passFor; setPassFor(null); if (p) record(p, 'passed', { reason, note: note.trim() }) }}
+                className="flex-1 h-12 rounded-full bg-burgundy-500 hover:bg-burgundy-600 disabled:opacity-40 text-white font-bold text-sm"
+              >
+                {he ? 'שליחה' : 'Send'}
+              </button>
+              <button type="button" onClick={() => setPassFor(null)} className="h-12 px-6 rounded-full border border-navy-200 text-navy-600 hover:bg-navy-50 text-sm font-medium">
+                {he ? 'ביטול' : 'Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="rounded-[32px] bg-navy-800 text-white shadow-luxury px-6 py-6 sm:px-8 flex flex-col sm:flex-row sm:items-center gap-4">
         <div className="flex-1">
@@ -119,6 +167,13 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
           {he ? '✦ דיוק עם העוזר החכם' : '✦ Refine with the assistant'}
         </Link>
       </div>
+
+      {learned.length > 0 && (
+        <p className="text-sm text-navy-600 bg-white rounded-2xl shadow-sm px-4 py-3">
+          <span className="font-semibold">{he ? 'העוזר התאים את ההצעות לפי מה שענית: ' : 'The assistant adjusted your suggestions: '}</span>
+          {learned.join(' · ')}
+        </p>
+      )}
 
       {filterText && (
         <div className="flex items-center gap-2 flex-wrap text-sm text-navy-600">
@@ -222,7 +277,7 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
                   {he ? 'מעוניין/ת' : 'Interested'}
                 </button>
                 <button
-                  onClick={() => record(p, 'passed')}
+                  onClick={() => { setPassFor(p); setReason(''); setNote('') }}
                   className="h-12 px-6 rounded-full border border-navy-200 text-navy-600 hover:bg-navy-50 text-sm font-medium transition-colors"
                 >
                   {he ? 'לא כרגע' : 'Not now'}

@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { findRegistration } from '@/lib/server/photos'
 import { notifyOwner } from '@/lib/server/notify'
 import { notifyCandidate } from '@/lib/server/candidateNotify'
+import { PASS_REASON_CODES } from '@/constants/passReasons'
 
 export const runtime = 'nodejs'
 
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
   const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
   if (!token) return NextResponse.json({ message: 'נדרשת התחברות.' }, { status: 401 })
 
-  let body: { to?: string; kind?: string }
+  let body: { to?: string; kind?: string; reason?: string; note?: string }
   try {
     body = await req.json()
   } catch {
@@ -26,6 +27,14 @@ export async function POST(req: NextRequest) {
   const to = String(body.to ?? '')
   const kind = body.kind === 'passed' ? 'passed' : body.kind === 'interested' ? 'interested' : null
   if (!kind || !/^[0-9a-f-]{36}$/i.test(to)) return NextResponse.json({ message: 'בקשה לא תקינה.' }, { status: 400 })
+
+  // "Not now" needs a reason (and a few words when the reason is "other"), so the assistant can learn.
+  const reason = kind === 'passed' ? String(body.reason ?? '') : ''
+  const note = kind === 'passed' ? String(body.note ?? '').trim().slice(0, 300) : ''
+  if (kind === 'passed') {
+    if (!PASS_REASON_CODES.includes(reason)) return NextResponse.json({ message: 'נא לבחור סיבה.' }, { status: 422 })
+    if (reason === 'other' && note.length < 2) return NextResponse.json({ message: 'נא לכתוב למה זה לא מתאים.' }, { status: 422 })
+  }
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } }) as any
   const { data: caller } = await admin.auth.getUser(token)
@@ -41,7 +50,10 @@ export async function POST(req: NextRequest) {
 
   const { error } = await admin
     .from('match_interests')
-    .upsert({ from_profile_id: me, to_profile_id: to, kind }, { onConflict: 'from_profile_id,to_profile_id' })
+    .upsert(
+      { from_profile_id: me, to_profile_id: to, kind, reason: reason || null, reason_note: note || null },
+      { onConflict: 'from_profile_id,to_profile_id' },
+    )
   if (error) {
     console.error('interest save failed:', error.message)
     return NextResponse.json({ message: 'השמירה נכשלה. נסו שוב.' }, { status: 502 })
