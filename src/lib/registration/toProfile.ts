@@ -63,11 +63,10 @@ export function registrationToProfileRow(
     line('פירוט רפואי/נפשי', a.medicalDetail),
     line('מצב ההורים', a.parents),
     line('סגנון הבית', a.houseStyle),
-    line('מספרים לבירורים', [
-      [a.ref1Name, a.ref1Phone],
-      [a.ref2Name, a.ref2Phone],
-      [a.ref3Name, a.ref3Phone],
-    ].filter(([n, ph]) => n || ph).map(([n, ph]) => `${n ?? ''} ${ph ?? ''}`.trim()).join(' | ')),
+    line('מספרים לבירורים', Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
+      const name = (a[`ref${n}Name`] ?? '').trim(), rel = (a[`ref${n}Relation`] ?? '').trim(), ph = (a[`ref${n}Phone`] ?? '').trim()
+      return name || ph ? `${name}${rel ? ` (${rel})` : ''} ${ph}`.trim() : ''
+    }).filter(Boolean).join(' | ')),
   ])
 
   const aboutPartner = join([

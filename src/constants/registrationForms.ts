@@ -9,7 +9,7 @@
 import { COMMUNITY_OPTIONS, CITY_OPTIONS, EDAH_OPTIONS, HASIDIC, HASIDUT_OPTIONS, HOUSING_OPTIONS } from '@/constants/communityLists'
 import { ageFromBirthDate, parseBirthDate } from '@/lib/registration/birthDate'
 
-export type FieldType = 'text' | 'tel' | 'email' | 'textarea' | 'select' | 'file' | 'combo' | 'birthdate' | 'toggle'
+export type FieldType = 'text' | 'tel' | 'email' | 'textarea' | 'select' | 'file' | 'combo' | 'birthdate' | 'toggle' | 'agerange'
 
 export interface TallyField {
   id: string
@@ -38,6 +38,8 @@ export interface TallyField {
   sectionBefore?: string
   /** The field is shown only when another field's answer includes this text. */
   visibleWhen?: { id: string; includes: string | string[] }
+  /** Contact boxes beyond the first three appear only after the person asks for more (the number of the box). */
+  group?: number
 }
 
 /** Whether a field applies, given the answers so far (some questions only follow another answer). */
@@ -120,23 +122,31 @@ const HEADCOVER = [
 ]
 const HOUSE_STYLE = ['שמורה', 'קלאסית', 'פתוחה', 'פתוחה במידה', 'מודרנית', 'מודרנית מאוד']
 
+/** Contact people for inquiries: name, relation and phone. The first three boxes are always shown, more can be added. */
+const REF_COUNT = 10
+function refFields(): TallyField[] {
+  const out: TallyField[] = []
+  for (let n = 1; n <= REF_COUNT; n++) {
+    const extra = n > 3 ? { group: n } : {}
+    out.push({ id: `ref${n}Name`, label: 'שם:', type: 'text', required: n === 1, ...(n === 1 ? { sectionBefore: 'מספרים לבירורים' } : {}), ...extra })
+    out.push({ id: `ref${n}Relation`, label: 'מה הקשר אליך?', type: 'text', required: false, ...extra })
+    out.push({ id: `ref${n}Phone`, label: 'טלפון:', type: 'tel', required: n === 1, ...extra })
+  }
+  return out
+}
+const REF_IDS = refFields().map((f) => f.id)
+
 /** Page 2 is identical in both forms except the partner question wording. */
 const page2 = (partnerLabel: string): TallyPage => ({
   fields: [
-    { id: 'ageRange', label: 'טווח גילאים', type: 'text', required: true, sectionBefore: 'פרטים חשובים לשדכנים' },
-    { id: 'country',  label: 'ארץ מועדפת', type: 'text', required: true },
+    { id: 'ageRange', label: 'טווח גילאים', hint: 'מאיזה גיל ועד איזה גיל', type: 'agerange', required: true, sectionBefore: 'פרטים חשובים לשדכנים' },
     { id: 'medical',  label: 'מצב רפואי/נפשי', type: 'select', required: true, options: ['תקין', 'יש בעיה קלה', 'מצב מאתגר'] },
-    { id: 'medicalDetail', label: 'בעיה רפואית/נפשית', hint: 'נא לציין אם יש', type: 'textarea', required: false },
+    { id: 'medicalDetail', label: 'בעיה רפואית/נפשית', type: 'textarea', required: false, visibleWhen: { id: 'medical', includes: ['בעיה קלה', 'מאתגר', 'אחר'] } },
     { id: 'parents',  label: 'מצב ההורים', type: 'select', required: true, options: ['נשואים', 'גרושים', 'אלמנ/ה'] },
     { id: 'houseStyle', label: 'סגנון הבית', type: 'select', required: true, options: HOUSE_STYLE },
-    { id: 'aboutMe',  label: 'פרטים נוספים שהיית רוצה להוסיף על עצמך:', type: 'textarea', required: true },
+    { id: 'aboutMe',  label: 'פרטים נוספים שהיית רוצה להוסיף על עצמך:', type: 'textarea', required: false },
     { id: 'aboutPartner', label: partnerLabel, type: 'textarea', required: true },
-    { id: 'ref1Name',  label: 'שם:', type: 'text', required: true, sectionBefore: 'מספרים לבירורים' },
-    { id: 'ref1Phone', label: 'טלפון:', type: 'tel', required: true },
-    { id: 'ref2Name',  label: 'שם:', type: 'text', required: false },
-    { id: 'ref2Phone', label: 'טלפון:', type: 'tel', required: false },
-    { id: 'ref3Name',  label: 'שם:', type: 'text', required: false },
-    { id: 'ref3Phone', label: 'טלפון:', type: 'tel', required: false },
+    ...refFields(),
   ],
 })
 
@@ -323,10 +333,10 @@ function newQuestions(gender: 'male' | 'female'): Record<string, TallyField[]> {
       { id: 'outings', label: 'יציאות', type: 'select', multi: true, required: true, options: ['מסעדות', 'טיולים', 'בבית', 'תרבות ומוזיקה', 'לא מרבים'] },
       { id: 'hobbies', label: 'תחביבים', hint: 'אפשר לבחור כמה שרוצים, ולהוסיף משלכם', type: 'select', multi: true, custom: true, required: true, options: ['ספורט', 'קריאה', 'מוזיקה', 'בישול', 'טיולים', 'יצירה', 'התנדבות', 'לימוד', 'צילום', 'גינון'] },
       { id: 'money', label: g(gender, 'איך אתה מתנהל עם כסף?', 'איך את מתנהלת עם כסף?'), type: 'select', required: true, options: ['חסכוני', 'מאוזן', 'נוח', 'לא חשוב'] },
-      { id: 'torahAfter', label: g(gender, 'לימוד תורה אחרי החתונה', 'לימוד התורה של בן הזוג אחרי החתונה'), type: 'select', required: true, options: ['קביעות מלאה', 'חלקי', 'ערבים', 'לא רלוונטי'] },
-      { id: 'livePlace', label: g(gender, 'איפה תרצה לגור אחרי החתונה?', 'איפה תרצי לגור אחרי החתונה?'), type: 'select', required: true, options: ['עיר בארץ', 'בכל מקום', 'בחו"ל', 'פתוח'] },
+      { id: 'torahAfter', label: g(gender, 'לימוד תורה אחרי החתונה', 'לימוד התורה של בן הזוג אחרי החתונה'), type: 'select', required: true, options: ['קביעות עיתים', 'חצי עובד חצי לומד', 'לימוד בכולל', 'לא רלוונטי'] },
+      { id: 'livePlace', label: g(gender, 'איפה תרצה לגור אחרי החתונה?', 'איפה תרצי לגור אחרי החתונה?'), type: 'select', required: true, options: ['בעיר מגורי', 'קרוב לעיר מגורי', 'בישראל', 'בחו"ל', 'עדיפות בישראל, אבל פתוח לשמוע גם בחו"ל'] },
       { id: 'homeValues', label: 'מה הכי חשוב לך בבית שלכם?', type: 'select', multi: true, required: true, options: ['שקט', 'אירוח', 'מסורת', 'צחוק ואווירה', 'סדר'] },
-      { id: 'kidsWanted', label: 'כמה ילדים בערך?', type: 'select', required: true, options: ['1 עד 2', '3 עד 4', '5 ומעלה', "כמה שה' ייתן", 'פתוח', 'מעדיפ/ה לא לענות'] },
+      { id: 'kidsWanted', label: 'כמה ילדים בערך?', type: 'select', required: true, options: ['1 עד 2', '3 עד 4', '5 עד 6', '7 עד 8', "כמה שה' ייתן", 'מעדיפ/ה לא לענות'] },
     ],
     personality: [
       { id: 'personalityMix', label: 'מה יותר מתאר אותך?', type: 'select', multi: true, required: true, options: ['מוחצן', 'מופנם', 'מסודר', 'ספונטני', 'רציני', 'מצחיק', 'שקט', 'חברותי'] },
@@ -343,12 +353,12 @@ const STEPS: { title: string; intro?: string; ids: string[]; lead?: 'prof'; extr
   { title: 'הסגנון שלך', intro: 'איך אתם מגדירים את עצמכם.', ids: ['styleSelf', 'clothingSelf', 'hatAfterWedding', 'headcoverSelf', 'techSelf', 'livingSelf'] },
   { title: 'מה מאפיין אותך', intro: 'האופי שלך ומה אתם מביאים.', ids: ['traits', 'brings'], extra: 'personality' },
   { title: 'אורח חיים', intro: 'איך נראים החיים שלכם ומה חשוב לכם בבית.', ids: [], extra: 'lifestyle' },
-  { title: 'מה אתם מחפשים', intro: 'הצד השני שאתם מחפשים.', ids: ['styleSought', 'clothingHer', 'clothingHim', 'headcoverHer', 'hatHim', 'techHer', 'techHim', 'livingHer', 'livingHim', 'edahSought', 'ageRange', 'country', 'notSuitable', 'aboutPartner'] },
-  { title: 'עוד עליך', intro: 'כמה דברים אחרונים, ומספרים לבירורים.', ids: ['medical', 'medicalDetail', 'parents', 'houseStyle', 'aboutMe', 'ref1Name', 'ref1Phone', 'ref2Name', 'ref2Phone', 'ref3Name', 'ref3Phone'], extra: 'more' },
+  { title: 'מה אתם מחפשים', intro: 'הצד השני שאתם מחפשים.', ids: ['styleSought', 'clothingHer', 'clothingHim', 'headcoverHer', 'hatHim', 'techHer', 'techHim', 'livingHer', 'livingHim', 'edahSought', 'ageRange', 'notSuitable', 'aboutPartner'] },
+  { title: 'עוד עליך', intro: 'כמה דברים אחרונים, ומספרים לבירורים.', ids: ['medical', 'medicalDetail', 'parents', 'houseStyle', 'aboutMe', ...REF_IDS], extra: 'more' },
 ]
 
 /** Questions that were replaced by newer ones (their old answers stay stored). */
-const RETIRED = new Set(['professionalStudies'])
+const RETIRED = new Set(['professionalStudies', 'country'])
 
 function buildForm(base: RegistrationForm): RegistrationForm {
   const all = base.pages.flatMap((p) => p.fields).filter((f) => !RETIRED.has(f.id))
@@ -402,6 +412,11 @@ export function validateField(f: TallyField, value: string): string | null {
   }
   if (f.type === 'combo' && v.length > 80) return 'הטקסט ארוך מדי'
   if (f.type === 'toggle' && v !== '1' && v !== '0') return 'בחירה לא תקינה'
+  if (f.type === 'agerange') {
+    const m = /^(d{2})-(d{2})$/.exec(v)
+    if (!m) return 'נא לבחור מגיל ועד גיל'
+    if (Number(m[1]) > Number(m[2])) return 'הגיל הראשון צריך להיות קטן מהשני'
+  }
   if (f.type === 'select' && f.custom) {
     const items = parseChoices(v)
     if (f.max && items.length > f.max) return `אפשר לבחור עד ${f.max}`

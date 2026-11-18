@@ -49,6 +49,8 @@ export async function PUT(req: NextRequest) {
     const err = validateField(f, answers[f.id])
     // A question added after this person registered may stay empty until they get to it.
     if (err === 'שדה חובה' && !(existing[f.id] ?? '').trim()) continue
+    // An old answer to a list that has since changed is kept as it is.
+    if (err && answers[f.id] === (existing[f.id] ?? '').trim()) continue
     if (err) fields[f.id] = err
   }
   if (Object.keys(fields).length > 0) {

@@ -56,6 +56,12 @@ export function TallyRegistrationForm({
   const [submitting, setSubmitting] = useState(false)
   const [otherDraft, setOtherDraft] = useState<Record<string, string>>({})
   const [showPw, setShowPw] = useState(false)
+  // Contact boxes: three are shown, and more can be added (up to ten). Boxes that already hold something stay open.
+  const [shownGroups, setShownGroups] = useState(() => {
+    let n = 3
+    for (let i = 4; i <= 10; i++) if ((initialValues?.[`ref${i}Name`] ?? '') || (initialValues?.[`ref${i}Phone`] ?? '')) n = i
+    return n
+  })
   // Set when the person came back from Google: then there is no password and the email is theirs.
   const [googleEmail, setGoogleEmail] = useState<string | null>(null)
   const [serverError, setServerError] = useState('')
@@ -364,6 +370,7 @@ export function TallyRegistrationForm({
     const err = errors[f.id]
     const border = err ? 'border-burgundy-400' : 'border-navy-100 hover:border-navy-300'
     const id = `f-${f.id}`
+    if (f.group && f.group > shownGroups) return null
     return (
       <div key={f.id} className="flex flex-col gap-6">
         {f.sectionBefore && (
@@ -546,6 +553,31 @@ export function TallyRegistrationForm({
             />
           )}
 
+          {f.type === 'agerange' && (() => {
+            const [from = '', to = ''] = (values[f.id] ?? '').split('-')
+            const set = (a: string, b: string) => setVal(f.id, a || b ? `${a}-${b}` : '')
+            const ages = Array.from({ length: 73 }, (_, i) => String(i + 18))
+            const sel = `${inputBase} ${border}`
+            return (
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex flex-col gap-1 text-sm text-navy-500">
+                  מגיל
+                  <select value={from} onChange={(e) => set(e.target.value, to)} className={sel} aria-invalid={!!err}>
+                    <option value="">בחירה</option>
+                    {ages.map((a) => <option key={a} value={a}>{a}</option>)}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-sm text-navy-500">
+                  עד גיל
+                  <select value={to} onChange={(e) => set(from, e.target.value)} className={sel} aria-invalid={!!err}>
+                    <option value="">בחירה</option>
+                    {ages.filter((a) => !from || Number(a) >= Number(from)).map((a) => <option key={a} value={a}>{a}</option>)}
+                  </select>
+                </label>
+              </div>
+            )
+          })()}
+
           {f.type === 'birthdate' && (() => {
             const v = values[f.id] ?? ''
             const parsed = parseBirthDate(v)
@@ -630,6 +662,15 @@ export function TallyRegistrationForm({
 
           {err && <p className="text-sm text-burgundy-500" role="alert">{err}</p>}
         </div>
+        )}
+        {f.id === `ref${shownGroups}Phone` && shownGroups < 10 && (
+          <button
+            type="button"
+            onClick={() => setShownGroups((n) => Math.min(10, n + 1))}
+            className="self-start h-11 px-5 rounded-full border border-navy-200 text-navy-700 hover:bg-navy-50 text-sm font-semibold"
+          >
+            + הוספת איש קשר נוסף
+          </button>
         )}
       </div>
     )

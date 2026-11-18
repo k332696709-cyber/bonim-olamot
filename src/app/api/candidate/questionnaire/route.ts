@@ -45,7 +45,7 @@ export async function PUT(req: NextRequest) {
     const v = String(fd.get(f.id) ?? '').trim()
     // Only the format is checked here; whether a question is required matters for the 100%.
     const err = validateField({ ...f, required: false }, v)
-    if (err) errors[f.id] = err
+    if (err && v !== (existing[f.id] ?? '').trim()) errors[f.id] = err
     else updates[f.id] = v
   }
   if (Object.keys(errors).length > 0) {
