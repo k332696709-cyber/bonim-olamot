@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { loadPrefs, savePrefs } from '@/lib/matchmaking/prefsStore'
+import { DateIdeasModal } from '@/components/smart-match/DateIdeasModal'
 import { loadCandidate, type CandidateState } from '@/lib/auth/candidate'
 import {
   applyPrefs, describePrefs, isMale,
@@ -85,6 +86,7 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const endRef = useRef<HTMLDivElement>(null)
+  const [datesId, setDatesId] = useState<string | null>(null)
 
   // The proposals are built on the server from real approved profiles; only anonymous fields arrive.
   useEffect(() => {
@@ -166,6 +168,7 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
           : (he ? `שלום ${me.firstName}, אלו הצעות של מיועדים` : `Hi ${me.firstName}, here are suggestions of men`)}
       </p>
 
+      {datesId && <DateIdeasModal id={datesId} he={he} onClose={() => setDatesId(null)} />}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
         {/* ── Assistant ───────────────────────────────────────────── */}
         <aside className="lg:col-span-2 lg:sticky lg:top-24 rounded-[32px] bg-navy-800 text-[#f1f1f1] shadow-luxury overflow-hidden flex flex-col">
@@ -264,6 +267,26 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
                   ? `${shown.length} ${shown.length === 1 ? 'הצעה מתאימה' : 'הצעות מתאימות'}${filterText ? ' לסינון שלך' : ''}`
                   : `${shown.length} matching suggestion${shown.length === 1 ? '' : 's'}${filterText ? ' for your filter' : ''}`}
               </p>
+            )}
+            {list.some((p) => p.state === 'mutual') && (
+              <div className="rounded-2xl bg-navy-50 px-5 py-4 flex flex-col gap-3">
+                <p className="font-bold text-navy-800">{he ? 'מקומות לדייט' : 'Date places'}</p>
+                <p className="text-sm text-navy-600">
+                  {he
+                    ? 'יש לך עניין הדדי. אפשר לראות מקומות קרובים לכל אחד מכם, ומקומות באמצע אם אתם גרים רחוק.'
+                    : 'You have mutual interest. See places near each of you, and in the middle if you live far apart.'}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {list.filter((p) => p.state === 'mutual').map((p) => (
+                    <button
+                      key={p.id} type="button" onClick={() => setDatesId(p.id)}
+                      className="h-11 px-5 rounded-full bg-navy-800 hover:bg-navy-700 text-white text-sm font-semibold"
+                    >
+                      {he ? `מקומות לדייט עם ${p.name || p.initial}` : `Date places with ${p.name || p.initial}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
             <Link
               href={`/${locale}/personal#proposals`}

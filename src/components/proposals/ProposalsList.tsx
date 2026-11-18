@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { ProposalDetailModal } from '@/components/smart-match/ProposalDetailModal'
+import { DateIdeasModal } from '@/components/smart-match/DateIdeasModal'
 import {
   MALE_STYLE_OPTIONS, FEMALE_STYLE_OPTIONS, TRAIT_OPTIONS_MALE, TRAIT_OPTIONS_FEMALE,
 } from '@/constants/formOptions'
@@ -29,6 +30,7 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
   const [all, setAll] = useState<LiveProposal[] | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
+  const [datesId, setDatesId] = useState<string | null>(null)
 
   useEffect(() => { setPrefs(loadPrefs()) }, [])
 
@@ -88,6 +90,7 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
   return (
     <section id="proposals" className="flex flex-col gap-5 scroll-mt-24">
       {openId && <ProposalDetailModal id={openId} he={he} onClose={() => setOpenId(null)} />}
+      {datesId && <DateIdeasModal id={datesId} he={he} onClose={() => setDatesId(null)} />}
 
       <div className="rounded-[32px] bg-navy-800 text-white shadow-luxury px-6 py-6 sm:px-8 flex flex-col sm:flex-row sm:items-center gap-4">
         <div className="flex-1">
@@ -236,6 +239,12 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
                 <p className="flex-1 text-sm">
                   {he ? 'יש עניין הדדי! שדכנית תיכנס לתמונה ותיצור איתך קשר.' : 'Mutual interest! A matchmaker will step in and contact you.'}
                 </p>
+                <button
+                  type="button" onClick={() => setDatesId(p.id)}
+                  className="h-11 px-6 rounded-full bg-white/10 hover:bg-white/20 ring-1 ring-white/25 text-white font-bold text-sm"
+                >
+                  {he ? 'מקומות לדייט' : 'Date places'}
+                </button>
                 <Link
                   href={`/${locale}/contact`}
                   className="h-11 px-6 rounded-full bg-burgundy-400 hover:bg-burgundy-300 text-white font-bold text-sm inline-flex items-center justify-center"
