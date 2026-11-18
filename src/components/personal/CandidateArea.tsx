@@ -9,6 +9,8 @@ import { loadCandidate, type CandidateState } from '@/lib/auth/candidate'
 import { PhotoSlots } from '@/components/personal/PhotoSlots'
 import { FeeNotices } from '@/components/personal/FeeNotices'
 import { PhotoViewer } from '@/components/ui/PhotoViewer'
+import { ProposalsList } from '@/components/proposals/ProposalsList'
+import type { AnyProfile } from '@/lib/matchmaking/assistant'
 import { NotificationSettings } from '@/components/personal/NotificationSettings'
 import { questionnaireProgress } from '@/lib/registration/completion'
 import { TallyRegistrationForm } from '@/components/forms/TallyRegistrationForm'
@@ -204,6 +206,7 @@ export function CandidateArea({ locale }: { locale: string }) {
   return shell(
     <div className="flex flex-col gap-5">
       <FeeNotices he={he} />
+      {state.profile && <ProposalsList locale={locale} me={state.profile as unknown as AnyProfile} />}
       {viewHeader && (() => {
         const list = (state.photos ?? []).filter((x) => x.url)
         const urls = list.length > 0 ? list.map((x) => x.url as string) : [state.photoUrl as string]

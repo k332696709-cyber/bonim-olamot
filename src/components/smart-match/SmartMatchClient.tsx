@@ -3,24 +3,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { ProposalDetailModal } from '@/components/smart-match/ProposalDetailModal'
+import { loadPrefs, savePrefs } from '@/lib/matchmaking/prefsStore'
 import { loadCandidate, type CandidateState } from '@/lib/auth/candidate'
-import {
-  MALE_STYLE_OPTIONS, FEMALE_STYLE_OPTIONS, TRAIT_OPTIONS_MALE, TRAIT_OPTIONS_FEMALE,
-} from '@/constants/formOptions'
 import {
   applyPrefs, describePrefs, isMale,
   type AnyProfile, type Prefs, type Proposal,
 } from '@/lib/matchmaking/assistant'
 
-type Status = 'interested' | 'mutual' | 'passed'
-type LiveProposal = Proposal & { state: 'none' | Status }
+type LiveProposal = Proposal & { state: 'none' | 'interested' | 'mutual' | 'passed' }
 interface Turn { role: 'user' | 'assistant'; text: string }
-
-const label = (opts: { value: string; he: string; en: string }[], v: string, he: boolean) => {
-  const o = opts.find((x) => x.value === v)
-  return o ? (he ? o.he : o.en) : v
-}
 
 /**
  * The Smart Assistant is only for approved candidates. A signed-in candidate whose registration
@@ -88,13 +79,11 @@ export function SmartMatchClient({ locale }: { locale: string }) {
 function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
   const he = locale === 'he'
   const [prefs, setPrefs] = useState<Prefs>({})
-  const [status, setStatus] = useState<Record<string, Status>>({})
   const [all, setAll] = useState<LiveProposal[] | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [chat, setChat] = useState<Turn[]>([])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
-  const [openId, setOpenId] = useState<string | null>(null)
   const endRef = useRef<HTMLDivElement>(null)
 
   // The proposals are built on the server from real approved profiles; only anonymous fields arrive.
@@ -109,15 +98,16 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
         if (!alive) return
         const list: LiveProposal[] = json.proposals ?? []
         setAll(list)
-        const st: Record<string, Status> = {}
-        for (const p of list) if (p.state !== 'none') st[p.id] = p.state
-        setStatus(st)
       } catch {
         if (alive) setLoadError(true)
       }
     })()
     return () => { alive = false }
   }, [])
+
+  // The filters live in this browser, so the list in the personal area applies them too.
+  useEffect(() => { setPrefs(loadPrefs()) }, [])
+  useEffect(() => { savePrefs(prefs) }, [prefs])
 
   const list = all ?? []
   const cities = useMemo(() => Array.from(new Set(list.map((p) => p.city).filter(Boolean))), [list])
@@ -166,32 +156,6 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
     }
   }
 
-  const record = async (p: Proposal, kind: 'interested' | 'passed') => {
-    const before = status[p.id]
-    setStatus((s) => ({ ...s, [p.id]: kind }))
-    try {
-      const { data } = await createClient().auth.getSession()
-      const res = await fetch('/api/candidate/interest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token ?? ''}` },
-        body: JSON.stringify({ to: p.id, kind }),
-      })
-      const json = await res.json()
-      if (!res.ok) throw new Error('bad')
-      setStatus((s) => ({ ...s, [p.id]: json.state }))
-    } catch {
-      setStatus((s) => {
-        const next = { ...s }
-        if (before) next[p.id] = before
-        else delete next[p.id]
-        return next
-      })
-    }
-  }
-  const express = (p: Proposal) => record(p, 'interested')
-
-  const styleOpts = isMale(me) ? FEMALE_STYLE_OPTIONS : MALE_STYLE_OPTIONS
-  const traitOpts = isMale(me) ? TRAIT_OPTIONS_FEMALE : TRAIT_OPTIONS_MALE
   const filterText = describePrefs(prefs, he)
 
   return (
@@ -202,7 +166,6 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
           : (he ? `שלום ${me.firstName}, אלו הצעות של מיועדים` : `Hi ${me.firstName}, here are suggestions of men`)}
       </p>
 
-      {openId && <ProposalDetailModal id={openId} he={he} onClose={() => setOpenId(null)} />}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
         {/* ── Assistant ───────────────────────────────────────────── */}
         <aside className="lg:col-span-2 lg:sticky lg:top-24 rounded-[32px] bg-navy-800 text-[#f1f1f1] shadow-luxury overflow-hidden flex flex-col">
@@ -284,152 +247,31 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
           </form>
         </aside>
 
-        {/* ── Proposals ───────────────────────────────────────────── */}
+        {/* ── Summary: the suggestions themselves are in the personal area ── */}
         <section className="lg:col-span-3 flex flex-col gap-5">
-          <div className="flex items-end justify-between">
-            <h2 className="text-2xl sm:text-3xl text-navy-800">
-              <span className="font-light">{he ? 'ההצעות ' : 'Your '}</span>
-              <span className="font-bold">{he ? 'שלך' : 'suggestions'}</span>
-            </h2>
-            <span className="text-sm text-navy-400">
-              {he ? `${shown.length} הצעות` : `${shown.length} suggestions`}
-            </span>
+          <div className="rounded-[28px] bg-white shadow-card p-8 flex flex-col gap-4">
+            <h2 className="text-2xl text-navy-800 font-bold">{he ? 'דיוק ההצעות' : 'Refine your suggestions'}</h2>
+            <p className="text-navy-600">
+              {he
+                ? 'כאן מדייקים. ההצעות עצמן נמצאות באזור האישי שלך, ושם תראו אותן אחרי הדיוק.'
+                : 'Refine here. The suggestions themselves are in your personal area, where you will see them after refining.'}
+            </p>
+            {all === null && !loadError && <p className="text-sm text-navy-400">{he ? 'בודקים...' : 'Checking…'}</p>}
+            {loadError && <p className="text-sm text-navy-500">{he ? 'לא הצלחנו לטעון הצעות. נסו לרענן.' : 'We could not load suggestions. Please refresh.'}</p>}
+            {all !== null && (
+              <p className="text-lg text-navy-800">
+                {he
+                  ? `${shown.length} ${shown.length === 1 ? 'הצעה מתאימה' : 'הצעות מתאימות'}${filterText ? ' לסינון שלך' : ''}`
+                  : `${shown.length} matching suggestion${shown.length === 1 ? '' : 's'}${filterText ? ' for your filter' : ''}`}
+              </p>
+            )}
+            <Link
+              href={`/${locale}/personal#proposals`}
+              className="self-start h-12 px-8 rounded-full bg-burgundy-500 hover:bg-burgundy-600 text-white font-bold text-sm inline-flex items-center"
+            >
+              {he ? 'לצפייה בהצעות באזור האישי' : 'See the suggestions in my personal area'}
+            </Link>
           </div>
-
-          <p className="text-xs text-navy-500 bg-white rounded-full px-4 py-2 self-start shadow-sm">
-            {he
-              ? 'בכרטיס המלא אפשר לראות תמונות ורזומה. טלפון ומייל אינם נחשפים, ומספרים לבירורים נחשפים רק אחרי עניין הדדי.'
-              : 'The full card shows photos and a resume. Phone and email are never shown, and inquiry contacts appear only after mutual interest.'}
-          </p>
-
-          {all === null && !loadError && (
-            <div className="rounded-[28px] bg-white p-10 text-center text-navy-500 shadow-card" aria-busy="true">
-              {he ? 'מחפשת הצעות...' : 'Looking for suggestions…'}
-            </div>
-          )}
-          {loadError && (
-            <div className="rounded-[28px] bg-white p-10 text-center text-navy-500 shadow-card">
-              {he ? 'לא הצלחנו לטעון הצעות. נסו לרענן את העמוד.' : 'We could not load suggestions. Please refresh.'}
-            </div>
-          )}
-          {all !== null && all.length === 0 && (
-            <div className="rounded-[28px] bg-white p-10 text-center text-navy-500 shadow-card">
-              {he ? 'עדיין אין הצעות להצגה. כשיצטרפו עוד מועמדים מתאימים הן יופיעו כאן.' : 'No suggestions yet. They will appear here as more candidates join.'}
-            </div>
-          )}
-          {all !== null && all.length > 0 && shown.length === 0 && (
-            <div className="rounded-[28px] bg-white p-10 text-center text-navy-500 shadow-card">
-              {he ? 'אין הצעות שמתאימות לסינון הזה. נסו להרחיב אותו.' : 'No suggestions match these filters. Try widening them.'}
-            </div>
-          )}
-
-          {shown.map((p) => {
-            const st = status[p.id]
-            if (st === 'passed') return null
-            const reasons = he ? p.highlightsHe : p.highlightsEn
-            const watch = he ? p.conflictsHe : p.conflictsEn
-            return (
-              <article key={p.id} className="rounded-[28px] bg-white shadow-card p-6 flex flex-col gap-4">
-                <div className="flex items-start gap-4">
-                  <span className="w-14 h-14 shrink-0 rounded-2xl bg-navy-800 text-white flex items-center justify-center text-2xl font-light">
-                    {p.initial}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-lg font-bold text-navy-800">
-                      {p.name || `${p.initial}.`} · {he ? `${p.gender === 'female' ? 'בת' : 'בן'} ${p.age}` : `Age ${p.age}`}
-                    </p>
-                    <p className="text-sm text-navy-500">{p.city} · {p.community}</p>
-                    <p className="text-sm text-navy-500">{p.occupation} · {label(styleOpts, p.style, he)}</p>
-                  </div>
-                  <div className="text-center shrink-0">
-                    <p className="text-3xl font-light text-burgundy-500 tabular-nums" dir="ltr">{p.score}%</p>
-                    <p className="text-[11px] text-navy-400">{he ? 'התאמה' : 'match'}</p>
-                  </div>
-                </div>
-
-                <div className="h-1.5 rounded-full bg-[#f1f1f1] overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-l from-burgundy-400 to-burgundy-500" style={{ width: `${p.score}%` }} />
-                </div>
-
-                <div className="flex flex-wrap gap-1.5">
-                  {p.traits.map((tr) => (
-                    <span key={tr} className="rounded-full bg-navy-50 text-navy-600 text-xs px-3 py-1">
-                      {label(traitOpts, tr, he)}
-                    </span>
-                  ))}
-                </div>
-
-                {reasons.length > 0 && (
-                  <div>
-                    <p className="text-xs font-semibold tracking-wide text-navy-400 mb-1.5">
-                      {he ? 'למה זה מתאים' : 'WHY IT FITS'}
-                    </p>
-                    <ul className="flex flex-col gap-1">
-                      {reasons.map((r) => (
-                        <li key={r} className="text-sm text-navy-700 flex gap-2">
-                          <span className="text-burgundy-500">✓</span>{r}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {watch.length > 0 && (
-                  <div className="rounded-2xl bg-[#f1f1f1] px-4 py-3">
-                    <p className="text-xs font-semibold text-navy-400 mb-1">{he ? 'שווה לברר' : 'WORTH CHECKING'}</p>
-                    {watch.map((w) => (
-                      <p key={w} className="text-sm text-navy-600">• {w}</p>
-                    ))}
-                  </div>
-                )}
-
-                <button
-                  type="button" onClick={() => setOpenId(p.id)}
-                  className="self-start h-11 px-6 rounded-full border border-navy-200 text-navy-700 hover:bg-navy-50 text-sm font-semibold"
-                >
-                  {he ? 'לכרטיס המלא ולתמונות' : 'Full card and photos'}
-                </button>
-
-                {/* Actions */}
-                {!st && (
-                  <div className="flex gap-2 pt-1">
-                    <button
-                      onClick={() => express(p)}
-                      className="flex-1 h-12 rounded-full bg-burgundy-500 hover:bg-burgundy-600 text-white font-bold text-sm transition-colors"
-                    >
-                      {he ? 'מעוניין/ת' : 'Interested'}
-                    </button>
-                    <button
-                      onClick={() => record(p, 'passed')}
-                      className="h-12 px-6 rounded-full border border-navy-200 text-navy-600 hover:bg-navy-50 text-sm font-medium transition-colors"
-                    >
-                      {he ? 'לא כרגע' : 'Not now'}
-                    </button>
-                  </div>
-                )}
-                {st === 'interested' && (
-                  <p className="rounded-full bg-navy-50 text-navy-700 text-sm px-5 py-3 text-center">
-                    {he ? '✓ העניין שלך נשלח בדיסקרטיות. ממתינים לצד השני.' : '✓ Your interest was sent discreetly. Waiting for the other side.'}
-                  </p>
-                )}
-                {st === 'mutual' && (
-                  <div className="rounded-3xl bg-navy-800 text-white px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
-                    <p className="flex-1 text-sm">
-                      {he
-                        ? 'יש עניין הדדי! שדכנית תיכנס לתמונה ותיצור איתך קשר.'
-                        : 'Mutual interest! A matchmaker will step in and contact you.'}
-                    </p>
-                    <Link
-                      href={`/${locale}/contact`}
-                      className="h-11 px-6 rounded-full bg-burgundy-400 hover:bg-burgundy-300 text-white font-bold text-sm inline-flex items-center justify-center"
-                    >
-                      {he ? 'לדבר עם שדכנית' : 'Talk to a matchmaker'}
-                    </Link>
-                  </div>
-                )}
-              </article>
-            )
-          })}
-
         </section>
       </div>
     </div>

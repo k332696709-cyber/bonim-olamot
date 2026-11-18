@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { BotChat } from '@/components/home/BotChat'
+import { MyProposalsButton } from '@/components/home/MyProposalsButton'
 import { Showcase } from '@/components/home/Showcase'
 import { HowItWorks } from '@/components/home/HowItWorks'
 import { Reveal } from '@/components/home/Reveal'
@@ -55,6 +56,8 @@ export default async function HomePage({ params: { locale } }: { params: { local
               ? 'ארגון בונים עולמות: הרשמה פשוטה, שדכנים מקצועיים והתאמה חכמה. הכל במקום אחד.'
               : 'Bonim Olamot: simple registration, professional matchmakers and smart matching, all in one place.'}
           </p>
+
+          <MyProposalsButton locale={locale} />
 
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
             <Link
