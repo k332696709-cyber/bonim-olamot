@@ -11,6 +11,7 @@ import { mapProfileRow, PROFILE_SELECT } from '@/lib/supabase/mapProfile'
 import { getSession } from '@/lib/auth/session'
 import { useConfirm } from '@/components/ui/useConfirm'
 import type { FemaleProfile, MaleProfile } from '@/types/registration'
+import { PhotoViewer } from '@/components/ui/PhotoViewer'
 
 /**
  * Loads one candidate's profile from the database (the real ones created from
@@ -28,6 +29,7 @@ export function ProfileLoader({ locale, id }: { locale: string; id: string }) {
   const [fromDb, setFromDb] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [error, setError] = useState('')
+  const [viewAt, setViewAt] = useState<number | null>(null)
 
   useEffect(() => {
     setIsAdmin(getSession()?.role === 'admin')
@@ -91,12 +93,15 @@ export function ProfileLoader({ locale, id }: { locale: string; id: string }) {
   return (
     <div className="flex flex-col gap-6">
       {dialog}
+      {viewAt !== null && <PhotoViewer photos={photoUrls} start={viewAt} onClose={() => setViewAt(null)} />}
       {(photoUrls.length > 0 || (isAdmin && fromDb)) && (
         <div className="flex items-center gap-4 flex-wrap">
-          {photoUrls.map((u) => (
-            // Signed URL from private storage, so next/image is not used.
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={u} src={u} alt="" className="w-28 h-28 rounded-3xl object-cover bg-white shadow-card" />
+          {photoUrls.map((u, idx) => (
+            <button key={u} type="button" onClick={() => setViewAt(idx)} aria-label={he ? 'הגדלת התמונה' : 'View photo'} className="cursor-zoom-in">
+              {/* Signed URL from private storage, so next/image is not used. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={u} alt="" className="w-28 h-28 rounded-3xl object-cover bg-white shadow-card" />
+            </button>
           ))}
           {isAdmin && fromDb && (
             <button onClick={remove} className="h-10 px-5 rounded-full border border-burgundy-300 text-burgundy-600 hover:bg-burgundy-50 text-sm font-semibold ms-auto">

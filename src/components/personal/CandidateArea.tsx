@@ -8,6 +8,7 @@ import { clearSession, restoreSession } from '@/lib/auth/session'
 import { loadCandidate, type CandidateState } from '@/lib/auth/candidate'
 import { PhotoSlots } from '@/components/personal/PhotoSlots'
 import { FeeNotices } from '@/components/personal/FeeNotices'
+import { PhotoViewer } from '@/components/ui/PhotoViewer'
 import { NotificationSettings } from '@/components/personal/NotificationSettings'
 import { questionnaireProgress } from '@/lib/registration/completion'
 import { TallyRegistrationForm } from '@/components/forms/TallyRegistrationForm'
@@ -33,6 +34,7 @@ export function CandidateArea({ locale }: { locale: string }) {
   const [isStaff, setIsStaff] = useState(false)
   const [editing, setEditing] = useState(false)
   const [savedMsg, setSavedMsg] = useState('')
+  const [viewHeader, setViewHeader] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -202,12 +204,20 @@ export function CandidateArea({ locale }: { locale: string }) {
   return shell(
     <div className="flex flex-col gap-5">
       <FeeNotices he={he} />
+      {viewHeader && (() => {
+        const list = (state.photos ?? []).filter((x) => x.url)
+        const urls = list.length > 0 ? list.map((x) => x.url as string) : [state.photoUrl as string]
+        const at = Math.max(0, list.findIndex((x) => x.url === state.photoUrl))
+        return <PhotoViewer photos={urls} start={at} onClose={() => setViewHeader(false)} />
+      })()}
       <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-8">
         <div className="flex items-center gap-4 mb-3">
           {state.photoUrl && (
             // Signed URL from private storage, so next/image is not used.
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={state.photoUrl} alt="" className="w-24 h-24 rounded-3xl object-cover bg-[#f1f1f1]" />
+            <button type="button" onClick={() => setViewHeader(true)} aria-label={he ? 'הגדלת התמונה' : 'View photo'} className="cursor-zoom-in">
+              <img src={state.photoUrl} alt="" className="w-24 h-24 rounded-3xl object-cover bg-[#f1f1f1]" />
+            </button>
           )}
           <div>
             <p className="text-xs font-semibold tracking-widest text-burgundy-500">{he ? 'הפרופיל שלי' : 'MY PROFILE'}</p>

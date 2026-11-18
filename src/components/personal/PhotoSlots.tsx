@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { compressImage, MAX_UPLOAD_BYTES } from '@/lib/images/compress'
 import type { CandidatePhoto } from '@/lib/auth/candidate'
+import { PhotoViewer } from '@/components/ui/PhotoViewer'
 
 const SLOTS = [0, 1, 2, 3, 4]
 
@@ -20,9 +21,12 @@ const STATUS = {
 export function PhotoSlots({ photos, he, onChanged }: { photos: CandidatePhoto[]; he: boolean; onChanged: () => void | Promise<void> }) {
   const [busy, setBusy] = useState<number | null>(null)
   const [msg, setMsg] = useState('')
+  const [viewAt, setViewAt] = useState<number | null>(null)
+  const shown = SLOTS.map(bySlot0).filter((x): x is CandidatePhoto => !!x && !!x.url)
   const inputs = useRef<(HTMLInputElement | null)[]>([])
 
   const bySlot = (slot: number) => photos.find((p) => p.slot === slot)
+  function bySlot0(slot: number) { return photos.find((p) => p.slot === slot) }
 
   const call = async (init: RequestInit) => {
     const { data } = await createClient().auth.getSession()
@@ -86,6 +90,7 @@ export function PhotoSlots({ photos, he, onChanged }: { photos: CandidatePhoto[]
 
   return (
     <div className="mb-5">
+      {viewAt !== null && viewAt >= 0 && <PhotoViewer photos={shown.map((x) => x.url as string)} start={viewAt} onClose={() => setViewAt(null)} />}
       <div className="flex items-baseline justify-between mb-2">
         <h3 className="text-sm font-bold text-navy-800">{he ? 'התמונות שלי' : 'My photos'}</h3>
         <span className="text-xs text-navy-400">{he ? `${photos.length} מתוך 5` : `${photos.length} of 5`}</span>
@@ -111,7 +116,11 @@ export function PhotoSlots({ photos, he, onChanged }: { photos: CandidatePhoto[]
                   <>
                     {/* Signed URL from private storage, so next/image is not used. */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {photo.url && <img src={photo.url} alt="" className="w-full h-full object-cover" />}
+                    {photo.url && (
+                      <button type="button" onClick={() => setViewAt(shown.findIndex((x) => x.slot === slot))} aria-label={he ? 'הגדלת התמונה' : 'View photo'} className="w-full h-full cursor-zoom-in">
+                        <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                      </button>
+                    )}
                     {photo.main && (
                       <span className="absolute bottom-1 start-1 text-[10px] font-bold bg-navy-800 text-white rounded-full px-2 py-0.5">{he ? 'ראשית' : 'Main'}</span>
                     )}

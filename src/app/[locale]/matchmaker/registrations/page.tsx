@@ -10,6 +10,7 @@ import { FEMALE_FORM, MALE_FORM, allFields, prettyChoices, type RegistrationForm
 import { registrationToProfileRow } from '@/lib/registration/toProfile'
 import { birthDateDisplay } from '@/lib/registration/birthDate'
 import { questionnaireProgress } from '@/lib/registration/completion'
+import { PhotoViewer } from '@/components/ui/PhotoViewer'
 
 interface Row {
   id: string
@@ -36,6 +37,7 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
   const [error, setError] = useState('')
   const [open, setOpen] = useState<string | null>(null)
   const [photos, setPhotos] = useState<Record<string, string[]>>({})
+  const [view, setView] = useState<{ list: string[]; at: number } | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [notice, setNotice] = useState('')
 
@@ -166,6 +168,7 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
   return (
     <div className="min-h-screen bg-[#f1f1f1]" dir={he ? 'rtl' : 'ltr'}>
       {dialog}
+      {view && <PhotoViewer photos={view.list} start={view.at} onClose={() => setView(null)} />}
       <header className="hero-dark text-white pt-6 pb-4">
         <div className="max-w-4xl mx-auto px-6 py-10 flex items-center justify-between gap-4 flex-wrap">
           <div>
@@ -245,8 +248,10 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
                 {!!photos[r.id]?.length && (
                   <div className="flex flex-wrap gap-3">
                     {photos[r.id].map((u, i) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img key={i} src={u} alt="" className="h-48 rounded-2xl object-contain bg-[#f1f1f1]" />
+                      <button key={i} type="button" onClick={() => setView({ list: photos[r.id], at: i })} aria-label={he ? 'הגדלת התמונה' : 'View photo'} className="cursor-zoom-in">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={u} alt="" className="h-48 rounded-2xl object-contain bg-[#f1f1f1]" />
+                      </button>
                     ))}
                   </div>
                 )}

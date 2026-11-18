@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { restoreSession } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/client'
+import { PhotoViewer } from '@/components/ui/PhotoViewer'
 
 interface Item {
   id: string
@@ -23,6 +24,7 @@ export default function PhotosPage({ params: { locale } }: { params: { locale: s
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
+  const [viewId, setViewId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -109,6 +111,7 @@ export default function PhotosPage({ params: { locale } }: { params: { locale: s
 
   return (
     <div className="min-h-screen bg-[#f1f1f1]" dir={he ? 'rtl' : 'ltr'}>
+      {viewId && (() => { const list = items.filter((x) => x.url); return <PhotoViewer photos={list.map((x) => x.url as string)} start={Math.max(0, list.findIndex((x) => x.id === viewId))} onClose={() => setViewId(null)} /> })()}
       <header className="hero-dark text-white pt-6 pb-4">
         <div className="max-w-4xl mx-auto px-6 py-10 flex items-center justify-between gap-4 flex-wrap">
           <div>
@@ -139,7 +142,9 @@ export default function PhotosPage({ params: { locale } }: { params: { locale: s
               {it.url ? (
                 // Signed URL from private storage, so next/image is not used.
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={it.url} alt="" className="max-h-72 w-full object-contain" />
+                <button type="button" onClick={() => setViewId(it.id)} aria-label={he ? 'הגדלת התמונה' : 'View photo'} className="w-full cursor-zoom-in">
+                  <img src={it.url} alt="" className="max-h-72 w-full object-contain" />
+                </button>
               ) : (
                 <span className="text-sm text-navy-400">{he ? 'התמונה לא נטענה' : 'Photo failed to load'}</span>
               )}
