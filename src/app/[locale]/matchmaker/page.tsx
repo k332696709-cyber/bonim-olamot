@@ -286,6 +286,23 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
     setMatchProgress((prev) => (prev.some((x) => x.id === m.id) ? prev.map((x) => (x.id === m.id ? { ...x, ...next, matchmakerName: x.matchmakerName || next.matchmakerName, matchmakerEmail: x.matchmakerEmail || next.matchmakerEmail } : x)) : [next, ...prev]))
   }, [femaleProfiles, maleProfiles, session])
 
+  // A match that exists but is not in the tracker yet (it opened by itself on mutual interest).
+  const handleMatchSeen = useCallback((m: any) => {
+    const nameOf = (id: string) => {
+      const p = [...femaleProfiles, ...maleProfiles].find((x) => x.id === id)
+      return p ? `${p.firstName} ${p.lastName}` : ''
+    }
+    setMatchProgress((prev) => prev.some((x) => x.id === m.id) ? prev : [{
+      id: m.id, femaleId: m.femaleId, femaleName: nameOf(m.femaleId), maleId: m.maleId, maleName: nameOf(m.maleId),
+      stage: m.stage as MatchStage, matchmakerName: m.matchmakerName ?? '', matchmakerEmail: m.matchmakerEmail ?? '',
+      matchmakerId: m.matchmakerId ?? null, updatedAt: new Date(m.updatedAt),
+    } as MatchProgress, ...prev])
+  }, [femaleProfiles, maleProfiles])
+
+  const handleClaimed = useCallback((matchId: string, patch: any) => {
+    setMatchProgress((prev) => prev.map((x) => (x.id === matchId ? { ...x, ...patch } : x)))
+  }, [])
+
   const stats = useMemo(() => {
     const all = [...femaleProfiles, ...maleProfiles]
     const active = all.filter(p => p.lockedAt !== null && lockRemainingMs(p.lockedAt) > 0).length
@@ -442,7 +459,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
 
         {/* ── Interest from candidates ── */}
         <section>
-          <InterestFeed locale={locale} />
+          <InterestFeed locale={locale} onMatch={handleMatchSeen} onClaimed={handleClaimed} />
         </section>
 
         {/* ── Match Progress Tracker ── */}

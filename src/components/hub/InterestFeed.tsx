@@ -5,9 +5,13 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 interface Brief { id: string; name: string; age: number | null; city: string }
+interface MatchInfo {
+  id: string; femaleId: string; maleId: string; stage: string; updatedAt: string
+  matchmakerId: string | null; matchmakerName: string; matchmakerEmail: string
+}
 interface Interest {
   at: string; mutual: boolean; from: Brief; to: Brief
-  femaleId: string; maleId: string; matchId: string | null
+  femaleId: string; maleId: string; matchId: string | null; match: MatchInfo | null
 }
 
 async function authed(path: string, init: RequestInit = {}) {
@@ -22,7 +26,15 @@ async function authed(path: string, init: RequestInit = {}) {
  * Interest that candidates pressed in the smart assistant: who is interested in whom, and whether
  * it is mutual. A matchmaker can open the match from here to move it forward.
  */
-export function InterestFeed({ locale, onOpened }: { locale: string; onOpened?: () => void }) {
+export function InterestFeed({
+  locale, onMatch, onClaimed,
+}: {
+  locale: string
+  /** A match that exists (opened here, or opened by itself): the tracker should list it. */
+  onMatch?: (m: MatchInfo) => void
+  /** The signed-in matchmaker took over a match. */
+  onClaimed?: (matchId: string, patch: { matchmakerId: string; matchmakerName: string; matchmakerEmail: string }) => void
+}) {
   const he = locale === 'he'
   const [list, setList] = useState<Interest[] | null>(null)
   const [error, setError] = useState('')
@@ -33,11 +45,13 @@ export function InterestFeed({ locale, onOpened }: { locale: string; onOpened?: 
       const res = await authed('/api/matchmaker/interests')
       if (!res.ok) throw new Error('bad')
       const json = await res.json()
-      setList(json.interests ?? [])
+      const items: Interest[] = json.interests ?? []
+      setList(items)
+      for (const i of items) if (i.match) onMatch?.(i.match)
     } catch {
       setError(he ? 'לא הצלחנו לטעון התעניינויות.' : 'Could not load interest.')
     }
-  }, [he])
+  }, [he, onMatch])
 
   useEffect(() => { load() }, [load])
 
@@ -50,9 +64,25 @@ export function InterestFeed({ locale, onOpened }: { locale: string; onOpened?: 
       const json = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(json?.message ?? 'bad')
       await load()
-      onOpened?.()
     } catch (e) {
       setError(e instanceof Error && e.message !== 'bad' ? e.message : he ? 'הפתיחה נכשלה. נסו שוב.' : 'Could not open the match.')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const claim = async (i: Interest) => {
+    if (!i.matchId) return
+    setBusy(i.matchId)
+    setError('')
+    try {
+      const res = await authed('/api/matchmaker/claim-match', { method: 'POST', body: JSON.stringify({ matchId: i.matchId }) })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json?.message ?? 'bad')
+      onClaimed?.(i.matchId, json.patch)
+      await load()
+    } catch (e) {
+      setError(e instanceof Error && e.message !== 'bad' ? e.message : he ? 'הפעולה נכשלה. נסו שוב.' : 'Could not take the match.')
     } finally {
       setBusy(null)
     }
@@ -95,8 +125,17 @@ export function InterestFeed({ locale, onOpened }: { locale: string; onOpened?: 
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <span className="text-xs text-navy-400">{new Date(i.at).toLocaleDateString(he ? 'he-IL' : 'en-GB')}</span>
-                  {i.matchId ? (
-                    <span className="text-xs font-semibold text-green-700">{he ? '✓ השידוך נפתח' : '✓ Match open'}</span>
+                  {i.matchId && !i.match?.matchmakerId ? (
+                    <button
+                      type="button" disabled={busy === i.matchId} onClick={() => claim(i)}
+                      className="h-10 px-5 rounded-full bg-burgundy-500 hover:bg-burgundy-600 disabled:opacity-60 text-white text-xs font-bold"
+                    >
+                      {he ? 'לקחת את השידוך' : 'Take this match'}
+                    </button>
+                  ) : i.matchId ? (
+                    <span className="text-xs font-semibold text-green-700">
+                      {he ? `✓ בטיפול${i.match?.matchmakerName ? `: ${i.match.matchmakerName}` : ''}` : '✓ Being handled'}
+                    </span>
                   ) : (
                     <button
                       type="button" disabled={busy === key} onClick={() => open(i)}

@@ -48,6 +48,9 @@ export async function POST(req: NextRequest) {
   const { data: target } = await admin.from('profiles').select('id, gender, first_name').eq('id', to).maybeSingle()
   if (!target || target.gender === found.gender) return NextResponse.json({ message: 'ההצעה לא נמצאה.' }, { status: 404 })
 
+  // Only a new "interested" counts as news (a second click does not send everything again).
+  const { data: before } = await admin
+    .from('match_interests').select('kind').eq('from_profile_id', me).eq('to_profile_id', to).maybeSingle()
   const { error } = await admin
     .from('match_interests')
     .upsert(
@@ -64,15 +67,37 @@ export async function POST(req: NextRequest) {
     const { data: back } = await admin
       .from('match_interests').select('id').eq('from_profile_id', to).eq('to_profile_id', me).eq('kind', 'interested').maybeSingle()
     mutual = !!back
+    const isNew = before?.kind !== 'interested'
+    const { data: mine } = await admin.from('profiles').select('first_name, last_name, city').eq('id', me).maybeSingle()
+    const { data: theirs } = await admin.from('profiles').select('first_name, last_name, city').eq('id', to).maybeSingle()
+    const nameOf = (x: any) => `${x?.first_name ?? ''} ${x?.last_name ?? ''}`.trim() + (x?.city ? ` (${x.city})` : '')
+
     if (mutual) {
-      const { data: mine } = await admin.from('profiles').select('first_name').eq('id', me).maybeSingle()
+      // The match opens by itself, so it shows at once under "proposals I received" for both. A
+      // matchmaker then takes it over and sets the fee.
+      const femaleId = found.gender === 'female' ? me : to
+      const maleId = found.gender === 'male' ? me : to
+      const { data: existing } = await admin.from('matches').select('id').eq('female_id', femaleId).eq('male_id', maleId).maybeSingle()
+      if (!existing) {
+        const { error: mErr } = await admin.from('matches').insert({ female_id: femaleId, male_id: maleId })
+        if (mErr) console.error('auto match failed:', mErr.message)
+      }
+      if (isNew) {
+        await notifyOwner(
+          'עניין הדדי בין שני מועמדים',
+          [`${nameOf(mine)} ו${nameOf(theirs)}`, 'שניהם סימנו עניין. השידוך נפתח ומחכה לשדכן/ית שייקח/תיקח אותו.'],
+          '/he/matchmaker',
+        )
+        await Promise.all([notifyCandidate(admin, me, 'mutual'), notifyCandidate(admin, to, 'mutual')])
+      }
+    } else if (isNew) {
       await notifyOwner(
-        'עניין הדדי בין שני מועמדים',
-        [`${mine?.first_name ?? ''} ו${target.first_name ?? ''}`, 'שניהם סימנו עניין. אפשר ליצור קשר ולהתחיל תהליך.'],
+        'מועמד/ת הביע/ה עניין',
+        [`${nameOf(mine)} מעוניין/ת ב${nameOf(theirs)}`, 'הצד השני עדיין לא ענה.'],
         '/he/matchmaker',
       )
-      // Both sides are told: email, and SMS for whoever switched it on.
-      await Promise.all([notifyCandidate(admin, me, 'mutual'), notifyCandidate(admin, to, 'mutual')])
+      // The other side hears that someone is interested, without being told who.
+      await notifyCandidate(admin, to, 'interestReceived')
     }
   }
   return NextResponse.json({ ok: true, state: kind === 'passed' ? 'passed' : mutual ? 'mutual' : 'interested' })

@@ -10,7 +10,7 @@ export interface LiveProposal extends Proposal { state: ProposalState }
 
 const LOCK_MS = 48 * 60 * 60 * 1000
 
-export async function loadProposals(admin: any, myProfileId: string): Promise<{ me: AnyProfile; proposals: LiveProposal[]; learned: string[] } | null> {
+export async function loadProposals(admin: any, myProfileId: string): Promise<{ me: AnyProfile; proposals: LiveProposal[]; learned: string[]; interestedInMe: number } | null> {
   const { data: meRow } = await admin.from('profiles').select('*').eq('id', myProfileId).maybeSingle()
   if (!meRow) return null
   const me = mapProfileRow(meRow) as AnyProfile
@@ -76,5 +76,6 @@ export async function loadProposals(admin: any, myProfileId: string): Promise<{ 
       kind === 'interested' ? (theirs.has(p.id) ? 'mutual' : 'interested') : kind === 'passed' ? 'passed' : 'none'
     return { ...p, state }
   })
-  return { me, proposals, learned }
+  const interestedInMe = Array.from(theirs).filter((id) => !mine.has(id) && byId.has(id)).length
+  return { me, proposals, learned, interestedInMe }
 }

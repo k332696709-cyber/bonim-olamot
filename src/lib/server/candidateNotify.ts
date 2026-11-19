@@ -3,7 +3,7 @@
 import { sendMail } from '@/lib/server/notify'
 import { sendSms, toSmsNumber } from '@/lib/server/sms'
 
-export type CandidateEvent = 'mutual' | 'fee' | 'newProposals' | 'matchOpened'
+export type CandidateEvent = 'mutual' | 'fee' | 'newProposals' | 'matchOpened' | 'interestReceived'
 
 interface Content {
   subject: string
@@ -17,9 +17,15 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://bonim-olamot-zoco.verc
 const CONTENT: Record<CandidateEvent, (vars: Record<string, string>) => Content> = {
   mutual: () => ({
     subject: 'יש עניין הדדי',
-    lines: ['שני הצדדים סימנו עניין בהצעה.', 'שדכן/ית ייצור איתך קשר בקרוב.'],
-    path: '/he/smart-match',
-    sms: 'בונים עולמות: יש עניין הדדי בהצעה. שדכן/ית ייצור איתך קשר בקרוב.',
+    lines: ['שני הצדדים סימנו עניין בהצעה.', 'ההצעה מופיעה עכשיו ב"ההצעות שקיבלתי", ושדכן/ית יצטרף/תצטרף ויעדכן/תעדכן.'],
+    path: '/he/personal#received',
+    sms: 'בונים עולמות: יש עניין הדדי בהצעה. היא מופיעה עכשיו ב"ההצעות שקיבלתי" ושדכן/ית ייצור קשר.',
+  }),
+  interestReceived: () => ({
+    subject: 'יש מי שמתעניין בך',
+    lines: ['מועמד/ת הביע/ה עניין בך.', 'היכנס/י להתאמות. אם גם את/ה מעוניין/ת, לחצ/י "מעוניין/ת" והשידוך יתקדם.'],
+    path: '/he/personal#matches',
+    sms: `בונים עולמות: יש מי שמתעניין בך. היכנס/י להתאמות: ${SITE}/he/personal#matches`,
   }),
   fee: (v) => ({
     subject: 'עדכון בנושא דמי שידוך',

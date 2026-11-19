@@ -36,6 +36,7 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
   const [reason, setReason] = useState('')
   const [note, setNote] = useState('')
   const [learned, setLearned] = useState<string[]>([])
+  const [interestedInMe, setInterestedInMe] = useState(0)
 
   useEffect(() => { setPrefs(loadPrefs()) }, [])
 
@@ -51,6 +52,7 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
         const list: LiveProposal[] = json.proposals ?? []
         setAll(list)
         setLearned(json.learned ?? [])
+        setInterestedInMe(json.interestedInMe ?? 0)
         const st: Record<string, Status> = {}
         for (const p of list) if (p.state !== 'none') st[p.id] = p.state
         setStatus(st)
@@ -167,6 +169,14 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
           {he ? '✦ דיוק עם העוזר החכם' : '✦ Refine with the assistant'}
         </Link>
       </div>
+
+      {interestedInMe > 0 && (
+        <div className="rounded-2xl bg-burgundy-500 text-white px-5 py-4 text-sm font-semibold">
+          {he
+            ? (interestedInMe === 1 ? 'יש מי שמתעניין/ת בך! עברו על ההצעות, ואם גם אתם מעוניינים, לחצו "מעוניין/ת".' : `יש ${interestedInMe} מתעניינים בך! עברו על ההצעות, ואם גם אתם מעוניינים, לחצו "מעוניין/ת".`)
+            : (interestedInMe === 1 ? 'Someone is interested in you! Go through the suggestions and press "Interested" if you are too.' : `${interestedInMe} people are interested in you! Go through the suggestions and press "Interested" if you are too.`)}
+        </div>
+      )}
 
       {learned.length > 0 && (
         <p className="text-sm text-navy-600 bg-white rounded-2xl shadow-sm px-4 py-3">

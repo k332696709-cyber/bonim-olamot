@@ -30,8 +30,11 @@ export async function GET(req: NextRequest) {
   const ids = Array.from(new Set(rows.flatMap((r: any) => [r.from_profile_id, r.to_profile_id])))
   const { data: people } = await admin.from('profiles').select('id, gender, first_name, last_name, age, city').in('id', ids)
   const byId = new Map<string, any>((people ?? []).map((p: any) => [p.id, p]))
-  const { data: matches } = await admin.from('matches').select('id, female_id, male_id').in('female_id', ids)
-  const matchOf = new Map<string, string>((matches ?? []).map((m: any) => [`${m.female_id}|${m.male_id}`, m.id]))
+  const { data: matches } = await admin
+    .from('matches')
+    .select('id, female_id, male_id, stage, updated_at, matchmaker_id, matchmakers!matches_matchmaker_id_fkey(first_name, last_name, email)')
+    .in('female_id', ids)
+  const matchOf = new Map<string, any>((matches ?? []).map((m: any) => [`${m.female_id}|${m.male_id}`, m]))
 
   const key = (a: string, b: string) => [a, b].sort().join('|')
   const seen = new Set<string>()
@@ -54,7 +57,17 @@ export async function GET(req: NextRequest) {
       to: brief(to),
       femaleId: female.id,
       maleId: male.id,
-      matchId: matchOf.get(`${female.id}|${male.id}`) ?? null,
+      matchId: matchOf.get(`${female.id}|${male.id}`)?.id ?? null,
+      match: (() => {
+        const m = matchOf.get(`${female.id}|${male.id}`)
+        if (!m) return null
+        return {
+          id: m.id, femaleId: female.id, maleId: male.id, stage: m.stage, updatedAt: m.updated_at,
+          matchmakerId: m.matchmaker_id ?? null,
+          matchmakerName: m.matchmakers ? `${m.matchmakers.first_name ?? ''} ${m.matchmakers.last_name ?? ''}`.trim() : '',
+          matchmakerEmail: m.matchmakers?.email ?? '',
+        }
+      })(),
     })
   }
   return NextResponse.json({ interests: out })

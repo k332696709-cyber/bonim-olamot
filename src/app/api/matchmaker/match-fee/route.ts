@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Only the matchmaker who handles the match (or the administrator) may set its fee.
-  if (!mm.is_admin && match.matchmaker_id !== mm.id) {
+  if (!mm.is_admin && match.matchmaker_id && match.matchmaker_id !== mm.id) {
     return NextResponse.json({ message: 'השידוך הזה מטופל על ידי שדכן/ית אחר/ת.' }, { status: 403 })
   }
 

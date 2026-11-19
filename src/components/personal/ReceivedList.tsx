@@ -142,6 +142,11 @@ export function ReceivedList({ locale }: { locale: string }) {
             )}
           </div>
 
+          {!r.matchmaker && (
+            <p className="rounded-2xl bg-[#f1f1f1] text-navy-600 text-sm px-4 py-3">
+              {he ? 'יש עניין הדדי! שדכן/ית יצטרף/תצטרף בקרוב לטפל בהצעה, ופרטיו/ה יופיעו כאן.' : 'Mutual interest! A matchmaker will join soon, and their details will appear here.'}
+            </p>
+          )}
           {r.matchmaker && <MatchmakerInfo m={r.matchmaker} title={he ? 'השדכן/ית המטפל/ת בהצעה' : 'Matchmaker handling this'} />}
           {r.coMatchmaker && <MatchmakerInfo m={r.coMatchmaker} title={he ? 'שדכן/ית נוסף/ת שעובד/ת איתם' : 'Working together with'} />}
 
