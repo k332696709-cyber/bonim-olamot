@@ -38,7 +38,10 @@ export async function loadProposals(admin: any, myProfileId: string): Promise<{ 
   const okPool = pool.filter((r: any) => {
     const a = regOf.get(r.id) ?? null
     const text = [r.community, a?.edah, a?.community, a?.hasidut].filter(Boolean).join(' ')
-    return respectsPreferences({ myAge: Number(meRow.age) || 0, myAnswers, otherAge: Number(r.age) || 0, otherText: text, otherAnswers: a })
+    return respectsPreferences({
+      myGender: meRow.gender, myCity: meRow.city ?? '', otherCity: r.city ?? '',
+      myAge: Number(meRow.age) || 0, myAnswers, otherAge: Number(r.age) || 0, otherText: text, otherAnswers: a,
+    })
   })
 
   const scored: Proposal[] = []

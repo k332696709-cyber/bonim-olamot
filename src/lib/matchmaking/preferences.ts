@@ -1,3 +1,6 @@
+import { CITY_OPTIONS } from '@/constants/communityLists'
+import { plansFit, wishesFit } from '@/lib/matchmaking/answerRules'
+
 // What a candidate wrote about who they are looking for, turned into rules the smart assistant must
 // respect before it offers anyone: the age range, and the community or edah they want or do not want.
 // These rules apply only to what candidates are offered. Matchmakers still see everyone.
@@ -77,7 +80,40 @@ export function groupsOf(text: string): Set<string> {
   return wanted
 }
 
+// Cities named in free text. A few names are ordinary words too, so they are left out.
+const CITY_STOP = new Set(['אזור', 'רמות', 'גאולה', 'ביתר', 'חריש', 'יבנאל'])
+const normCity = (c: string) => c.replace(/\([^)]*\)/g, ' ').replace(/[-־]/g, ' ').replace(/\s+/g, ' ').trim()
+const escRe = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+const CITIES = Array.from(new Set((CITY_OPTIONS as string[]).map(normCity))).filter((c) => c.length >= 3 && !CITY_STOP.has(c)).sort((a, b) => b.length - a.length)
+
+/** Cities a person named as unwanted: anything in "does not suit me", or after a "no" elsewhere. */
+export function citiesRejected(a: Record<string, string>): Set<string> {
+  const out = new Set<string>()
+  const scan = (text: string, onlyNegated: boolean) => {
+    const t = text.replace(/[-־]/g, ' ')
+    for (const c of CITIES) {
+      const re = new RegExp(`(^|[^א-ת])[והבלמש]?${escRe(c)}(?![א-ת])`, 'g')
+      for (let m = re.exec(t); m; m = re.exec(t)) {
+        const before = t.slice(0, m.index + m[1].length)
+        if (!onlyNegated || NEGATION.test(before)) out.add(c)
+      }
+    }
+  }
+  scan(a.notSuitable ?? '', false)
+  scan(a.edahSought ?? '', true)
+  scan(a.aboutPartner ?? '', true)
+  return out
+}
+
+const cityIs = (city: string, set: Set<string>) => {
+  const c = normCity(city ?? '')
+  return !!c && Array.from(set).some((x) => c === x || c.includes(x))
+}
+
 export interface PrefInput {
+  myGender: 'male' | 'female'
+  myCity: string
+  otherCity: string
   /** The person looking: the answers they gave about who they want, and their own age. */
   myAge: number
   myAnswers: Record<string, string>
@@ -92,6 +128,18 @@ export function respectsPreferences(i: PrefInput): boolean {
   // Age: the range the person chose, with a year of leeway; and the other side's range must hold me.
   if (!ageFits(i.otherAge, parseAgeRange(i.myAnswers.ageRange))) return false
   if (i.otherAnswers && !ageFits(i.myAge, parseAgeRange(i.otherAnswers.ageRange))) return false
+
+  // Cities they do not want (their own words), in both directions.
+  if (cityIs(i.otherCity, citiesRejected(i.myAnswers))) return false
+  if (i.otherAnswers && cityIs(i.myCity, citiesRejected(i.otherAnswers))) return false
+
+  // Style, clothing, head covering or hat, technology, living standard, and the life plans.
+  if (i.otherAnswers) {
+    const otherGender = i.myGender === 'male' ? 'female' : 'male'
+    if (!wishesFit(i.myAnswers, i.myGender, i.otherAnswers)) return false
+    if (!wishesFit(i.otherAnswers, otherGender, i.myAnswers)) return false
+    if (!plansFit(i.myAnswers, i.otherAnswers)) return false
+  }
 
   // Community / edah: what they want, and what they said does not suit them at all.
   const sought = groupsMentioned(i.myAnswers.edahSought ?? '')
