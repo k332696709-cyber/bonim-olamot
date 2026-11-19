@@ -165,8 +165,19 @@ export function calculateCompatibility(
   const maxVals = Math.max(bachur.relationshipValues.length, bachurah.relationshipValues.length, 1)
   const maxBrings = Math.max(bachur.brings.length, bachurah.brings.length, 1)
 
-  const valuesPct = (sharedValues.length / maxVals) * 0.7 + (sharedBrings.length / maxBrings) * 0.3
+  // The newer registration does not ask for relationship values. When neither side has any, the
+  // category rests on "what each brings" alone, and when there is nothing at all it is left out.
+  const hasValues = bachur.relationshipValues.length > 0 || bachurah.relationshipValues.length > 0
+  const hasBrings = bachur.brings.length > 0 || bachurah.brings.length > 0
+  const valuesPct = hasValues && hasBrings
+    ? (sharedValues.length / maxVals) * 0.7 + (sharedBrings.length / maxBrings) * 0.3
+    : hasValues
+      ? sharedValues.length / maxVals
+      : hasBrings
+        ? sharedBrings.length / maxBrings
+        : 0
   const valuesPoints = Math.round(valuesPct * 30)
+  const valuesCounts = hasValues || hasBrings
 
   if (sharedValues.length >= 2) {
     highlights.push(`${sharedValues.length} shared core values`)
@@ -275,8 +286,11 @@ export function calculateCompatibility(
 
   // ── Final score ───────────────────────────────────────────────────────────
 
-  const totalPoints = stylePoints + valuesPoints + practicalPoints + traitPoints
-  const score = Math.min(100, Math.max(0, totalPoints))
+  // Only categories with something to compare count; the score is out of what could be measured.
+  const traitsCount = bachur.traits.length > 0 || bachurah.traits.length > 0
+  const possible = 35 + 20 + (valuesCounts ? 30 : 0) + (traitsCount ? 15 : 0)
+  const earned = stylePoints + practicalPoints + (valuesCounts ? valuesPoints : 0) + (traitsCount ? traitPoints : 0)
+  const score = Math.min(100, Math.max(0, Math.round((earned / possible) * 100)))
 
   return {
     score,

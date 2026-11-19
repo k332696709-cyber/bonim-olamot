@@ -212,7 +212,7 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
       )}
       {all !== null && all.length === 0 && (
         <div className="rounded-[28px] bg-white p-8 text-center text-navy-500 shadow-card">
-          {he ? 'כשיצטרפו עוד מועמדים מתאימים, ההצעות יופיעו כאן.' : 'Suggestions will appear here as more candidates join.'}
+          {he ? 'כרגע אין התאמה של 88% ומעלה. כשתהיה התאמה גבוהה באמת, נעדכן אותך והיא תופיע כאן.' : 'There is no 88%+ match right now. When a truly high match appears, we will tell you and it will show here.'}
         </div>
       )}
       {all !== null && all.length > 0 && shown.length === 0 && (

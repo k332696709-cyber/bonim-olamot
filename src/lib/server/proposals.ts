@@ -2,7 +2,7 @@
 // Server-only: builds the anonymous proposals a candidate sees. Other people's full profiles
 // are read with the service role and never leave the server; only the safe fields below do.
 import { mapProfileRow } from '@/lib/supabase/mapProfile'
-import { buildProposals, styleRank, type AnyProfile, type Proposal } from '@/lib/matchmaking/assistant'
+import { buildProposals, MIN_MATCH_SCORE, styleRank, type AnyProfile, type Proposal } from '@/lib/matchmaking/assistant'
 import { cityCoords, distanceKm } from '@/constants/cityCoords'
 
 export type ProposalState = 'none' | 'interested' | 'mutual' | 'passed'
@@ -69,6 +69,8 @@ export async function loadProposals(admin: any, myProfileId: string): Promise<{ 
     }
     scored.sort((a, b) => b.score - a.score)
   }
+  // Only real matches are offered: nobody gets everyone who registered.
+  for (let i = scored.length - 1; i >= 0; i--) if (scored[i].score < MIN_MATCH_SCORE) scored.splice(i, 1)
 
   const proposals: LiveProposal[] = scored.map((p) => {
     const kind = mine.get(p.id)

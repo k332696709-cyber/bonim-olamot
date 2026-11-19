@@ -4,6 +4,9 @@ import { TRAIT_OPTIONS_FEMALE, TRAIT_OPTIONS_MALE } from '@/constants/formOption
 
 export type AnyProfile = MaleProfile | FemaleProfile
 
+/** The assistant offers only proposals at or above this match percentage. */
+export const MIN_MATCH_SCORE = 88
+
 /** What the candidate is allowed to see about a proposal: no surname, phone or email. */
 export interface Proposal {
   id: string
