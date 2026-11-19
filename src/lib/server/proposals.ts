@@ -60,6 +60,8 @@ export async function loadProposals(admin: any, myProfileId: string): Promise<{ 
     else if (i.kind === 'interested') theirs.add(i.from_profile_id)
   }
 
+  for (const p of scored) p.origin = regOf.get(p.id)?.edah ?? ''
+
   // What the assistant learned from the reasons given for "not now".
   const { data: passes } = await admin
     .from('match_interests').select('to_profile_id, reason')

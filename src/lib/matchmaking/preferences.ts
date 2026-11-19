@@ -46,6 +46,13 @@ const GROUPS: [string, string[]][] = [
   ['dati', ['דתי לאומי', 'דתיה לאומית', 'דתי-לאומי', 'לאומי']],
 ]
 
+/** Hebrew names of the groups, for showing which filter is on. */
+export const GROUP_LABELS: Record<string, string> = {
+  ashkenazi: 'אשכנזי', sephardi: 'ספרדי', teimani: 'תימני', moroccan: 'מרוקאי', iraqi: 'עיראקי', persian: 'פרסי',
+  bukharan: 'בוכרי', georgian: 'גרוזיני', kurdish: 'כורדי', libyan: 'לובי', tunisian: 'תוניסאי', egyptian: 'מצרי',
+  syrian: 'סורי', turkish: 'טורקי', ethiopian: 'אתיופי', chasidi: 'חסידי', litai: 'ליטאי', modern: 'חרדי מודרני', dati: 'דתי לאומי',
+}
+
 const NEGATION = /(לא|בלי|ללא|שלא|חוץ|פרט)\s*$/
 const OPEN = /(לא משנה|ללא העדפה|אין העדפה|פתוח|פתוחה|הכל|כל עדה|כולם|גמיש)/
 

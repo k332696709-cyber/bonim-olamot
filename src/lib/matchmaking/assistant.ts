@@ -1,6 +1,7 @@
 import type { FemaleProfile, MaleProfile } from '@/types/registration'
 import { calculateCompatibility } from './compatibilityEngine'
 import { TRAIT_OPTIONS_FEMALE, TRAIT_OPTIONS_MALE } from '@/constants/formOptions'
+import { GROUP_LABELS, groupsMentioned, groupsOf } from './preferences'
 
 export type AnyProfile = MaleProfile | FemaleProfile
 
@@ -17,6 +18,8 @@ export interface Proposal {
   age: number
   city: string
   community: string
+  /** The edah, for filtering by origin (empty when unknown). */
+  origin?: string
   occupation: string
   style: string
   traits: string[]
@@ -34,6 +37,10 @@ export interface Prefs {
   minAge?: number | null
   maxAge?: number | null
   styleShift?: StyleShift
+  /** Origin or community wanted, as group ids (for example "ashkenazi"). */
+  groups?: string[] | null
+  /** Origin or community not wanted. */
+  notGroups?: string[] | null
 }
 
 export const isMale = (p: AnyProfile): p is MaleProfile =>
@@ -85,6 +92,13 @@ export function applyPrefs(list: Proposal[], prefs: Prefs, mine: AnyProfile): Pr
     .filter((p) => prefs.minAge == null || p.age >= prefs.minAge)
     .filter((p) => prefs.maxAge == null || p.age <= prefs.maxAge)
     .filter((p) => {
+      const theirs = groupsOf(`${p.community ?? ''} ${p.origin ?? ''}`)
+      if (theirs.size === 0) return true // nothing known about them: do not guess
+      if (prefs.notGroups?.some((g) => theirs.has(g))) return false
+      if (prefs.groups && prefs.groups.length > 0 && !prefs.groups.some((g) => theirs.has(g))) return false
+      return true
+    })
+    .filter((p) => {
       if (prefs.styleShift === 'more_open') return styleRank(p.style) >= myRank
       if (prefs.styleShift === 'more_conservative') return styleRank(p.style) <= myRank
       return true
@@ -104,11 +118,16 @@ export function parseLocal(text: string, cities: string[]): Prefs {
   const min = t.match(/(?:מעל|לפחות|from|over|min)\s*(?:גיל\s*)?(\d{2})/)
   if (min) prefs.minAge = Number(min[1])
 
+  // Origin or community: "אשכנזיה", "לא חסידית".
+  const mentioned = groupsMentioned(text)
+  if (mentioned.wanted.size > 0) prefs.groups = Array.from(mentioned.wanted)
+  if (mentioned.rejected.size > 0) prefs.notGroups = Array.from(mentioned.rejected)
+
   if (/פתוח|מודרני|open|modern/.test(t)) prefs.styleShift = 'more_open'
   if (/שמור|ישיבתי|חרדי יותר|conservative|traditional|yeshivish/.test(t)) prefs.styleShift = 'more_conservative'
 
   if (/הכל|איפוס|reset|clear|show all/.test(t)) {
-    return { city: null, minAge: null, maxAge: null, styleShift: null }
+    return { city: null, minAge: null, maxAge: null, styleShift: null, groups: null, notGroups: null }
   }
   return prefs
 }
@@ -118,6 +137,8 @@ export function describePrefs(prefs: Prefs, he: boolean): string {
   if (prefs.city) parts.push(he ? `עיר: ${prefs.city}` : `City: ${prefs.city}`)
   if (prefs.minAge) parts.push(he ? `מגיל ${prefs.minAge}` : `from ${prefs.minAge}`)
   if (prefs.maxAge) parts.push(he ? `עד גיל ${prefs.maxAge}` : `up to ${prefs.maxAge}`)
+  if (prefs.groups?.length) parts.push((he ? 'מוצא או קהילה: ' : 'Origin: ') + prefs.groups.map((g) => GROUP_LABELS[g] ?? g).join(', '))
+  if (prefs.notGroups?.length) parts.push((he ? 'ללא: ' : 'Not: ') + prefs.notGroups.map((g) => GROUP_LABELS[g] ?? g).join(', '))
   if (prefs.styleShift === 'more_open') parts.push(he ? 'סגנון פתוח יותר' : 'more open style')
   if (prefs.styleShift === 'more_conservative') parts.push(he ? 'סגנון שמור יותר' : 'more conservative style')
   return parts.join(' · ')

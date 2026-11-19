@@ -120,7 +120,7 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
     : 'Hi! I ranked suggestions for you by compatibility. Tell me what to change: a city, an age range or a style.'
 
   const chips = he
-    ? ['על מה לדבר בפגישה ראשונה?', 'איפה כדאי לצאת לדייט?', 'כמה פגישות צריך?', 'איך לסרב בצורה מכובדת?', 'עד גיל 27', 'נקה סינון']
+    ? ['על מה לדבר בפגישה ראשונה?', 'איפה כדאי לצאת לדייט?', 'כמה פגישות צריך?', 'איך לסרב בצורה מכובדת?', 'נקה סינון']
     : ['Jerusalem', 'up to 27', 'a bit more open', 'clear filters']
 
   const send = async (text: string) => {
