@@ -143,7 +143,7 @@ export function TallyRegistrationForm({
   const isVisible = (f: TallyField) => isFieldVisible(f, values)
 
   /** Short lists stay as buttons; long lists open as a dropdown; own entries use a search-and-add list. */
-  const SHORT_LISTS = ['maritalStatus', 'community', 'housing']
+  const SHORT_LISTS = ['maritalStatus', 'housing']
   const asDropdown = (f: TallyField) => f.type === 'select' && !!f.options && !f.chips && (!SHORT_LISTS.includes(f.id) && (f.custom || f.options.length >= 4 || f.multi))
 
   const validatePage = (index: number) => {

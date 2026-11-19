@@ -8,7 +8,22 @@ export const EDAH_OPTIONS = [
   'תוניסאי', 'אלג\'יראי', 'מצרי', 'סורי', 'טורקי', 'יווני', 'הודי', 'אתיופי', 'מעורב',
 ]
 
-export const COMMUNITY_OPTIONS = ['ליטאי', 'חסידי', 'ספרדי-חרדי', 'חרדי מודרני']
+export const COMMUNITY_OPTIONS = [
+  'ליטאי (כללי)',
+  'ליטאי מודרני',
+  'ליטאי ישיבתי (פרומער)',
+  'בריסקער',
+  'חזון אישניק',
+  'חסידי',
+  'חב"ד',
+  'חב"ד (משיחיסטים)',
+  'ברסלב (כללי)',
+  'ברסלב (נ נח)',
+  'ברסלב (קהילת השול)',
+  'ספרדי (כללי)',
+  'ספרדי בני תורה (ישיבתי)',
+  'ספרדי משתלב / עממי',
+]
 
 /** The option that opens the Hasidic court list. */
 export const HASIDIC = 'חסידי'
@@ -17,7 +32,7 @@ export const HASIDIC = 'חסידי'
 export const HOUSING_OPTIONS = ['אצל ההורים', 'דירת שותפים', 'לבד']
 
 /** Hasidic courts. A free-text entry is also allowed in the field. */
-export const HASIDUT_OPTIONS = [
+const HASIDUT_RAW = [
   'גור',
   'גור (פני מנחם - הגר"ש אלתר)',
   'בעלזא',
@@ -25,8 +40,6 @@ export const HASIDUT_OPTIONS = [
   'ויז\'ניץ (שיכון ר\' ישראל)',
   'סאטמר (מהר"א - ר\' אהרן)',
   'סאטמר (ר\' זלמן לייב)',
-  'חב"ד (כללי)',
-  'חב"ד (משיחיסטים)',
   'באבוב',
   'צאנז',
   'צאנז (נתניה)',
@@ -35,9 +48,6 @@ export const HASIDUT_OPTIONS = [
   'ספינקא',
   'בויאן',
   'סקולען',
-  'ברסלב (כללי)',
-  'ברסלב (נ נח)',
-  'ברסלב (קהילת השול)',
   'קרלין סטולין',
   'פינסק קרלין',
   'תולדות אהרן',
@@ -107,7 +117,27 @@ export const HASIDUT_OPTIONS = [
   'תורת חכם',
   'נחלת יעקב',
   'שבט הלוי',
+  'חסידי (כללי)',
+  'ויז\'ניץ (כללי)',
+  'סערט ויז\'ניץ',
+  'סאטמר (כללי)',
+  'סאטמר (מהר"יי - ר\' יזליפ)',
+  'באבוב (48)',
+  'באבוב-45',
+  'סלונים',
+  'סלאנים',
+  'ביאלא (כללי)',
+  'מודז\'יץ',
+  'פרמישלאן',
+  'בוסטון',
+  'רחמסטריווקא',
+  'דז\'יקוב ויז\'ניץ',
+  'צאנז קלויזנבורג (ארה"ב)',
 ]
+
+/** The Hasidic courts in alphabetical order (א׳ ב׳), ignoring quotes and apostrophes. */
+const alefBet = (x: string) => x.replace(/["'׳״]/g, '')
+export const HASIDUT_OPTIONS = [...HASIDUT_RAW].sort((a, b) => alefBet(a).localeCompare(alefBet(b), 'he'))
 
 /** Localities, with the Haredi centers first. The field also accepts any other name. */
 export const CITY_OPTIONS = [
