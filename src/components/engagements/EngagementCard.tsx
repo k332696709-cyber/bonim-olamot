@@ -13,43 +13,30 @@ export interface Engagement {
   engaged_on: string
 }
 
-function Corner({ className }: { className: string }) {
+function Side({ role, name, father, community, city }: { role: string; name: string; father: string | null; community: string | null; city: string | null }) {
   return (
-    <svg className={`absolute w-7 h-7 text-navy-300 ${className}`} viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
-      <path d="M3 25V12c0-5 4-9 9-9h13" />
-      <path d="M8 25V14c0-3.3 2.7-6 6-6h11" opacity=".6" />
-      <circle cx="5" cy="5" r="1.6" fill="currentColor" stroke="none" />
-    </svg>
-  )
-}
-
-function Side({ name, father, community, city }: { name: string; father: string | null; community: string | null; city: string | null }) {
-  return (
-    <div className="flex flex-col gap-0.5 min-w-0">
+    <div className="flex flex-col gap-1 min-w-0">
+      <p className="text-xs font-semibold tracking-widest text-burgundy-500">{role}</p>
       <p className="text-lg sm:text-xl font-bold text-navy-800 break-words">{name}</p>
-      {father && <p className="text-sm sm:text-base text-navy-500">בהר״ר {father}</p>}
-      {community && <p className="text-sm sm:text-base text-navy-500">{community}</p>}
-      {city && <p className="text-sm sm:text-base text-navy-500">{city}</p>}
+      {father && <p className="text-sm text-navy-500">בהר״ר {father}</p>}
+      {(community || city) && <p className="text-sm text-navy-500">{[community, city].filter(Boolean).join(' · ')}</p>}
     </div>
   )
 }
 
-/** One engagement announcement: the groom's side, the bride's side, "מאורסים" and the Hebrew date. */
+/** One engagement announcement, in the site's own style: a dark top band and the two sides below. */
 export function EngagementCard({ e }: { e: Engagement }) {
   const heb = hebrewDate(e.engaged_on)
   return (
-    <article className="relative rounded-[28px] bg-white border border-navy-100 shadow-card p-2.5">
-      <div className="relative rounded-[22px] border-2 border-navy-100 px-6 sm:px-9 py-7">
-        <Corner className="top-1.5 start-1.5" />
-        <Corner className="top-1.5 end-1.5 -scale-x-100" />
-        <Corner className="bottom-1.5 start-1.5 -scale-y-100" />
-        <Corner className="bottom-1.5 end-1.5 -scale-x-100 -scale-y-100" />
-        <div className="grid grid-cols-2 gap-6 items-start">
-          <Side name={e.groom_name} father={e.groom_father} community={e.groom_community} city={e.groom_city} />
-          <Side name={e.bride_name} father={e.bride_father} community={e.bride_community} city={e.bride_city} />
-        </div>
-        <p className="text-center text-4xl sm:text-5xl font-bold text-navy-800 mt-6">מאורסים</p>
-        {heb && <p className="text-center text-sm text-navy-400 mt-3">{`בס״ד, ${heb}`}</p>}
+    <article className="rounded-[28px] bg-white shadow-card overflow-hidden flex flex-col">
+      <div className="hero-dark text-white px-6 py-5 flex items-center justify-between gap-3">
+        <p className="text-3xl sm:text-4xl font-bold">מאורסים</p>
+        {heb && <p className="text-sm text-navy-100 text-end">{`בס״ד, ${heb}`}</p>}
+      </div>
+      <div className="px-6 py-6 grid grid-cols-[1fr_auto_1fr] gap-4 items-start">
+        <Side role="החתן" name={e.groom_name} father={e.groom_father} community={e.groom_community} city={e.groom_city} />
+        <span className="self-center text-2xl text-burgundy-400" aria-hidden>♥</span>
+        <Side role="הכלה" name={e.bride_name} father={e.bride_father} community={e.bride_community} city={e.bride_city} />
       </div>
     </article>
   )

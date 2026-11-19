@@ -89,9 +89,6 @@ export default async function HomePage({ params: { locale } }: { params: { local
       {/* ══ Marquee strip ══════════════════════════════════════════════════════ */}
       <WordBand words={marqueeWords} />
 
-      {/* ══ Closed matches: engagement announcements ═════════════════════════ */}
-      <EngagementsSection locale={locale} />
-
       {/* ══ Showcase: stacked animated cards ═══════════════════════════════════ */}
       <Showcase locale={locale} />
 
@@ -185,6 +182,9 @@ export default async function HomePage({ params: { locale } }: { params: { local
           </div>
         </Reveal>
       </section>
+
+      {/* ══ Closed matches: engagement announcements ═════════════════════════ */}
+      <EngagementsSection locale={locale} />
 
       {/* ══ 4. Dating Spots (light) ════════════════════════════════════════════ */}
       <section className="bg-[#f1f1f1] px-4 py-20 sm:py-28">

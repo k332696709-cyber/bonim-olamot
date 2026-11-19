@@ -7,6 +7,7 @@ import { compressImage, MAX_UPLOAD_BYTES } from '@/lib/images/compress'
 import { GoogleButton } from '@/components/forms/GoogleButton'
 import { questionnaireProgress } from '@/lib/registration/completion'
 import { clearDraft, clearPhotos, loadDraft, loadPhotos, saveDraft, savePhotos } from '@/lib/forms/draft'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { ChoiceDropdown } from '@/components/forms/ChoiceDropdown'
 import { currentGoogleEmail } from '@/lib/auth/google'
 import { ageFromBirthDate, hebrewDate, parseBirthDate } from '@/lib/registration/birthDate'
@@ -593,11 +594,10 @@ export function TallyRegistrationForm({
             const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
             return (
               <>
-                <input
-                  id={id} type="date" dir="ltr" value={parsed ? v : ''} min="1930-01-01" max={iso(newest)}
-                  onChange={(e) => setVal(f.id, e.target.value)}
-                  className={`${inputBase} ${border} text-end`}
-                  aria-invalid={!!err} aria-required={f.required}
+                <DatePicker
+                  id={id} value={parsed ? v : ''} invalid={!!err}
+                  years={Array.from({ length: newest.getFullYear() - 1929 }, (_, i) => newest.getFullYear() - i)}
+                  onChange={(x) => setVal(f.id, x)}
                 />
                 {parsed && (
                   <p className="text-sm text-navy-600">

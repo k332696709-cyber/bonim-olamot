@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Turnstile } from '@/components/forms/Turnstile'
 import { hebrewDate } from '@/lib/registration/birthDate'
+import { DatePicker } from '@/components/ui/DatePicker'
 
 const today = () => {
   const d = new Date()
@@ -72,7 +73,11 @@ export function EngagementForm({ locale }: { locale: string }) {
 
       <div className="rounded-[28px] bg-white shadow-card p-6 flex flex-col gap-2">
         <label htmlFor="eng-date" className="text-sm font-semibold text-navy-800">{he ? 'תאריך האירוסין' : 'Engagement date'}</label>
-        <input id="eng-date" type="date" className={input} value={v.date} onChange={set('date')} />
+        <DatePicker
+          id="eng-date" value={v.date}
+          years={[new Date().getFullYear() + 1, new Date().getFullYear(), new Date().getFullYear() - 1]}
+          onChange={(x) => setV((s) => ({ ...s, date: x }))}
+        />
         <p className="text-sm text-navy-400">{hebrewDate(v.date)}</p>
       </div>
 
