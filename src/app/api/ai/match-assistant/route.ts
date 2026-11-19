@@ -1,5 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { describePrefs, parseLocal, type Prefs } from '@/lib/matchmaking/assistant'
+import { findAnswer, helpText, isDatePlacesQuestion, withNote } from '@/lib/assistant/answer'
+import { cityCoords, distanceKm } from '@/constants/cityCoords'
+import { fetchPublishedSpots } from '@/lib/dateSpots'
+
+/** Date places near a city: the closest kosher ones in the list, with a link to each. */
+async function datePlaces(city: string | null | undefined) {
+  const spots = (await fetchPublishedSpots()).filter((s) => s.kosher !== false)
+  const from = cityCoords(city)
+  if (!from) return { reply: 'כדי להציע מקומות קרובים צריך לדעת באיזו עיר אתם גרים. אפשר לכתוב לי עיר, או לעיין ברשימה המלאה בעמוד "מקומות לדייטים".', sources: [{ title: 'כל המקומות לדייטים', url: '/he/date-spots' }] }
+  const near = spots
+    .map((s) => ({ s, c: cityCoords(s.city) }))
+    .filter((x): x is { s: typeof spots[number]; c: [number, number] } => !!x.c)
+    .map((x) => ({ s: x.s, km: Math.round(distanceKm(from, x.c)) }))
+    .sort((a, b) => a.km - b.km)
+    .slice(0, 5)
+  if (near.length === 0) return { reply: 'עדיין אין ברשימה מקומות קרובים. אפשר לעיין בכל המקומות בעמוד "מקומות לדייטים".', sources: [{ title: 'כל המקומות לדייטים', url: '/he/date-spots' }] }
+  return {
+    reply: `אלה מקומות לדייט הקרובים ל${city}. מקומות ציבוריים או חצי ציבוריים מתאימים לפגישה ראשונה. כשיש עניין הדדי אפשר לראות גם מקומות באמצע בין שני הגרים.`,
+    sources: near.map(({ s, km }) => ({ title: `${s.name} · ${s.city} (כ-${km} ק״מ)`, url: s.googleMapsUrl || '/he/date-spots' })),
+  }
+}
 
 interface ChatTurn {
   role: 'user' | 'assistant'
@@ -38,6 +59,19 @@ export async function POST(req: NextRequest) {
   const message = (body.message ?? '').toString().slice(0, MAX_MESSAGE).trim()
   const cities = Array.isArray(body.cities) ? body.cities.slice(0, 40) : []
   if (!message) return NextResponse.json({ error: 'empty' }, { status: 400 })
+
+  // Questions about dating, tips and places get a prepared answer with its sources.
+  const asked = parseLocal(message, cities)
+  const filterWords = asked.minAge != null || asked.maxAge != null
+  if (isDatePlacesQuestion(message)) {
+    const named = cities.find((c) => message.includes(c))
+    const out = await datePlaces(named || body.me?.city)
+    return NextResponse.json({ reply: out.reply, prefs: body.current ?? {}, sources: out.sources, source: 'knowledge' })
+  }
+  const known = findAnswer(message)
+  if (known && !filterWords) {
+    return NextResponse.json({ reply: withNote(known.entry), prefs: body.current ?? {}, sources: known.entry.sources, source: 'knowledge' })
+  }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
 
@@ -100,7 +134,7 @@ Return ONLY JSON: {"reply": "1-2 short friendly sentences confirming what you ch
     reply = he ? 'ניקיתי את הסינון. אלו כל ההצעות שמתאימות לך.' : 'Filters cleared. Here are all the suggestions that fit you.'
   } else if (Object.keys(found).length === 0) {
     reply = he
-      ? 'לא לגמרי הבנתי. אפשר לבקש עיר, טווח גילאים או סגנון, למשל "מירושלים, עד גיל 27, קצת יותר פתוחה".'
+      ? `לא מצאתי לזה תשובה בחומר שלי. ${helpText()}`
       : 'I didn’t quite get that. Try a city, an age range or a style, e.g. “from Jerusalem, up to 27, a bit more open”.'
   } else {
     reply = he ? `עדכנתי את ההצעות: ${summary}.` : `Updated your suggestions: ${summary}.`

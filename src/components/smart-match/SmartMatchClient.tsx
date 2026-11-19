@@ -12,7 +12,7 @@ import {
 } from '@/lib/matchmaking/assistant'
 
 type LiveProposal = Proposal & { state: 'none' | 'interested' | 'mutual' | 'passed' }
-interface Turn { role: 'user' | 'assistant'; text: string }
+interface Turn { role: 'user' | 'assistant'; text: string; sources?: { title: string; url: string }[] }
 
 /**
  * The Smart Assistant is only for approved candidates. A signed-in candidate whose registration
@@ -116,11 +116,11 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
   const shown = useMemo(() => applyPrefs(list, prefs, me), [list, prefs, me])
 
   const welcome = he
-    ? 'שלום! דירגתי עבורך הצעות לפי התאמה. אפשר לכתוב לי מה לשנות: עיר, טווח גילאים או סגנון.'
+    ? 'שלום! אני כאן לעזור בכל מה שקשור לשידוכים ולדייטים. אפשר לשאול אותי על פגישה ראשונה, על מקומות לדייט, על בירורים או איך לסרב בכבוד, ואפשר גם לדייק את ההצעות: עיר, טווח גילאים או סגנון.'
     : 'Hi! I ranked suggestions for you by compatibility. Tell me what to change: a city, an age range or a style.'
 
   const chips = he
-    ? ['ירושלים', 'עד גיל 27', 'קצת יותר פתוח', 'נקה סינון']
+    ? ['על מה לדבר בפגישה ראשונה?', 'איפה כדאי לצאת לדייט?', 'כמה פגישות צריך?', 'איך לסרב בצורה מכובדת?', 'עד גיל 27', 'נקה סינון']
     : ['Jerusalem', 'up to 27', 'a bit more open', 'clear filters']
 
   const send = async (text: string) => {
@@ -146,7 +146,7 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
       const data = await res.json()
       if (!res.ok) throw new Error('bad')
       setPrefs(data.prefs ?? {})
-      setChat((c) => [...c, { role: 'assistant', text: data.reply }])
+      setChat((c) => [...c, { role: 'assistant', text: data.reply, sources: Array.isArray(data.sources) ? data.sources : undefined }])
     } catch {
       setChat((c) => [
         ...c,
@@ -193,7 +193,17 @@ function SmartMatchView({ locale, me }: { locale: string; me: AnyProfile }) {
                     : 'self-start rounded-ss-sm bg-white/10'
                 }`}
               >
-                {t.text}
+                <p className="whitespace-pre-wrap">{t.text}</p>
+                {t.sources && t.sources.length > 0 && (
+                  <ul className="mt-2 flex flex-col gap-1 text-xs">
+                    <li className="text-navy-200">{he ? 'מקורות ולקריאה נוספת:' : 'Sources and further reading:'}</li>
+                    {t.sources.map((src) => (
+                      <li key={src.url + src.title}>
+                        <a href={src.url} target="_blank" rel="noopener noreferrer" className="underline text-white/90 hover:text-white break-words">{src.title}</a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             ))}
             {busy && <div className="self-start text-xs text-navy-200 px-2">{he ? 'חושב...' : 'Thinking…'}</div>}
