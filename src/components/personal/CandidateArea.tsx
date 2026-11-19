@@ -7,7 +7,8 @@ import { createClient } from '@/lib/supabase/client'
 import { clearSession, restoreSession } from '@/lib/auth/session'
 import { loadCandidate, type CandidateState } from '@/lib/auth/candidate'
 import { PhotoSlots } from '@/components/personal/PhotoSlots'
-import { FeeNotices } from '@/components/personal/FeeNotices'
+import { AppShell, type AppTab } from '@/components/personal/AppShell'
+import { ReceivedList } from '@/components/personal/ReceivedList'
 import { PhotoViewer } from '@/components/ui/PhotoViewer'
 import { ProposalsList } from '@/components/proposals/ProposalsList'
 import type { AnyProfile } from '@/lib/matchmaking/assistant'
@@ -37,6 +38,19 @@ export function CandidateArea({ locale }: { locale: string }) {
   const [editing, setEditing] = useState(false)
   const [savedMsg, setSavedMsg] = useState('')
   const [viewHeader, setViewHeader] = useState(false)
+  const [tab, setTab] = useState<AppTab>('matches')
+
+  // The tab lives in the address (#matches, #received, #me), so links and notifications can open it.
+  useEffect(() => {
+    const read = () => {
+      const h = window.location.hash.replace('#', '')
+      setTab(h === 'received' ? 'received' : h === 'me' ? 'me' : 'matches')
+    }
+    read()
+    window.addEventListener('hashchange', read)
+    return () => window.removeEventListener('hashchange', read)
+  }, [])
+  const goTab = (t: AppTab) => { window.history.replaceState(null, '', `#${t}`); setTab(t) }
 
   useEffect(() => {
     let alive = true
@@ -64,6 +78,10 @@ export function CandidateArea({ locale }: { locale: string }) {
       </div>
       <div className="max-w-2xl mx-auto px-4 pb-24">{children}</div>
     </div>
+  )
+
+  const app = (content: React.ReactNode) => (
+    <AppShell he={he} locale={locale} tab={tab} onTab={goTab}>{content}</AppShell>
   )
 
   if (!state) return shell(<p className="text-center text-navy-400 py-10">{he ? 'טוען...' : 'Loading…'}</p>)
@@ -112,7 +130,7 @@ export function CandidateArea({ locale }: { locale: string }) {
   if (state.status === 'pending') {
     const progress = questionnaireProgress(state.gender === 'female' ? FEMALE_FORM : MALE_FORM, a)
     const started = progress.done > 0
-    return shell(
+    const pendingMe = (
       <div className="flex flex-col gap-5">
         <div className="rounded-[32px] bg-white shadow-card px-6 py-10 sm:px-10 text-center">
           <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-2xl mb-5">✓</div>
@@ -156,8 +174,20 @@ export function CandidateArea({ locale }: { locale: string }) {
             {he ? 'יציאה' : 'Sign out'}
           </button>
         </div>
-      </div>,
+      </div>
     )
+    const pendingPrompt = (
+      <div className="rounded-[32px] bg-white shadow-card px-6 py-12 text-center">
+        <h2 className="text-xl font-bold text-navy-800 mb-2">{he ? 'צריך להשלים את השאלון' : 'Please complete the questionnaire'}</h2>
+        <p className="text-navy-500 mb-6">
+          {he ? 'אחרי שתשלימו את שאלון ההיכרות עד 100% יופיעו כאן הצעות.' : 'Once you complete the questionnaire to 100%, suggestions will appear here.'}
+        </p>
+        <button type="button" onClick={() => goTab('me')} className="h-12 px-8 rounded-full bg-burgundy-500 hover:bg-burgundy-600 text-white text-sm font-bold">
+          {he ? 'להשלמת השאלון' : 'Complete the questionnaire'}
+        </button>
+      </div>
+    )
+    return app(tab === 'me' ? pendingMe : pendingPrompt)
   }
 
   // Approved: the full profile
@@ -176,7 +206,7 @@ export function CandidateArea({ locale }: { locale: string }) {
   ]
 
   if (editing && state.gender) {
-    return shell(
+    return app(
       <div className="flex flex-col gap-4">
         <div className="rounded-[32px] bg-white shadow-card px-6 py-5">
           <h2 className="text-xl font-bold text-navy-800">{he ? 'עריכת הפרופיל' : 'Edit your profile'}</h2>
@@ -203,10 +233,8 @@ export function CandidateArea({ locale }: { locale: string }) {
     )
   }
 
-  return shell(
+  const meView = (
     <div className="flex flex-col gap-5">
-      <FeeNotices he={he} />
-      {state.profile && <ProposalsList locale={locale} me={state.profile as unknown as AnyProfile} />}
       {viewHeader && (() => {
         const list = (state.photos ?? []).filter((x) => x.url)
         const urls = list.length > 0 ? list.map((x) => x.url as string) : [state.photoUrl as string]
@@ -277,6 +305,14 @@ export function CandidateArea({ locale }: { locale: string }) {
           {he ? 'יציאה' : 'Sign out'}
         </button>
       </div>
-    </div>,
+    </div>
+  )
+
+  return app(
+    tab === 'matches'
+      ? (state.profile ? <ProposalsList locale={locale} me={state.profile as unknown as AnyProfile} /> : null)
+      : tab === 'received'
+        ? <ReceivedList locale={locale} />
+        : meView,
   )
 }

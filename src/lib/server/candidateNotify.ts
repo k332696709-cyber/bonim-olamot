@@ -3,7 +3,7 @@
 import { sendMail } from '@/lib/server/notify'
 import { sendSms, toSmsNumber } from '@/lib/server/sms'
 
-export type CandidateEvent = 'mutual' | 'fee' | 'newProposals'
+export type CandidateEvent = 'mutual' | 'fee' | 'newProposals' | 'matchOpened'
 
 interface Content {
   subject: string
@@ -28,8 +28,14 @@ const CONTENT: Record<CandidateEvent, (vars: Record<string, string>) => Content>
       'הסכום משולם רק לאחר סגירת האירוסין, ולא בשלבים קודמים.',
       'נא להיכנס לאזור האישי כדי לראות ולאשר שקראת.',
     ],
-    path: '/he/personal',
-    sms: `בונים עולמות: עודכן סכום דמי השידוך (${v.money}). הסכום משולם רק לאחר האירוסין. פרטים באזור האישי: ${SITE}/he/personal`,
+    path: '/he/personal#received',
+    sms: `בונים עולמות: עודכן סכום דמי השידוך (${v.money}). הסכום משולם רק לאחר האירוסין. פרטים באזור האישי: ${SITE}/he/personal#received`,
+  }),
+  matchOpened: (v) => ({
+    subject: 'שדכן/ית פתח/ה עבורך הצעה',
+    lines: [`${v.who || 'שדכן/ית'} פתח/ה עבורך הצעת שידוך.`, 'אפשר להיכנס ולראות אותה באזור "ההצעות שקיבלתי".'],
+    path: '/he/personal#received',
+    sms: `בונים עולמות: שדכן/ית פתח/ה עבורך הצעה. ${SITE}/he/personal#received`,
   }),
   newProposals: (v) => ({
     subject: 'יש הצעות חדשות בשבילך',

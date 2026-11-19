@@ -13,6 +13,7 @@ import { getT } from '@/lib/i18n/translations'
 import { AdminLinks } from '@/components/matchmaker/InboxLink'
 import { SocialWall } from '@/components/hub/SocialWall'
 import { MatchProgressSection } from '@/components/hub/MatchProgressSection'
+import { InterestFeed } from '@/components/hub/InterestFeed'
 import { PerformanceScorecard } from '@/components/hub/PerformanceScorecard'
 import { AdminLeaderboard } from '@/components/hub/AdminLeaderboard'
 import type { SocialPost, Announcement, MatchProgress, MatchStage, TaggedProfile, MatchmakerLeaderboardEntry } from '@/types/hub'
@@ -437,6 +438,11 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
               <PerformanceScorecard entry={myLeaderboardEntry} locale={locale} />
             </div>
           </div>
+        </section>
+
+        {/* ── Interest from candidates ── */}
+        <section>
+          <InterestFeed locale={locale} />
         </section>
 
         {/* ── Match Progress Tracker ── */}
