@@ -4,6 +4,7 @@
 import { mapProfileRow } from '@/lib/supabase/mapProfile'
 import { buildProposals, MIN_MATCH_SCORE, styleRank, type AnyProfile, type Proposal } from '@/lib/matchmaking/assistant'
 import { cityCoords, distanceKm } from '@/constants/cityCoords'
+import { respectsPreferences } from '@/lib/matchmaking/preferences'
 
 export type ProposalState = 'none' | 'interested' | 'mutual' | 'passed'
 export interface LiveProposal extends Proposal { state: ProposalState }
@@ -23,8 +24,25 @@ export async function loadProposals(admin: any, myProfileId: string): Promise<{ 
     .filter((r: any) => !(r.locked_at && new Date(r.locked_at).getTime() + LOCK_MS > now))
     .map((r: any) => mapProfileRow(r) as AnyProfile)
 
+  // What each side wrote about who they want (age range, community or edah) is a hard rule: the
+  // assistant never offers someone who breaks it. This applies to candidates only.
+  const myTable = meRow.gender === 'male' ? 'male_registrations' : 'female_registrations'
+  const otherTable = meRow.gender === 'male' ? 'female_registrations' : 'male_registrations'
+  const { data: myReg } = await admin.from(myTable).select('answers').eq('profile_id', myProfileId).maybeSingle()
+  const myAnswers: Record<string, string> = myReg?.answers ?? {}
+  const poolIds = pool.map((r: any) => r.id)
+  const { data: otherRegs } = poolIds.length
+    ? await admin.from(otherTable).select('profile_id, answers').in('profile_id', poolIds)
+    : { data: [] }
+  const regOf = new Map<string, Record<string, string>>((otherRegs ?? []).map((r: any) => [r.profile_id, r.answers ?? {}]))
+  const okPool = pool.filter((r: any) => {
+    const a = regOf.get(r.id) ?? null
+    const text = [r.community, a?.edah, a?.community, a?.hasidut].filter(Boolean).join(' ')
+    return respectsPreferences({ myAge: Number(meRow.age) || 0, myAnswers, otherAge: Number(r.age) || 0, otherText: text, otherAnswers: a })
+  })
+
   const scored: Proposal[] = []
-  for (const p of pool) {
+  for (const p of okPool) {
     try { scored.push(...buildProposals(me, [p])) } catch { /* a profile the engine cannot read is skipped */ }
   }
   scored.sort((a, b) => b.score - a.score)
