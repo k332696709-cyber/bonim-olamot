@@ -14,6 +14,7 @@ import { AdminLinks } from '@/components/matchmaker/InboxLink'
 import { SocialWall } from '@/components/hub/SocialWall'
 import { MatchProgressSection } from '@/components/hub/MatchProgressSection'
 import { InterestFeed } from '@/components/hub/InterestFeed'
+import { EngagementAdmin } from '@/components/hub/EngagementAdmin'
 import { PerformanceScorecard } from '@/components/hub/PerformanceScorecard'
 import { AdminLeaderboard } from '@/components/hub/AdminLeaderboard'
 import type { SocialPost, Announcement, MatchProgress, MatchStage, TaggedProfile, MatchmakerLeaderboardEntry } from '@/types/hub'
@@ -460,6 +461,11 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
         {/* ── Interest from candidates ── */}
         <section>
           <InterestFeed locale={locale} onMatch={handleMatchSeen} onClaimed={handleClaimed} />
+        </section>
+
+        {/* ── Engagement announcements ── */}
+        <section>
+          <EngagementAdmin />
         </section>
 
         {/* ── Match Progress Tracker ── */}

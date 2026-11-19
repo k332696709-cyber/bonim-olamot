@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { BotChat } from '@/components/home/BotChat'
 import { MyProposalsButton } from '@/components/home/MyProposalsButton'
+import { EngagementsSection } from '@/components/engagements/EngagementsSection'
 import { Showcase } from '@/components/home/Showcase'
 import { HowItWorks } from '@/components/home/HowItWorks'
 import { Reveal } from '@/components/home/Reveal'
@@ -87,6 +88,9 @@ export default async function HomePage({ params: { locale } }: { params: { local
 
       {/* ══ Marquee strip ══════════════════════════════════════════════════════ */}
       <WordBand words={marqueeWords} />
+
+      {/* ══ Closed matches: engagement announcements ═════════════════════════ */}
+      <EngagementsSection locale={locale} />
 
       {/* ══ Showcase: stacked animated cards ═══════════════════════════════════ */}
       <Showcase locale={locale} />
