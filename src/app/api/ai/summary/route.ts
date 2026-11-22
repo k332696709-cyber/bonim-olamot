@@ -1,4 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import {
+  TRAIT_OPTIONS_MALE, TRAIT_OPTIONS_FEMALE, RELATIONSHIP_VALUES_MALE, RELATIONSHIP_VALUES_FEMALE, BRINGS_MALE, BRINGS_FEMALE,
+} from '@/constants/formOptions'
+
+/** Turns stored codes such as "stability" into their Hebrew (or English) names. */
+function names(list: { value: string; he: string; en: string }[], values: string[], he: boolean): string {
+  return values.map((v) => { const o = list.find((x) => x.value === v); return o ? (he ? o.he : o.en) : v }).join(', ')
+}
 
 interface SummaryRequest {
   aboutMe: string
@@ -21,44 +29,44 @@ function generateStructuredBullets(body: SummaryRequest): string[] {
     ? (gender === 'female' ? 'בחורה' : 'בחור')
     : (gender === 'female' ? 'Female candidate' : 'Male candidate')
 
+  const f = gender === 'female'
   const styleMap: Record<string, string> = {
     yeshivish: he ? 'ישיבתי' : 'Yeshivish',
-    open_ish:  he ? 'פתוח/ה במידה' : 'Open-ish',
-    open:      he ? 'פתוח/ה' : 'Open',
-    modern:    he ? 'מודרני/ת' : 'Modern',
-    very_modern: he ? 'מודרני/ת מאוד' : 'Very Modern',
+    open_ish:  he ? (f ? 'פתוחה במידה' : 'פתוח במידה') : 'Open-ish',
+    open:      he ? (f ? 'פתוחה' : 'פתוח') : 'Open',
+    modern:    he ? (f ? 'מודרנית' : 'מודרני') : 'Modern',
+    very_modern: he ? (f ? 'מודרנית מאוד' : 'מודרני מאוד') : 'Very Modern',
     shmura:    he ? 'שמורה' : 'Shmura',
   }
 
+  const female = gender === 'female'
+  const traitList = female ? TRAIT_OPTIONS_FEMALE : TRAIT_OPTIONS_MALE
+  const valueList = female ? RELATIONSHIP_VALUES_FEMALE : RELATIONSHIP_VALUES_MALE
+  const bringList = female ? BRINGS_FEMALE : BRINGS_MALE
+  const traitText = names(traitList, traits, he)
+  const valueText = names(valueList, relationshipValues, he)
+  const bringText = names(bringList, brings, he)
+
   const bullets: string[] = []
 
-  // Bullet 1: identity
   bullets.push(he
-    ? `${genderWord} בסגנון ${styleMap[style] ?? style} עם אישיות: ${traits.join(', ')}`
-    : `${genderWord} with a ${styleMap[style] ?? style} lifestyle and ${traits.join(', ')} personality`,
+    ? `${genderWord} בסגנון ${styleMap[style] ?? style}${traitText ? `, עם אישיות ${traitText}` : ''}`
+    : `${genderWord} with a ${styleMap[style] ?? style} lifestyle${traitText ? ` and a ${traitText} personality` : ''}`,
   )
 
-  // Bullet 2: relationship values
-  if (relationshipValues.length > 0) {
-    bullets.push(he
-      ? `מחפש/ת ערכים של: ${relationshipValues.join(', ')}`
-      : `Seeking a relationship built on: ${relationshipValues.join(', ')}`,
-    )
+  if (valueText) {
+    bullets.push(he ? `מחפש/ת זוגיות שמבוססת על: ${valueText}` : `Seeking a relationship built on: ${valueText}`)
   }
 
-  // Bullet 3: what they bring
-  if (brings.length > 0) {
-    bullets.push(he
-      ? `מביא/ה לזוגיות: ${brings.join(', ')}`
-      : `Brings to the marriage: ${brings.join(', ')}`,
-    )
+  if (bringText) {
+    bullets.push(he ? `מביא/ה לזוגיות: ${bringText}` : `Brings to the marriage: ${bringText}`)
   }
 
-  // Bullet 4: doesntSuit if present
+  // What the person wrote that does not suit them: their own words, so it is labelled as such.
   if (doesntSuit && doesntSuit.trim()) {
     bullets.push(he
-      ? `חשוב לדעת: ${doesntSuit.trim()}`
-      : `Important to note: ${doesntSuit.trim()}`,
+      ? `לפי מה שכתב/ה, לא מתאים: ${doesntSuit.trim()}`
+      : `Wrote that this does not suit them: ${doesntSuit.trim()}`,
     )
   }
 

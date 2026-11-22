@@ -244,11 +244,11 @@ export const translations = {
       internalNotes: 'הערות פנימיות',
     },
     ai: {
-      title: 'סיכום AI',
+      title: 'סיכום',
       powered: 'מבוסס AI',
       empty: 'אין מידע מספיק לסיכום',
-      aboutMe: 'על עצמי (מקורי)',
-      lookingFor: 'מה מחפש/ת (מקורי)',
+      aboutMe: 'על עצמי',
+      lookingFor: 'מה מחפש/ת',
     },
     compatibility: {
       title: 'מנוע תאימות',

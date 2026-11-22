@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { MaleProfile, FemaleProfile } from '@/types/registration'
 import { getT } from '@/lib/i18n/translations'
+import { ResumeText } from './ResumeText'
 
 interface AISummaryProps {
   profile: MaleProfile | FemaleProfile
@@ -91,17 +92,17 @@ export function AISummary({ profile, gender, locale = 'he' }: AISummaryProps) {
       )}
 
       {(profile.aboutMe || profile.aboutPartner) && !loading && (
-        <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
+        <div className="mt-4 pt-4 border-t border-gray-100 space-y-6">
           {profile.aboutMe && (
             <div>
-              <p className="text-xs font-medium text-gray-400 mb-1">{T.ai.aboutMe}</p>
-              <p className="text-sm text-gray-600 leading-relaxed">{profile.aboutMe}</p>
+              <p className="text-sm font-bold text-navy-800 mb-2">{T.ai.aboutMe}</p>
+              <ResumeText text={profile.aboutMe} />
             </div>
           )}
           {profile.aboutPartner && (
             <div>
-              <p className="text-xs font-medium text-gray-400 mb-1">{T.ai.lookingFor}</p>
-              <p className="text-sm text-gray-600 leading-relaxed">{profile.aboutPartner}</p>
+              <p className="text-sm font-bold text-navy-800 mb-2">{T.ai.lookingFor}</p>
+              <ResumeText text={profile.aboutPartner} />
             </div>
           )}
         </div>
