@@ -22,7 +22,7 @@ async function openAnswer(message: string, history: string, cities: string[], cu
 ${knowledge}
 
 החזר/י אך ורק JSON בצורה: {"reply": string, "prefs": {"city": string|null, "minAge": number|null, "maxAge": number|null, "styleShift": "more_open"|"more_conservative"|null, "groups": string[]|null, "notGroups": string[]|null}, "sourceIds": string[]}
-ב-sourceIds רשמ/י רק מזהים מהחומר המוכן שבאמת השתמשת בהם.`
+ב-sourceIds רשמ/י רק מזהים מהחומר המוכן שבאמת השתמשת בהם. אל תכתוב/י מזהים או סוגריים מרובעים בתוך ה-reply.`
   const text = await askModel(system, `${history ? history + '\n' : ''}משתמש: ${message}`)
   const match = text?.match(/\{[\s\S]*\}/)
   if (!match) return null
@@ -33,7 +33,9 @@ ${knowledge}
     const used = KNOWLEDGE.filter((k) => ids.includes(k.id))
     const sources = used.flatMap((k) => k.sources).filter((s, i, a) => a.findIndex((x) => x.url === s.url) === i).slice(0, 5)
     const rabbi = used.some((k) => k.rabbi) && !parsed.reply.includes('רב')
-    return { reply: (parsed.reply.trim() + (rabbi ? `\n\n${RABBI_NOTE}` : '')).slice(0, 1200), prefs: parsed.prefs, sources }
+    // The model sometimes writes the ids of the prepared answers into the text; they mean nothing to people.
+    const text = parsed.reply.replace(/\s*\(?\s*(?:see\s*)?\[[a-z0-9-]+\]\s*\)?/gi, '').trim()
+    return { reply: (text + (rabbi ? `\n\n${RABBI_NOTE}` : '')).slice(0, 1200), prefs: parsed.prefs, sources }
   } catch {
     return null
   }
