@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   if (!caller?.user) return NextResponse.json({ message: 'נדרשת התחברות.' }, { status: 401 })
   const found = await findRegistration(admin, caller.user.id)
   const me = found?.reg.profile_id
-  if (!found || !me) return NextResponse.json({ message: 'ההרשמה עדיין ממתינה לאישור.' }, { status: 403 })
+  if (!found || !me) return NextResponse.json({ message: 'יש להשלים את שאלון ההיכרות כדי להמשיך.' }, { status: 403 })
   if (me === to) return NextResponse.json({ message: 'בקשה לא תקינה.' }, { status: 400 })
 
   // Only the opposite gender can be proposed.

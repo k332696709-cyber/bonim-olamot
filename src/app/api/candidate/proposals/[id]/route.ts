@@ -18,7 +18,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const { data: caller } = await admin.auth.getUser(token)
   if (!caller?.user) return NextResponse.json({ message: 'נדרשת התחברות.' }, { status: 401 })
   const found = await findRegistration(admin, caller.user.id)
-  if (!found?.reg.profile_id) return NextResponse.json({ message: 'ההרשמה עדיין ממתינה לאישור.' }, { status: 403 })
+  if (!found?.reg.profile_id) return NextResponse.json({ message: 'יש להשלים את שאלון ההיכרות כדי להמשיך.' }, { status: 403 })
 
   const detail = await loadProposalDetail(admin, found.reg.profile_id, params.id)
   if (!detail) return NextResponse.json({ message: 'ההצעה לא נמצאה.' }, { status: 404 })

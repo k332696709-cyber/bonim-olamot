@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { sendMail } from '@/lib/server/notify'
 
 export const runtime = 'nodejs'
 
@@ -15,7 +16,7 @@ export async function DELETE(req: NextRequest) {
   const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
   if (!token) return NextResponse.json({ message: 'נדרשת התחברות.' }, { status: 401 })
 
-  let body: { userId?: string }
+  let body: { userId?: string; reason?: string; email?: string }
   try {
     body = await req.json()
   } catch {
@@ -34,6 +35,18 @@ export async function DELETE(req: NextRequest) {
   // Never delete a staff login through this route.
   const { data: staff } = await admin.from('matchmakers').select('id').eq('user_id', userId).maybeSingle()
   if (staff) return NextResponse.json({ message: 'זה חשבון של שדכן/מנהל.' }, { status: 400 })
+
+  // The administrator may tell the candidate why (for example that the terms were not kept). It is sent
+  // only when they wrote a reason, and a failure to send never blocks the deletion.
+  const reason = String(body.reason ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, 400)
+  const email = String(body.email ?? '').trim()
+  if (reason && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    await sendMail(email, 'הפרופיל שלך באתר בונים עולמות הוסר', [
+      'הפרופיל והאזור האישי שלך באתר בונים עולמות הוסרו.',
+      `סיבה: ${reason}`,
+      'לשאלות אפשר לפנות אלינו דרך עמוד צור קשר.',
+    ], '/he/contact')
+  }
 
   const { error } = await admin.auth.admin.deleteUser(userId)
   if (error) {

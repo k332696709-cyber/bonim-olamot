@@ -104,12 +104,10 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
     setBusyId(null)
   }
 
-  const removeRegistration = async (r: Row) => {
-    const name = `${r.answers.fullName ?? ''} ${r.answers.lastName ?? ''}`.trim()
-    const extra = r.profile_id ? (he ? ' גם הפרופיל שנוצר ממנה יימחק.' : ' The profile created from it is deleted too.') : ''
-    const ask = (he ? `למחוק את ההרשמה של ${name} לצמיתות, כולל התמונה?` : `Permanently delete ${name}'s registration, including the photo?`)
-      + extra + (he ? ' אי אפשר לשחזר.' : ' This cannot be undone.')
-    if (!(await confirm(ask, { danger: true, confirmLabel: he ? 'מחיקה' : 'Delete' }))) return
+  const [delRow, setDelRow] = useState<Row | null>(null)
+  const [delReason, setDelReason] = useState('')
+
+  const removeRegistration = async (r: Row, reason = '') => {
     setBusyId(r.id)
     setError('')
     setNotice('')
@@ -135,7 +133,7 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
       const res = await fetch('/api/admin/candidate', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sess.session?.access_token ?? ''}` },
-        body: JSON.stringify({ userId: r.user_id }),
+        body: JSON.stringify({ userId: r.user_id, reason, email: r.answers.email ?? '' }),
       })
       if (!res.ok) setError(he ? 'ההרשמה נמחקה, אבל ההתחברות של המועמד לא נמחקה.' : 'Registration deleted, but the candidate login was not removed.')
     }
@@ -168,6 +166,41 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
   return (
     <div className="min-h-screen bg-[#f1f1f1]" dir={he ? 'rtl' : 'ltr'}>
       {dialog}
+      {delRow && (
+        <div className="fixed inset-0 z-[90] bg-black/50 flex items-center justify-center px-4" onClick={() => setDelRow(null)} dir={he ? 'rtl' : 'ltr'}>
+          <div role="dialog" aria-modal="true" className="bg-white rounded-[28px] shadow-luxury w-full max-w-md p-6 flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-navy-800">{he ? 'למחוק את המועמד?' : 'Delete this candidate?'}</h3>
+            <p className="text-sm text-navy-600">
+              {he
+                ? `יימחקו: ההרשמה של ${delRow.answers.fullName ?? ''} ${delRow.answers.lastName ?? ''}, הכרטיס והפרופיל, התמונות והאזור האישי. אי אפשר לשחזר.`
+                : 'The registration, profile, photos and personal area are deleted. This cannot be undone.'}
+            </p>
+            <label className="text-sm font-semibold text-navy-800" htmlFor="del-reason">
+              {he ? 'סיבה למועמד (לא חובה)' : 'Reason for the candidate (optional)'}
+            </label>
+            <textarea
+              id="del-reason" rows={3} maxLength={400} value={delReason} onChange={(e) => setDelReason(e.target.value)}
+              placeholder={he ? 'למשל: לא עמדת בתקנון האתר' : 'For example: the site terms were not kept'}
+              className="rounded-2xl border border-navy-100 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-300"
+            />
+            <p className="text-xs text-navy-400">
+              {he ? 'אם תכתוב סיבה, היא תישלח למועמד במייל לפני המחיקה. בלי סיבה לא נשלחת הודעה.' : 'If you write a reason it is emailed to the candidate before deleting. No reason, no message.'}
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => { const r = delRow; const why = delReason.trim(); setDelRow(null); removeRegistration(r, why) }}
+                className="flex-1 h-12 rounded-full bg-burgundy-500 hover:bg-burgundy-600 text-white font-bold text-sm"
+              >
+                {he ? 'מחיקה' : 'Delete'}
+              </button>
+              <button type="button" onClick={() => setDelRow(null)} className="h-12 px-6 rounded-full border border-navy-200 text-navy-600 hover:bg-navy-50 text-sm font-medium">
+                {he ? 'ביטול' : 'Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {view && <PhotoViewer photos={view.list} start={view.at} onClose={() => setView(null)} />}
       <header className="hero-dark text-white pt-6 pb-4">
         <div className="max-w-4xl mx-auto px-6 py-10 flex items-center justify-between gap-4 flex-wrap">
@@ -238,7 +271,7 @@ export default function RegistrationsPage({ params: { locale } }: { params: { lo
                     </button>
                   )}
                   <button
-                    onClick={() => removeRegistration(r)}
+                    onClick={() => { setDelReason(''); setDelRow(r) }}
                     disabled={busyId === r.id}
                     className="h-10 px-5 rounded-full text-sm text-burgundy-500 hover:bg-burgundy-50 ms-auto disabled:opacity-60"
                   >
