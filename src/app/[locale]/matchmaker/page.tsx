@@ -259,6 +259,18 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
       .eq('id', matchId)
   }, [])
 
+  // Candidates who are in an active match: they get the green light by themselves.
+  const [activeIds, setActiveIds] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const { data } = await createClient().auth.getSession()
+        const res = await fetch('/api/matchmaker/active-profiles', { headers: { Authorization: `Bearer ${data.session?.access_token ?? ''}` } })
+        if (res.ok) setActiveIds(new Set((await res.json()).ids ?? []))
+      } catch { /* the lights then rely on the last offer date alone */ }
+    })()
+  }, [matchProgress])
+
   // The proposal came down (or is put back): the server checks that the match is theirs.
   const handleDrop = useCallback(async (matchId: string, dropped: boolean) => {
     const { data } = await createClient().auth.getSession()
@@ -322,7 +334,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
   const stats = useMemo(() => {
     const all = [...femaleProfiles, ...maleProfiles]
     const active = all.filter(p => p.lockedAt !== null && lockRemainingMs(p.lockedAt) > 0).length
-    const urgent = all.filter(p => computeStatus(p) === 'bright_red').length
+    const urgent = all.filter(p => computeStatus(p, activeIds.has(p.id)) === 'bright_red').length
     return { totalF: femaleProfiles.length, totalM: maleProfiles.length, active, urgent }
   }, [femaleProfiles, maleProfiles])
 
@@ -543,6 +555,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
               profiles={tab === 'bachurot' ? femaleProfiles : maleProfiles}
               gender={tab === 'bachurot' ? 'female' : 'male'}
               locale={locale}
+              activeIds={activeIds}
             />
           )}
         </section>

@@ -13,6 +13,7 @@ import { PhotoViewer } from '@/components/ui/PhotoViewer'
 import { ProposalsList } from '@/components/proposals/ProposalsList'
 import type { AnyProfile } from '@/lib/matchmaking/assistant'
 import { NotificationSettings } from '@/components/personal/NotificationSettings'
+import { DeleteAccount } from '@/components/personal/DeleteAccount'
 import { questionnaireProgress } from '@/lib/registration/completion'
 import { TallyRegistrationForm } from '@/components/forms/TallyRegistrationForm'
 import { FEMALE_FORM, MALE_FORM } from '@/constants/registrationForms'
@@ -174,6 +175,7 @@ export function CandidateArea({ locale }: { locale: string }) {
             {he ? 'יציאה' : 'Sign out'}
           </button>
         </div>
+        <DeleteAccount he={he} locale={locale} />
       </div>
     )
     const pendingPrompt = (
@@ -305,6 +307,7 @@ export function CandidateArea({ locale }: { locale: string }) {
           {he ? 'יציאה' : 'Sign out'}
         </button>
       </div>
+      <DeleteAccount he={he} locale={locale} />
     </div>
   )
 

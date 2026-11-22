@@ -28,6 +28,8 @@ interface RowState {
 }
 
 export interface ProfilesTableProps {
+  /** Candidates who are in an active match (for the green light). */
+  activeIds?: Set<string>
   profiles: AnyProfile[]
   gender:   'female' | 'male'
   locale?:  string
@@ -143,7 +145,7 @@ const IconEye = () => (
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTableProps) {
+export function ProfilesTable({ profiles, gender, locale = 'he', activeIds }: ProfilesTableProps) {
   const T = getT(locale)
   const { name: currentName, isAdmin } = useLockIdentity()
   const router = useRouter()
@@ -254,7 +256,7 @@ export function ProfilesTable({ profiles, gender, locale = 'he' }: ProfilesTable
             if (!rs) return null
 
             const profileWithState: AnyProfile = { ...profile, lockedAt: rs.lockedAt }
-            const status        = computeStatus(profileWithState)
+            const status        = computeStatus(profileWithState, !!activeIds?.has(profile.id))
             const lockActive    = rs.lockedAt !== null && lockRemainingMs(rs.lockedAt) > 0
             const isEven        = idx % 2 === 0
 
