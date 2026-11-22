@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import type { FemaleProfile, MaleProfile, MatchmakerStatus, Note } from '@/types/registration'
+import type { FemaleProfile, MaleProfile, Note } from '@/types/registration'
+import { computeStatus } from '@/lib/matchmaker/statusUtils'
 import { getT } from '@/lib/i18n/translations'
 import { TrafficLight } from './TrafficLight'
 import { LockIndicator } from './LockIndicator'
@@ -24,6 +25,8 @@ interface MaleProfileCardProps {
   profile:          MaleProfile
   locale?:          string
   femaleCandidates: FemaleProfile[]
+  /** The candidate is in an active match (green light). */
+  inActiveMatch?:   boolean
 }
 
 function getLabel(
@@ -45,18 +48,17 @@ function FieldRow({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
-export function MaleProfileCard({ profile, locale = 'he', femaleCandidates }: MaleProfileCardProps) {
+export function MaleProfileCard({ profile, locale = 'he', femaleCandidates, inActiveMatch = false }: MaleProfileCardProps) {
   const { name: currentName, isAdmin } = useLockIdentity()
   const T = getT(locale)
 
-  const [status,   setStatusState] = useState<MatchmakerStatus>(profile.matchmakerStatus)
   const [lockedAt, setLockedAt]    = useState<Date | null>(profile.lockedAt)
   const [lockedBy, setLockedBy]    = useState<string | undefined>(profile.lockedBy)
   const [notes,    setNotes]       = useState<Note[]>(profile.notes)
 
   const canUnlock       = canActOnLock(lockedBy, currentName, isAdmin)
-  const isGreenStatus   = status === 'green'
-  const canChangeStatus = !isGreenStatus || canActOnLock(lockedBy, currentName, isAdmin)
+  // The traffic light follows the last offer, an active match and the 48-hour work lock by itself.
+  const status = computeStatus({ ...profile, lockedAt }, inActiveMatch)
 
   const handleAddNote = (text: string) => {
     setNotes((prev) => [
@@ -68,24 +70,12 @@ export function MaleProfileCard({ profile, locale = 'he', femaleCandidates }: Ma
   const handleLock = () => {
     setLockedAt(new Date())
     setLockedBy(currentName)
-    setStatusState('green')
   }
 
   const handleUnlock = () => {
     if (!canActOnLock(lockedBy, currentName, isAdmin)) return
     setLockedAt(null)
     setLockedBy(undefined)
-    if (status === 'green') setStatusState('orange')
-  }
-
-  const handleStatusChange = (newStatus: MatchmakerStatus) => {
-    if (!canChangeStatus) return
-    setStatusState(newStatus)
-    if (newStatus === 'green') {
-      setLockedBy(currentName)
-    } else {
-      setLockedBy(undefined)
-    }
   }
 
   return (
@@ -106,8 +96,6 @@ export function MaleProfileCard({ profile, locale = 'he', femaleCandidates }: Ma
             <TrafficLight
               status={status}
               locale={locale}
-              onChange={handleStatusChange}
-              canChange={canChangeStatus}
               lockedBy={lockedBy}
             />
           </div>

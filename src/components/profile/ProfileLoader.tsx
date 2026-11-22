@@ -30,6 +30,7 @@ export function ProfileLoader({ locale, id }: { locale: string; id: string }) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [error, setError] = useState('')
   const [viewAt, setViewAt] = useState<number | null>(null)
+  const [inActiveMatch, setInActiveMatch] = useState(false)
 
   useEffect(() => {
     setIsAdmin(getSession()?.role === 'admin')
@@ -85,6 +86,18 @@ export function ProfileLoader({ locale, id }: { locale: string; id: string }) {
     router.push(`/${locale}/matchmaker`)
   }
 
+  // Whether this candidate is in an active match decides the green light.
+  useEffect(() => {
+    if (!profile?.id) return
+    ;(async () => {
+      try {
+        const { data } = await createClient().auth.getSession()
+        const res = await fetch('/api/matchmaker/active-profiles', { headers: { Authorization: `Bearer ${data.session?.access_token ?? ''}` } })
+        if (res.ok) setInActiveMatch(((await res.json()).ids ?? []).includes(profile.id))
+      } catch { /* the light then follows the last offer date alone */ }
+    })()
+  }, [profile?.id])
+
   if (state === 'loading') return <p className="text-center py-16 text-gray-400">{he ? 'טוען...' : 'Loading…'}</p>
   if (state === 'missing' || !profile) {
     return <div className="text-center py-16 text-gray-400">{he ? 'הפרופיל לא נמצא' : 'Profile not found'}</div>
@@ -114,7 +127,7 @@ export function ProfileLoader({ locale, id }: { locale: string; id: string }) {
 
       {gender === 'female' ? (
         <>
-          <ProfileCard profile={profile as FemaleProfile} locale={locale} />
+          <ProfileCard profile={profile as FemaleProfile} locale={locale} inActiveMatch={inActiveMatch} />
           <CompatibilityPanel
             currentProfile={profile as FemaleProfile}
             currentGender="female"
@@ -123,7 +136,7 @@ export function ProfileLoader({ locale, id }: { locale: string; id: string }) {
           />
         </>
       ) : (
-        <MaleProfileCard profile={profile as MaleProfile} locale={locale} femaleCandidates={candidates as FemaleProfile[]} />
+        <MaleProfileCard profile={profile as MaleProfile} locale={locale} femaleCandidates={candidates as FemaleProfile[]} inActiveMatch={inActiveMatch} />
       )}
     </div>
   )
