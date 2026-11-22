@@ -187,7 +187,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
       // 3. Matches
       const { data: matchesData } = await supabase
         .from('matches')
-        .select('id, female_id, male_id, matchmaker_id, stage, updated_at, fee_amount, fee_sent_at, fee_female_ack_at, fee_male_ack_at, co_matchmaker_id, matchmakers!matches_matchmaker_id_fkey(first_name, last_name, email), co:matchmakers!matches_co_matchmaker_id_fkey(first_name, last_name, email)')
+        .select('id, female_id, male_id, matchmaker_id, stage, status, updated_at, fee_amount, fee_sent_at, fee_female_ack_at, fee_male_ack_at, co_matchmaker_id, matchmakers!matches_matchmaker_id_fkey(first_name, last_name, email), co:matchmakers!matches_co_matchmaker_id_fkey(first_name, last_name, email)')
         .order('updated_at', { ascending: false })
 
       if (matchesData) {
@@ -202,6 +202,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
             ? `${profileMap[row.male_id].firstName} ${profileMap[row.male_id].lastName}`
             : '',
           stage: row.stage as MatchStage,
+          status: row.status ?? 'active',
           matchmakerName: row.matchmakers
             ? `${row.matchmakers.first_name} ${row.matchmakers.last_name}`
             : '',
@@ -256,6 +257,20 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
       .from('matches')
       .update({ stage: newStage, updated_at: new Date().toISOString() })
       .eq('id', matchId)
+  }, [])
+
+  // The proposal came down (or is put back): the server checks that the match is theirs.
+  const handleDrop = useCallback(async (matchId: string, dropped: boolean) => {
+    const { data } = await createClient().auth.getSession()
+    const res = await fetch('/api/matchmaker/match-status', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token ?? ''}` },
+      body: JSON.stringify({ matchId, dropped }),
+    })
+    if (res.ok) {
+      setMatchProgress((prev) => prev.map((m) => (m.id === matchId ? { ...m, status: dropped ? 'rejected' : 'active', updatedAt: new Date() } : m)))
+    }
+    return res.ok
   }, [])
 
   // A match was opened or its fee was sent from the tracker: show it without reloading.
@@ -476,6 +491,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
             currentUserEmail={currentEmail}
             locale={locale}
             onStageUpdate={handleStageUpdate}
+            onDrop={handleDrop}
             onMatchSaved={handleMatchSaved}
             people={[...femaleProfiles.map((x) => ({ id: x.id, name: `${x.firstName} ${x.lastName}`, gender: 'female' as const })), ...maleProfiles.map((x) => ({ id: x.id, name: `${x.firstName} ${x.lastName}`, gender: 'male' as const }))]}
           />

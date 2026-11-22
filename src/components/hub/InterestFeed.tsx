@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 
 interface Brief { id: string; name: string; age: number | null; city: string }
 interface MatchInfo {
-  id: string; femaleId: string; maleId: string; stage: string; updatedAt: string
+  id: string; femaleId: string; maleId: string; stage: string; status?: string; updatedAt: string
   matchmakerId: string | null; matchmakerName: string; matchmakerEmail: string
 }
 interface Interest {
@@ -132,6 +132,8 @@ export function InterestFeed({
                     >
                       {he ? 'לקחת את השידוך' : 'Take this match'}
                     </button>
+                  ) : i.match?.status === 'rejected' ? (
+                    <span className="text-xs font-semibold text-gray-500">{he ? 'ההצעה ירדה' : 'Proposal came down'}</span>
                   ) : i.matchId ? (
                     <span className="text-xs font-semibold text-green-700">
                       {he ? `✓ בטיפול${i.match?.matchmakerName ? `: ${i.match.matchmakerName}` : ''}` : '✓ Being handled'}

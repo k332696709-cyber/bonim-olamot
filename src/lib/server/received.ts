@@ -30,6 +30,7 @@ export async function loadReceived(admin: any, myProfileId: string, myGender: 'm
     .from('matches')
     .select('id, female_id, male_id, stage, updated_at, fee_amount, fee_sent_at, fee_female_ack_at, fee_male_ack_at, matchmakers!matches_matchmaker_id_fkey(email, first_name, last_name), co:matchmakers!matches_co_matchmaker_id_fkey(email, first_name, last_name)')
     .eq(col, myProfileId)
+    .neq('status', 'rejected')
     .order('updated_at', { ascending: false })
   if (!rows || rows.length === 0) return []
 

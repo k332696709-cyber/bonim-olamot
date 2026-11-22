@@ -250,11 +250,20 @@ function Collaboration({
   )
 }
 
+function TrashIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M6 6l1 14h10l1-14" /><path d="M10 11v6" /><path d="M14 11v6" />
+    </svg>
+  )
+}
+
 function MatchCard({
   match,
   locale,
   canEdit,
   onAdvance,
+  onDrop,
   onMatchSaved,
   isAdmin,
   currentUserEmail,
@@ -263,12 +272,15 @@ function MatchCard({
   locale: string
   canEdit: boolean
   onAdvance: (id: string, next: MatchStage) => void
+  onDrop: (id: string, dropped: boolean) => Promise<boolean>
   onMatchSaved: (m: any) => void
   isAdmin: boolean
   currentUserEmail: string
 }) {
   const [editingFee, setEditingFee] = useState(false)
+  const [dropBusy, setDropBusy] = useState(false)
   const isHe = locale === 'he'
+  const dropped = match.status === 'rejected'
   // Only the matchmaker who opened the match (or an admin) sets and sends the fee; a colleague added to it cannot.
   const canSetFee = isAdmin || match.matchmakerEmail === currentUserEmail
   const labels = isHe ? STAGE_LABELS_HE : STAGE_LABELS_EN
@@ -277,7 +289,7 @@ function MatchCard({
   const nextStage = hasNext ? MATCH_STAGES[currentIdx + 1] : null
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+    <div className={`rounded-xl border p-4 shadow-sm transition-shadow ${dropped ? 'bg-[#f5f5f5] border-gray-200 opacity-80' : 'bg-white border-gray-200 hover:shadow-md'}`}>
       <div className="flex items-start justify-between gap-2 mb-3" dir={isHe ? 'rtl' : 'ltr'}>
         <div>
           <div className="flex items-center gap-1.5 text-sm font-semibold text-navy-700 flex-wrap">
@@ -289,14 +301,51 @@ function MatchCard({
             {isHe ? 'שדכנ/ית:' : 'Matchmaker:'} {match.matchmakerName}
           </p>
         </div>
-        <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full border ${STAGE_BADGE[match.stage]}`}>
-          {labels[match.stage]}
-        </span>
+        <div className="flex items-center gap-2 shrink-0">
+          {dropped ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-300 bg-white text-gray-600">
+              <TrashIcon /> {isHe ? 'ההצעה ירדה' : 'Proposal came down'}
+            </span>
+          ) : (
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${STAGE_BADGE[match.stage]}`}>
+              {labels[match.stage]}
+            </span>
+          )}
+          {canEdit && !dropped && (
+            <button
+              type="button" disabled={dropBusy} title={isHe ? 'לא יתקדם: להוריד את ההצעה' : 'Will not go forward: take the proposal down'}
+              aria-label={isHe ? 'לא יתקדם, להוריד את ההצעה' : 'Take the proposal down'}
+              onClick={async () => {
+                if (!window.confirm(isHe ? 'להוריד את ההצעה? השידוך לא יתקדם, וההצעה תסומן "ההצעה ירדה".' : 'Take this proposal down? The match will not go forward.')) return
+                setDropBusy(true); await onDrop(match.id, true); setDropBusy(false)
+              }}
+              className="w-8 h-8 rounded-full border border-gray-200 text-gray-500 hover:text-burgundy-600 hover:border-burgundy-300 flex items-center justify-center disabled:opacity-50"
+            >
+              <TrashIcon />
+            </button>
+          )}
+        </div>
       </div>
 
       <ProgressBar stage={match.stage} locale={locale} />
 
+      {dropped && (
+        <div className="mt-3 flex items-center justify-between gap-2 flex-wrap" dir={isHe ? 'rtl' : 'ltr'}>
+          <p className="text-xs text-gray-500">
+            {isHe ? `ההצעה ירדה בשלב: ${labels[match.stage]}` : `The proposal came down at: ${labels[match.stage]}`}
+          </p>
+          {canEdit && (
+            <button type="button" disabled={dropBusy}
+              onClick={async () => { setDropBusy(true); await onDrop(match.id, false); setDropBusy(false) }}
+              className="text-xs font-medium text-navy-600 hover:text-navy-800 border border-navy-200 rounded-lg px-3 py-1 hover:bg-navy-50 disabled:opacity-50">
+              {isHe ? 'החזרת ההצעה' : 'Put it back'}
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Matchmaking fee */}
+      {!dropped && (
       <div className="mt-3 border-t border-gray-100 pt-3" dir={isHe ? 'rtl' : 'ltr'}>
         {match.feeAmount && !editingFee ? (
           <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -336,7 +385,9 @@ function MatchCard({
           <p className="text-xs text-gray-400">{isHe ? 'דמי השידוך נקבעים ונשלחים על ידי השדכן/ית שפתח/ה את השידוך' : 'The fee is set and sent by the matchmaker who opened the match'}</p>
         )}
       </div>
+      )}
 
+      {!dropped && (
       <Collaboration
         match={match}
         isHe={isHe}
@@ -345,8 +396,9 @@ function MatchCard({
         isCo={!!match.coEmail && match.coEmail === currentUserEmail}
         onChange={(patch) => onMatchSaved({ id: match.id, patch })}
       />
+      )}
 
-      {canEdit && nextStage && (
+      {canEdit && !dropped && nextStage && (
         <button
           type="button"
           onClick={() => onAdvance(match.id, nextStage)}
@@ -367,6 +419,7 @@ interface MatchProgressSectionProps {
   currentUserEmail: string
   locale: string
   onStageUpdate: (matchId: string, newStage: MatchStage) => void
+  onDrop: (matchId: string, dropped: boolean) => Promise<boolean>
   onMatchSaved: (m: any) => void
   people: { id: string; name: string; gender: 'female' | 'male' }[]
 }
@@ -377,6 +430,7 @@ export function MatchProgressSection({
   currentUserEmail,
   locale,
   onStageUpdate,
+  onDrop,
   onMatchSaved,
   people,
 }: MatchProgressSectionProps) {
@@ -384,7 +438,11 @@ export function MatchProgressSection({
   const [opening, setOpening] = useState(false)
   const [femaleId, setFemaleId] = useState('')
   const [maleId, setMaleId] = useState('')
-  const visible = isAdmin ? matches : matches.filter(m => m.matchmakerEmail === currentUserEmail || (!!m.coEmail && m.coEmail === currentUserEmail))
+  // A match on the table can be touched only by the matchmaker handling it, the colleague added to it, and an administrator.
+  const mine = isAdmin ? matches : matches.filter(m => m.matchmakerEmail === currentUserEmail || (!!m.coEmail && m.coEmail === currentUserEmail))
+  // Matches that came down go to the end of the list and do not count as active.
+  const visible = mine.filter((m) => m.status !== 'rejected')
+  const cameDown = mine.filter((m) => m.status === 'rejected')
 
   const labels = isHe ? STAGE_LABELS_HE : STAGE_LABELS_EN
   const stageCounts = MATCH_STAGES.reduce(
@@ -464,13 +522,13 @@ export function MatchProgressSection({
         ))}
       </div>
 
-      {visible.length === 0 ? (
+      {mine.length === 0 ? (
         <div className="text-center py-8 text-gray-400 text-sm">
           {isHe ? 'אין שידוכים פעילים' : 'No active matches'}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {visible.map(match => (
+          {[...visible, ...cameDown].map(match => (
             <MatchCard
               key={match.id}
               match={match}
@@ -479,6 +537,7 @@ export function MatchProgressSection({
               isAdmin={isAdmin}
               currentUserEmail={currentUserEmail}
               onAdvance={onStageUpdate}
+              onDrop={onDrop}
               onMatchSaved={onMatchSaved}
             />
           ))}

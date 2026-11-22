@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   const byId = new Map<string, any>((people ?? []).map((p: any) => [p.id, p]))
   const { data: matches } = await admin
     .from('matches')
-    .select('id, female_id, male_id, stage, updated_at, matchmaker_id, matchmakers!matches_matchmaker_id_fkey(first_name, last_name, email)')
+    .select('id, female_id, male_id, stage, status, updated_at, matchmaker_id, matchmakers!matches_matchmaker_id_fkey(first_name, last_name, email)')
     .in('female_id', ids)
   const matchOf = new Map<string, any>((matches ?? []).map((m: any) => [`${m.female_id}|${m.male_id}`, m]))
 
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
         const m = matchOf.get(`${female.id}|${male.id}`)
         if (!m) return null
         return {
-          id: m.id, femaleId: female.id, maleId: male.id, stage: m.stage, updatedAt: m.updated_at,
+          id: m.id, femaleId: female.id, maleId: male.id, stage: m.stage, status: m.status, updatedAt: m.updated_at,
           matchmakerId: m.matchmaker_id ?? null,
           matchmakerName: m.matchmakers ? `${m.matchmakers.first_name ?? ''} ${m.matchmakers.last_name ?? ''}`.trim() : '',
           matchmakerEmail: m.matchmakers?.email ?? '',

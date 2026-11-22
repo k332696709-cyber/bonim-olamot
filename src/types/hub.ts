@@ -48,6 +48,8 @@ export interface MatchProgress {
   femaleAck?: boolean
   maleAck?: boolean
   /** The matchmaker who opened the match, and an optional colleague working on it with them. */
+  /** "rejected" means the proposal came down and the match will not go forward. */
+  status?: 'active' | 'closed' | 'rejected'
   matchmakerId?: string | null
   coId?: string | null
   coName?: string
