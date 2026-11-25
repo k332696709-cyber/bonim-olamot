@@ -24,13 +24,13 @@ export function WordBand({ words }: { words: string[] }) {
 
   return (
     <div ref={ref} className="bg-burgundy-500 text-white py-5 sm:py-7 select-none overflow-hidden" aria-hidden="true">
-      <div className="max-w-5xl mx-auto px-4 flex flex-wrap items-center justify-center gap-x-7 sm:gap-x-14 gap-y-3">
+      <div className="max-w-5xl mx-auto px-4 flex flex-wrap items-center justify-center gap-x-8 sm:gap-x-16 gap-y-3">
         {words.map((w, i) => {
           const on = active === i
           return (
             <span key={w} className={`flex items-center gap-5 sm:gap-10 ${inView ? 'animate-fade-up' : 'opacity-0'}`} style={{ animationDelay: `${i * 110}ms`, animationDuration: '0.6s' }}>
               <span
-                className="relative text-xl sm:text-4xl font-medium transition-all duration-500 ease-out"
+                className="relative text-lg sm:text-3xl font-light transition-all duration-500 ease-out"
                 style={{
                   opacity: active === -1 || on ? 1 : 0.55,
                   transform: on ? 'translateY(-3px) scale(1.12)' : 'translateY(0) scale(1)',

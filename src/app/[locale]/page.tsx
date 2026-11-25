@@ -6,6 +6,8 @@ import { Showcase } from '@/components/home/Showcase'
 import { HowItWorks } from '@/components/home/HowItWorks'
 import { Reveal } from '@/components/home/Reveal'
 import { WordBand } from '@/components/home/WordBand'
+import { IntroSplash } from '@/components/home/IntroSplash'
+import { ContactRise } from '@/components/home/ContactRise'
 import { getT } from '@/lib/i18n/translations'
 import { fetchPublishedSpots } from '@/lib/dateSpots'
 import { CATEGORY_LABELS } from '@/types/dateSpots'
@@ -28,6 +30,7 @@ export default async function HomePage({ params: { locale } }: { params: { local
 
   return (
     <div className="flex flex-col -mt-[5.25rem]" dir={isHe ? 'rtl' : 'ltr'}>
+      <IntroSplash title={isHe ? 'בונים עולמות' : 'Bonim Olamot'} subtitle={isHe ? 'שידוכים בדרך חדשה' : 'Matchmaking, the new way'} />
 
       {/* ══ 1. Hero (dark) ═════════════════════════════════════════════════════ */}
       <section className="relative overflow-hidden bg-navy-800 text-[#f1f1f1] px-4 pt-40 pb-24 sm:pt-48 sm:pb-32">
@@ -38,10 +41,11 @@ export default async function HomePage({ params: { locale } }: { params: { local
 
         <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-8 items-center">
          <div className="text-center lg:text-start">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/15 px-4 py-2 text-sm text-burgundy-100 mb-8">
-            <span className="w-2 h-2 rounded-full bg-burgundy-300" />
-            {isHe ? 'אתר שידוכים מתקדם לקהילה החרדית' : 'Advanced matchmaking for the Haredi community'}
-          </span>
+          <p className="flex items-center justify-center lg:justify-start gap-4 text-sm sm:text-base text-burgundy-100 mb-8">
+            <span className="h-px w-10 bg-burgundy-300/70" aria-hidden="true" />
+            {isHe ? 'שידוך חכם, בדרך של כבוד' : 'Smart matchmaking, with respect'}
+            <span className="h-px w-10 bg-burgundy-300/70 lg:hidden" aria-hidden="true" />
+          </p>
 
           <h1 className="leading-[1.1] mb-6">
             <span className="block text-4xl sm:text-6xl font-light">
@@ -253,6 +257,9 @@ export default async function HomePage({ params: { locale } }: { params: { local
           </div>
         </div>
       </section>
+
+      {/* ══ 5. Contact ═══════════════════════════════════════════════════════ */}
+      <ContactRise he={isHe} />
 
     </div>
   )
