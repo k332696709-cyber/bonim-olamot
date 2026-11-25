@@ -35,16 +35,16 @@ export function SmartMatchClient({ locale }: { locale: string }) {
     return (
       <div className="max-w-xl mx-auto px-4 pb-24">
         <div className="rounded-[32px] bg-white shadow-card px-6 py-12 sm:px-10 text-center">
-          <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-2xl mb-5">{pending ? '' : ''}</div>
+          <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-2xl mb-5">✦</div>
           <h2 className="text-2xl font-bold text-navy-800 mb-2">
             {pending
               ? (he ? 'צריך להשלים את השאלון' : 'Please complete the questionnaire')
-              : (he ? 'העוזר החכם נפתח אחרי הרשמה ואישור' : 'The Smart Assistant opens after registration and approval')}
+              : (he ? 'העוזר החכם נפתח אחרי השלמת השאלון' : 'The Smart Assistant opens once you complete the questionnaire')}
           </h2>
           <p className="text-navy-500 mb-8">
             {pending
               ? (he ? 'אחרי שתשלימו את שאלון ההיכרות עד 100%, תוכלו לראות הצעות התאמה מדורגות ולדייק אותן עם העוזר.' : 'Once you complete the questionnaire to 100% you can see ranked match suggestions and refine them with the assistant.')
-              : (he ? 'אחרי שתמלאו את שאלון ההכרות והמנהל יאשר, תוכלו לראות הצעות התאמה מדורגות ולדייק אותן עם העוזר.' : 'Once you complete the registration questionnaire and the administrator approves it, you can see ranked match suggestions and refine them with the assistant.')}
+              : (he ? 'נרשמים או נכנסים, ממלאים את שאלון ההיכרות עד 100%, ואז רואים הצעות התאמה מדורגות ומדייקים אותן עם העוזר.' : 'Register or sign in, complete the questionnaire to 100%, and then you can see ranked match suggestions and refine them with the assistant.')}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             {pending ? (
