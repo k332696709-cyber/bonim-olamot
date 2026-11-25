@@ -14,12 +14,22 @@ export interface DateSpotRow {
   phone: string | null
   kosher: boolean | null
   price_range: PriceRange | null
+  price_min?: number | null
+  price_max?: number | null
   suitable_dates: DateStage[] | null
   is_published: boolean
   is_sponsored: boolean
   sponsor_until: string | null
   admin_notes: string | null
   created_at: string
+}
+
+/** "₪40–70" from a typed range; falls back to the old ₪ levels. */
+export function formatPrice(min: number | null | undefined, max: number | null | undefined, legacy?: string | null): string | undefined {
+  if (min != null && max != null) return min === max ? `₪${min}` : `₪${min}–${max}`
+  if (min != null) return `מ-₪${min}`
+  if (max != null) return `עד ₪${max}`
+  return legacy ?? undefined
 }
 
 export function rowToSpot(r: DateSpotRow): DateSpot {
@@ -36,7 +46,7 @@ export function rowToSpot(r: DateSpotRow): DateSpot {
     phone: r.phone ?? undefined,
     kosher: r.kosher ?? undefined,
     suitableDates: r.suitable_dates ?? [],
-    priceRange: r.price_range ?? undefined,
+    priceRange: formatPrice(r.price_min, r.price_max, r.price_range),
     sponsored: r.is_sponsored && (!r.sponsor_until || new Date(r.sponsor_until) >= new Date(new Date().toDateString())),
     averageRating: 0,
     reviewCount: 0,

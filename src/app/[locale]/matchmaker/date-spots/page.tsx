@@ -19,7 +19,8 @@ interface Draft {
   website_url: string
   phone: string
   kosher: '' | 'yes' | 'no'
-  price_range: '' | '₪' | '₪₪' | '₪₪₪'
+  price_min: string
+  price_max: string
   suitable_dates: DateStage[]
   is_published: boolean
   is_sponsored: boolean
@@ -29,7 +30,7 @@ interface Draft {
 
 const EMPTY: Draft = {
   name: '', city: '', region: 'jerusalem', category: 'restaurant', vibe: '', address: '',
-  google_maps_url: '', website_url: '', phone: '', kosher: '', price_range: '', suitable_dates: [],
+  google_maps_url: '', website_url: '', phone: '', kosher: '', price_min: '', price_max: '', suitable_dates: [],
   is_published: true, is_sponsored: false, sponsor_until: '', admin_notes: '',
 }
 
@@ -37,7 +38,7 @@ const toDraft = (r: DateSpotRow): Draft => ({
   name: r.name, city: r.city, region: r.region, category: r.category, vibe: r.vibe,
   address: r.address ?? '', google_maps_url: r.google_maps_url ?? '', website_url: r.website_url ?? '', phone: r.phone ?? '',
   kosher: r.kosher == null ? '' : r.kosher ? 'yes' : 'no',
-  price_range: r.price_range ?? '', suitable_dates: r.suitable_dates ?? [], is_published: r.is_published, is_sponsored: r.is_sponsored,
+  price_min: r.price_min == null ? '' : String(r.price_min), price_max: r.price_max == null ? '' : String(r.price_max), suitable_dates: r.suitable_dates ?? [], is_published: r.is_published, is_sponsored: r.is_sponsored,
   sponsor_until: r.sponsor_until ?? '', admin_notes: r.admin_notes ?? '',
 })
 
@@ -116,6 +117,7 @@ export default function DateSpotsAdminPage({ params: { locale } }: { params: { l
     if (!draft.name.trim() || !draft.city.trim()) return setError(he ? 'שם ועיר הם שדות חובה.' : 'Name and city are required.')
     if (draft.google_maps_url && !isHttp(draft.google_maps_url)) return setError(he ? 'קישור המפה חייב להתחיל ב-https://' : 'Map link must start with https://')
     if (draft.website_url && !isHttp(draft.website_url)) return setError(he ? 'קישור האתר חייב להתחיל ב-https://' : 'Website link must start with https://')
+    if (draft.price_min !== '' && draft.price_max !== '' && Number(draft.price_min) > Number(draft.price_max)) return setError(he ? 'המחיר ההתחלתי גדול מהמחיר העליון.' : 'The lowest price is higher than the highest.')
     const payload = {
       name: draft.name.trim(),
       city: draft.city.trim(),
@@ -127,7 +129,9 @@ export default function DateSpotsAdminPage({ params: { locale } }: { params: { l
       website_url: draft.website_url.trim() || null,
       phone: draft.phone.trim() || null,
       kosher: draft.kosher === '' ? null : draft.kosher === 'yes',
-      price_range: draft.price_range || null,
+      price_min: draft.price_min === '' ? null : Number(draft.price_min),
+      price_max: draft.price_max === '' ? null : Number(draft.price_max),
+      ...(draft.price_min !== '' || draft.price_max !== '' ? { price_range: null } : {}),
       suitable_dates: draft.suitable_dates,
       is_published: draft.is_published,
       is_sponsored: draft.is_sponsored,
@@ -256,11 +260,14 @@ export default function DateSpotsAdminPage({ params: { locale } }: { params: { l
                   <option value="yes">{he ? 'כשר' : 'Kosher'}</option>
                   <option value="no">{he ? 'לא כשר' : 'Not kosher'}</option>
                 </select></div>
-              <div className="flex flex-col gap-1.5"><label className={label}>{he ? 'טווח מחירים' : 'Price range'}</label>
-                <select className={input} value={draft.price_range} onChange={(e) => set('price_range', e.target.value as Draft['price_range'])}>
-                  <option value="">{he ? 'לא צוין' : 'Not specified'}</option>
-                  <option value="₪">₪</option><option value="₪₪">₪₪</option><option value="₪₪₪">₪₪₪</option>
-                </select></div>
+              <div className="flex flex-col gap-1.5"><label className={label}>{he ? 'טווח מחירים (ש"ח לאדם)' : 'Price range (NIS per person)'}</label>
+                <div className="flex items-center gap-2">
+                  <input className={input} dir="ltr" inputMode="numeric" placeholder={he ? 'מ-' : 'from'} value={draft.price_min} maxLength={4}
+                    onChange={(e) => set('price_min', e.target.value.replace(/[^0-9]/g, ''))} />
+                  <span className="text-navy-400">–</span>
+                  <input className={input} dir="ltr" inputMode="numeric" placeholder={he ? 'עד' : 'to'} value={draft.price_max} maxLength={4}
+                    onChange={(e) => set('price_max', e.target.value.replace(/[^0-9]/g, ''))} />
+                </div></div>
             </div>
 
             <div className="flex flex-col gap-1.5">

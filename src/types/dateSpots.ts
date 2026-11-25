@@ -55,7 +55,8 @@ export interface DateSpot {
   kosher?: boolean
   /** Which date(s) the place suits: first, second, third. */
   suitableDates?: DateStage[]
-  priceRange?: PriceRange
+  /** Shown as text: a typed range such as "₪40–70", or the old ₪ levels. */
+  priceRange?: string
   averageRating: number  // pre-computed average (1–5)
   reviewCount: number
   reviews: SpotReview[]
