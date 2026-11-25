@@ -7,7 +7,6 @@ import { getT } from '@/lib/i18n/translations'
 import { TrafficLight } from './TrafficLight'
 import { LockIndicator } from './LockIndicator'
 import { NotesThread } from './NotesThread'
-import { PdfExportButton } from './PdfExportButton'
 import { FullResumeButton } from './FullResumeButton'
 import { AISummary } from './AISummary'
 import { useLockIdentity, canActOnLock } from '@/lib/matchmaker/lockContext'
@@ -203,7 +202,6 @@ export function ProfileCard({ profile, locale = 'he', inActiveMatch = false }: P
             onLock={!lockedAt ? handleLock : undefined}
             onUnlock={lockedAt ? handleUnlock : undefined}
           />
-          <PdfExportButton profileId={profile.id} locale={locale} />
           <FullResumeButton profileId={profile.id} locale={locale} gender="female" />
         </div>
       </div>

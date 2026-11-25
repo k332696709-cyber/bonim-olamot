@@ -214,7 +214,7 @@ export function ProfilesTable({ profiles, gender, locale = 'he', activeIds }: Pr
   const handleExport = useCallback(async (id: string) => {
     updateRow(id, { exporting: true, exportError: '' })
     try {
-      await downloadProfilePdf({ id, type: 'card', locale })
+      await downloadProfilePdf({ id, locale })
     } catch (err) {
       console.error('PDF export error:', err)
       updateRow(id, { exportError: err instanceof Error ? err.message : String(err) })

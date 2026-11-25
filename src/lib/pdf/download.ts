@@ -5,13 +5,13 @@ import { createClient } from '@/lib/supabase/client'
  * server can read the profile from the database (only matchmakers can) and nobody else can.
  * Throws an Error with a readable message on failure.
  */
-export async function downloadProfilePdf(opts: { id: string; type?: 'card' | 'full'; locale?: string }) {
-  const { id, type = 'card', locale = 'he' } = opts
+export async function downloadProfilePdf(opts: { id: string; locale?: string }) {
+  const { id, locale = 'he' } = opts
   const { data } = await createClient().auth.getSession()
   const token = data.session?.access_token
   if (!token) throw new Error(locale === 'he' ? 'ההתחברות פגה. היכנסו מחדש.' : 'Your sign-in expired. Please sign in again.')
 
-  const res = await fetch(`/api/export/profile/${id}?type=${type}&locale=${locale}`, {
+  const res = await fetch(`/api/export/profile/${id}?locale=${locale}`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   })
@@ -29,7 +29,7 @@ export async function downloadProfilePdf(opts: { id: string; type?: 'card' | 'fu
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `${type === 'full' ? 'resume' : 'card'}-${id}.pdf`
+  a.download = `resume-${id}.pdf`
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)

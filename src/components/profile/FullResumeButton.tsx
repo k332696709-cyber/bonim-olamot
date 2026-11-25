@@ -23,7 +23,7 @@ export function FullResumeButton({
     setLoading(true)
     setErrorMsg(null)
     try {
-      await downloadProfilePdf({ id: profileId, type: 'full', locale })
+      await downloadProfilePdf({ id: profileId, locale })
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       console.error('[FullResumeButton]', msg)

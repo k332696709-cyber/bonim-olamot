@@ -7,7 +7,6 @@ import { getT } from '@/lib/i18n/translations'
 import { TrafficLight } from './TrafficLight'
 import { LockIndicator } from './LockIndicator'
 import { NotesThread } from './NotesThread'
-import { PdfExportButton } from './PdfExportButton'
 import { FullResumeButton } from './FullResumeButton'
 import { AISummary } from './AISummary'
 import { CompatibilityPanel } from './CompatibilityPanel'
@@ -186,7 +185,6 @@ export function MaleProfileCard({ profile, locale = 'he', femaleCandidates, inAc
             onLock={!lockedAt ? handleLock : undefined}
             onUnlock={lockedAt ? handleUnlock : undefined}
           />
-          <PdfExportButton profileId={profile.id} locale={locale} gender="male" />
           <FullResumeButton profileId={profile.id} locale={locale} gender="male" />
         </div>
       </div>

@@ -170,7 +170,7 @@ export const translations = {
       view: 'צפה',
       startWork: 'פתח עבודה',
       unlockBtn: 'שחרר',
-      pdf: 'PDF',
+      pdf: 'קורות חיים PDF',
       notes: 'הערות',
       internalNotes: 'הערות פנימיות',
       addNote: 'הוסף',
