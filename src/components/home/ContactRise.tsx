@@ -60,7 +60,7 @@ export function ContactRise({ he }: { he: boolean }) {
           <div className="grid grid-cols-2 gap-4">
             <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noopener noreferrer" className="rounded-[24px] bg-white text-navy-800 p-5 sm:p-7 flex flex-col gap-4 hover:-translate-y-1 transition-transform duration-300">
               <span className="w-11 h-11 rounded-xl bg-burgundy-50 text-burgundy-500 flex items-center justify-center" aria-hidden>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20.5l1.7-5.4A8.4 8.4 0 1 1 21 11.5z" /></svg>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm4.6 13.3c-.2.6-1.2 1.1-1.7 1.2-.5.1-1 .1-3.2-.8-2.7-1.2-4.3-3.9-4.5-4.1-.1-.2-1-1.3-1-2.5s.6-1.8.9-2c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 1.9c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.2-.3.3-.1.6.2.3.7 1.2 1.5 1.9 1 .9 1.9 1.200 2.200 1.300.3.1.4.1.6-.1l.8-1c.2-.2.4-.2.6-.1l1.800.9c.3.1.5.2.5.3.1.2.1.8-.1 1.400z" clipRule="evenodd" /></svg>
               </span>
               <span>
                 <span className="block text-xl font-bold">{he ? 'וואטסאפ' : 'WhatsApp'}</span>

@@ -43,7 +43,7 @@ export default async function HomePage({ params: { locale } }: { params: { local
          <div className="text-center lg:text-start">
           <p className="flex items-center justify-center lg:justify-start gap-4 text-sm sm:text-base text-burgundy-100 mb-8">
             <span className="h-px w-10 bg-burgundy-300/70" aria-hidden="true" />
-            {isHe ? 'שידוך חכם, בדרך של כבוד' : 'Smart matchmaking, with respect'}
+            {isHe ? 'אתר שידוכים מתקדם לקהילה החרדית' : 'Advanced matchmaking for the Haredi community'}
             <span className="h-px w-10 bg-burgundy-300/70 lg:hidden" aria-hidden="true" />
           </p>
 
