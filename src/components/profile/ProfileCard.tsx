@@ -9,6 +9,7 @@ import { LockIndicator } from './LockIndicator'
 import { NotesThread } from './NotesThread'
 import { FullResumeButton } from './FullResumeButton'
 import { AISummary } from './AISummary'
+import { CandidateMessages } from './CandidateMessages'
 import { useLockIdentity, canActOnLock } from '@/lib/matchmaker/lockContext'
 import {
   FEMALE_STYLE_OPTIONS,
@@ -205,6 +206,8 @@ export function ProfileCard({ profile, locale = 'he', inActiveMatch = false }: P
           <FullResumeButton profileId={profile.id} locale={locale} gender="female" />
         </div>
       </div>
+
+      <CandidateMessages profileId={profile.id} name={profile.firstName} />
 
       {/* Internal Notes */}
       <div className="bg-white rounded-2xl shadow-card border border-gray-100 px-6 py-5">

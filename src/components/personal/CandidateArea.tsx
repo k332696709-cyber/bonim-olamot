@@ -9,6 +9,7 @@ import { loadCandidate, type CandidateState } from '@/lib/auth/candidate'
 import { PhotoSlots } from '@/components/personal/PhotoSlots'
 import { AppShell, type AppTab } from '@/components/personal/AppShell'
 import { ReceivedList } from '@/components/personal/ReceivedList'
+import { MessagesTab } from '@/components/personal/MessagesTab'
 import { PhotoViewer } from '@/components/ui/PhotoViewer'
 import { ProposalsList } from '@/components/proposals/ProposalsList'
 import type { AnyProfile } from '@/lib/matchmaking/assistant'
@@ -45,12 +46,23 @@ export function CandidateArea({ locale }: { locale: string }) {
   useEffect(() => {
     const read = () => {
       const h = window.location.hash.replace('#', '')
-      setTab(h === 'received' ? 'received' : h === 'me' ? 'me' : 'matches')
+      setTab(h === 'received' ? 'received' : h === 'messages' ? 'messages' : h === 'me' ? 'me' : 'matches')
     }
     read()
     window.addEventListener('hashchange', read)
     return () => window.removeEventListener('hashchange', read)
   }, [])
+  // How many messages from matchmakers are waiting (the badge on the Messages tab).
+  const [unread, setUnread] = useState(0)
+  const refreshUnread = async () => {
+    try {
+      const { data } = await createClient().auth.getSession()
+      if (!data.session) return
+      const res = await fetch('/api/candidate/messages', { headers: { Authorization: `Bearer ${data.session.access_token}` } })
+      if (res.ok) setUnread((await res.json()).unread ?? 0)
+    } catch { /* no badge */ }
+  }
+  useEffect(() => { refreshUnread() }, [])
   const goTab = (t: AppTab) => { window.history.replaceState(null, '', `#${t}`); setTab(t) }
 
   useEffect(() => {
@@ -82,7 +94,7 @@ export function CandidateArea({ locale }: { locale: string }) {
   )
 
   const app = (content: React.ReactNode) => (
-    <AppShell he={he} locale={locale} tab={tab} onTab={goTab}>{content}</AppShell>
+    <AppShell he={he} locale={locale} tab={tab} onTab={goTab} unread={unread}>{content}</AppShell>
   )
 
   if (!state) return shell(<p className="text-center text-navy-400 py-10">{he ? 'טוען...' : 'Loading…'}</p>)
@@ -189,7 +201,7 @@ export function CandidateArea({ locale }: { locale: string }) {
         </button>
       </div>
     )
-    return app(tab === 'me' ? pendingMe : pendingPrompt)
+    return app(tab === 'me' ? pendingMe : tab === 'messages' ? <MessagesTab he={he} onRead={() => setUnread(0)} /> : pendingPrompt)
   }
 
   // Approved: the full profile
@@ -316,6 +328,8 @@ export function CandidateArea({ locale }: { locale: string }) {
       ? (state.profile ? <ProposalsList locale={locale} me={state.profile as unknown as AnyProfile} /> : null)
       : tab === 'received'
         ? <ReceivedList locale={locale} />
-        : meView,
+        : tab === 'messages'
+          ? <MessagesTab he={he} onRead={() => setUnread(0)} />
+          : meView,
   )
 }

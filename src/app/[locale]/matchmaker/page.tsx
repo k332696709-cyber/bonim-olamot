@@ -15,6 +15,7 @@ import { SocialWall } from '@/components/hub/SocialWall'
 import { MatchProgressSection } from '@/components/hub/MatchProgressSection'
 import { InterestFeed } from '@/components/hub/InterestFeed'
 import { EngagementAdmin } from '@/components/hub/EngagementAdmin'
+import { MessagesInbox } from '@/components/hub/MessagesInbox'
 import { PerformanceScorecard } from '@/components/hub/PerformanceScorecard'
 import { AdminLeaderboard } from '@/components/hub/AdminLeaderboard'
 import type { SocialPost, Announcement, MatchProgress, MatchStage, TaggedProfile, MatchmakerLeaderboardEntry } from '@/types/hub'
@@ -484,6 +485,9 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
             </div>
           </div>
         </section>
+
+        {/* ── Candidates who wrote back ── */}
+        <MessagesInbox locale={locale} />
 
         {/* ── Interest from candidates ── */}
         <section>

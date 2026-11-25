@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 
-export type AppTab = 'matches' | 'received' | 'me'
+export type AppTab = 'matches' | 'received' | 'messages' | 'me'
 
 const ICONS: Record<AppTab, JSX.Element> = {
   matches: (
@@ -16,6 +16,12 @@ const ICONS: Record<AppTab, JSX.Element> = {
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M3 13l2.5-7.5A2 2 0 0 1 7.4 4h9.2a2 2 0 0 1 1.9 1.5L21 13" />
       <path d="M3 13v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5h-5l-1.5 2.5h-5L8 13H3z" />
+    </svg>
+  ),
+  messages: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-4 3v-3H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />
+      <path d="M7 10h10" /><path d="M7 13h6" />
     </svg>
   ),
   me: (
@@ -32,8 +38,8 @@ const ICONS: Record<AppTab, JSX.Element> = {
  * personal area.
  */
 export function AppShell({
-  he, locale, tab, onTab, children,
-}: { he: boolean; locale: string; tab: AppTab; onTab: (t: AppTab) => void; children: React.ReactNode }) {
+  he, locale, tab, onTab, unread = 0, children,
+}: { he: boolean; locale: string; tab: AppTab; onTab: (t: AppTab) => void; unread?: number; children: React.ReactNode }) {
   const scroller = useRef<HTMLDivElement>(null)
   useEffect(() => { scroller.current?.scrollTo({ top: 0 }) }, [tab])
   useEffect(() => {
@@ -45,6 +51,7 @@ export function AppShell({
   const tabs: { id: AppTab; he: string; en: string }[] = [
     { id: 'matches', he: 'התאמות העוזר החכם', en: 'Smart matches' },
     { id: 'received', he: 'ההצעות שקיבלתי', en: 'Received' },
+    { id: 'messages', he: 'הודעות', en: 'Messages' },
     { id: 'me', he: 'האזור האישי', en: 'My area' },
   ]
   const title = tabs.find((t) => t.id === tab)!
@@ -63,7 +70,7 @@ export function AppShell({
       </div>
 
       <nav className="shrink-0 bg-white border-t border-navy-100 pb-[env(safe-area-inset-bottom)]" aria-label={he ? 'ניווט' : 'Navigation'}>
-        <ul className="max-w-2xl mx-auto grid grid-cols-3">
+        <ul className="max-w-2xl mx-auto grid grid-cols-4">
           {tabs.map((t) => {
             const on = t.id === tab
             return (
@@ -72,7 +79,12 @@ export function AppShell({
                   type="button" onClick={() => onTab(t.id)} aria-current={on ? 'page' : undefined}
                   className={`w-full flex flex-col items-center gap-1 py-2.5 text-[11px] sm:text-xs font-semibold transition-colors ${on ? 'text-burgundy-500' : 'text-navy-400 hover:text-navy-700'}`}
                 >
-                  {ICONS[t.id]}
+                  <span className="relative">
+                    {ICONS[t.id]}
+                    {t.id === 'messages' && unread > 0 && (
+                      <span className="absolute -top-1 -end-2 min-w-[18px] h-[18px] px-1 rounded-full bg-burgundy-500 text-white text-[10px] font-bold flex items-center justify-center">{unread}</span>
+                    )}
+                  </span>
                   <span>{he ? t.he : t.en}</span>
                 </button>
               </li>
