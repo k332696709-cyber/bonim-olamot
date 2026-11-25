@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
   const years = Number(clean(fd.get('yearsExperience'), 3))
   const matches = Number(clean(fd.get('matchesClosed'), 6))
   const city = clean(fd.get('city'), 80)
-  const languages = clean(fd.get('languages'), 150)
+  const languages = clean(fd.get('languages'), 300)
   const password = String(fd.get('password') ?? '')
   const specialties = fd.getAll('specialties').map(String).filter((s) => SPECIALTY_VALUES.includes(s))
   const photo = fd.get('photo')

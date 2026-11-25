@@ -6,7 +6,8 @@ import { Turnstile, TURNSTILE_ENABLED } from '@/components/forms/Turnstile'
 import { GoogleButton } from '@/components/forms/GoogleButton'
 import { currentGoogleEmail } from '@/lib/auth/google'
 import { createClient } from '@/lib/supabase/client'
-import { MAX_PHOTO_BYTES, MIN_AGE, SPECIALTIES } from '@/constants/matchmakerForm'
+import { ChoiceDropdown } from '@/components/forms/ChoiceDropdown'
+import { LANGUAGES, MAX_PHOTO_BYTES, MIN_AGE, SPECIALTIES } from '@/constants/matchmakerForm'
 
 type Gender = 'male' | 'female' | ''
 
@@ -117,7 +118,7 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
       fd.append('gender', gender)
       for (const k of ['firstName', 'lastName', 'phone', 'email', 'birthDate', 'biography', 'yearsExperience', 'matchesClosed', 'city', 'languages', 'password'] as const) {
         if (googleEmail && k === 'password') continue
-        fd.append(k, v[k].trim())
+        fd.append(k, k === 'languages' ? v[k].split(' | ').map((x) => x.trim()).filter(Boolean).join(', ') : v[k].trim())
       }
       specialties.forEach((s) => fd.append('specialties', s))
       if (photo) fd.append('photo', photo)
@@ -339,10 +340,10 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
         {/* Languages */}
         <div className="flex flex-col gap-1.5">
           <Label req>{t('שפות', 'Languages')}</Label>
-          <input
-            className={`${input} ${border('languages')}`} maxLength={150}
-            placeholder={t('לדוגמה: עברית, אנגלית, יידיש', 'For example: Hebrew, English, Yiddish')}
-            value={v.languages} onChange={(e) => set('languages', e.target.value)}
+          <ChoiceDropdown
+            id="languages" options={LANGUAGES} multi custom search hasError={!!errors.languages}
+            value={v.languages} onChange={(val) => set('languages', val)}
+            placeholder={t('בחרו את השפות שאתם דוברים', 'Choose the languages you speak')}
           />
           <Err k="languages" />
         </div>
