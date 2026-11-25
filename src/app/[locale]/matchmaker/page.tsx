@@ -188,7 +188,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
       // 3. Matches
       const { data: matchesData } = await supabase
         .from('matches')
-        .select('id, female_id, male_id, matchmaker_id, stage, status, updated_at, fee_amount, fee_sent_at, fee_female_ack_at, fee_male_ack_at, co_matchmaker_id, matchmakers!matches_matchmaker_id_fkey(first_name, last_name, email), co:matchmakers!matches_co_matchmaker_id_fkey(first_name, last_name, email)')
+        .select('id, female_id, male_id, matchmaker_id, stage, status, updated_at, fee_amount, fee_sent_at, fee_female_ack_at, fee_male_ack_at, fee_paid_at, co_matchmaker_id, matchmakers!matches_matchmaker_id_fkey(first_name, last_name, email), co:matchmakers!matches_co_matchmaker_id_fkey(first_name, last_name, email)')
         .order('updated_at', { ascending: false })
 
       if (matchesData) {
@@ -216,6 +216,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
           feeAmount: row.fee_amount ?? null,
           feeSentAt: row.fee_sent_at ?? null,
           femaleAck: !!row.fee_female_ack_at,
+          feePaidAt: row.fee_paid_at ?? null,
           maleAck: !!row.fee_male_ack_at,
         })))
       }

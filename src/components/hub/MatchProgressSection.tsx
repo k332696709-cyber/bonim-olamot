@@ -279,10 +279,33 @@ function MatchCard({
 }) {
   const [editingFee, setEditingFee] = useState(false)
   const [dropBusy, setDropBusy] = useState(false)
+  const [paidBusy, setPaidBusy] = useState(false)
+  const [paidError, setPaidError] = useState('')
   const isHe = locale === 'he'
   const dropped = match.status === 'rejected'
   // Only the matchmaker who opened the match (or an admin) sets and sends the fee; a colleague added to it cannot.
   const canSetFee = isAdmin || match.matchmakerEmail === currentUserEmail
+  // The matchmaker of the match, their colleague on it, or an admin confirms that the fee was received.
+  const canConfirmPaid = isAdmin || match.matchmakerEmail === currentUserEmail || (!!match.coEmail && match.coEmail === currentUserEmail)
+  const confirmPaid = async (paid: boolean) => {
+    setPaidBusy(true)
+    setPaidError('')
+    try {
+      const { data } = await createClient().auth.getSession()
+      const res = await fetch('/api/matchmaker/match-fee-paid', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token ?? ''}` },
+        body: JSON.stringify({ matchId: match.id, paid }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json?.message ?? 'bad')
+      onMatchSaved({ id: match.id, patch: { feePaidAt: json.feePaidAt ?? null } })
+    } catch (e) {
+      setPaidError(e instanceof Error && e.message !== 'bad' ? e.message : (isHe ? 'השמירה נכשלה.' : 'Saving failed.'))
+    } finally {
+      setPaidBusy(false)
+    }
+  }
   const labels = isHe ? STAGE_LABELS_HE : STAGE_LABELS_EN
   const currentIdx = MATCH_STAGES.indexOf(match.stage)
   const hasNext = currentIdx < MATCH_STAGES.length - 1
@@ -385,6 +408,23 @@ function MatchCard({
           <p className="text-xs text-gray-400">{isHe ? 'דמי השידוך נקבעים ונשלחים על ידי השדכן/ית שפתח/ה את השידוך' : 'The fee is set and sent by the matchmaker who opened the match'}</p>
         )}
       </div>
+      )}
+
+      {!dropped && match.stage === 'closing' && match.feeAmount && (
+        <div className="mt-3 border-t border-gray-100 pt-3 flex items-center justify-between gap-2 flex-wrap" dir={isHe ? 'rtl' : 'ltr'}>
+          <p className={`text-xs font-semibold ${match.feePaidAt ? 'text-green-700' : 'text-burgundy-600'}`}>
+            {match.feePaidAt
+              ? (isHe ? '✓ דמי השידוך התקבלו' : '✓ Fee received')
+              : (isHe ? 'דמי השידוך עדיין לא אושרו כנתקבלו. עד אז המועמדים לא יכולים למחוק את החשבון.' : 'The fee is not confirmed yet. Until then the candidates cannot delete their accounts.')}
+          </p>
+          {canConfirmPaid && (
+            <button type="button" disabled={paidBusy} onClick={() => confirmPaid(!match.feePaidAt)}
+              className="text-xs font-medium text-navy-600 hover:text-navy-800 border border-navy-200 rounded-lg px-3 py-1 hover:bg-navy-50 disabled:opacity-50">
+              {match.feePaidAt ? (isHe ? 'ביטול האישור' : 'Undo') : (isHe ? 'אישרתי שקיבלתי את הכסף' : 'I confirm the money was received')}
+            </button>
+          )}
+          {paidError && <p className="w-full text-xs text-burgundy-600" role="alert">{paidError}</p>}
+        </div>
       )}
 
       {!dropped && (

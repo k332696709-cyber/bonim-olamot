@@ -46,6 +46,8 @@ export interface MatchProgress {
   feeAmount?: number | null
   feeSentAt?: string | null
   femaleAck?: boolean
+  /** When the matchmaker confirmed the fee was received (after the engagement closed). */
+  feePaidAt?: string | null
   maleAck?: boolean
   /** The matchmaker who opened the match, and an optional colleague working on it with them. */
   /** "rejected" means the proposal came down and the match will not go forward. */

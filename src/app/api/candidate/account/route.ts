@@ -34,6 +34,22 @@ export async function DELETE(req: NextRequest) {
   if (staff) return NextResponse.json({ message: 'זה חשבון של שדכן/מנהל.' }, { status: 400 })
 
   const found = await findRegistration(admin, user.id)
+
+  // An engagement that closed through the site: the account stays until the matchmaker confirms the fee was received.
+  if (found?.reg.profile_id) {
+    const pid = found.reg.profile_id
+    const { data: owing } = await admin
+      .from('matches').select('id')
+      .or(`female_id.eq.${pid},male_id.eq.${pid}`)
+      .eq('stage', 'closing').neq('status', 'rejected')
+      .not('fee_amount', 'is', null).is('fee_paid_at', null)
+      .limit(1)
+    if ((owing ?? []).length > 0) {
+      return NextResponse.json({
+        message: 'השידוך שלכם נסגר דרך האתר, ולכן אי אפשר למחוק את החשבון עד שדמי השידוך ישולמו והשדכן/ית יאשר/תאשר שהתקבלו. אפשר לפנות אל השדכן/ית.',
+      }, { status: 409 })
+    }
+  }
   const name = `${found?.reg.answers?.fullName ?? ''} ${found?.reg.answers?.lastName ?? ''}`.trim()
 
   // Photos: the files first, then their rows.

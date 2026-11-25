@@ -8,6 +8,7 @@ import { Reveal } from '@/components/home/Reveal'
 import { WordBand } from '@/components/home/WordBand'
 import { IntroSplash } from '@/components/home/IntroSplash'
 import { ContactRise } from '@/components/home/ContactRise'
+import { Faq } from '@/components/home/Faq'
 import { getT } from '@/lib/i18n/translations'
 import { fetchPublishedSpots } from '@/lib/dateSpots'
 import { CATEGORY_LABELS } from '@/types/dateSpots'
@@ -155,6 +156,9 @@ export default async function HomePage({ params: { locale } }: { params: { local
           </Reveal>
         </div>
       </section>
+
+      {/* ══ Questions and answers ═══════════════════════════════════════════ */}
+      <Faq he={isHe} />
 
       {/* ══ 3. Matchmaker Corner (dark) ════════════════════════════════════════ */}
       <section className="relative overflow-hidden bg-navy-800 text-[#f1f1f1] px-4 py-20 sm:py-28">
