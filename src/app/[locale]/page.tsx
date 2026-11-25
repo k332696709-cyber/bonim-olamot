@@ -31,7 +31,7 @@ export default async function HomePage({ params: { locale } }: { params: { local
 
   return (
     <div className="flex flex-col -mt-[5.25rem]" dir={isHe ? 'rtl' : 'ltr'}>
-      <IntroSplash title={isHe ? 'בונים עולמות' : 'Bonim Olamot'} subtitle={isHe ? 'שידוכים בדרך חדשה' : 'Matchmaking, the new way'} />
+      <IntroSplash title={isHe ? 'בונים עולמות' : 'Bonim Olamot'} subtitle={isHe ? 'אתר שידוכים מתקדם לקהילה החרדית' : 'Advanced matchmaking for the Haredi community'} />
 
       {/* ══ 1. Hero (dark) ═════════════════════════════════════════════════════ */}
       <section className="relative overflow-hidden bg-navy-800 text-[#f1f1f1] px-4 pt-40 pb-24 sm:pt-48 sm:pb-32">
