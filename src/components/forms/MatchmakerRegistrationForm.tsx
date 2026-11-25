@@ -1,8 +1,11 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Turnstile, TURNSTILE_ENABLED } from '@/components/forms/Turnstile'
+import { GoogleButton } from '@/components/forms/GoogleButton'
+import { currentGoogleEmail } from '@/lib/auth/google'
+import { createClient } from '@/lib/supabase/client'
 import { MAX_PHOTO_BYTES, MIN_AGE, SPECIALTIES } from '@/constants/matchmakerForm'
 
 type Gender = 'male' | 'female' | ''
@@ -26,7 +29,26 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
   const [resetSignal, setResetSignal] = useState(0)
   const [done, setDone] = useState(false)
   const [consent, setConsent] = useState(false)
+  const [googleEmail, setGoogleEmail] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const DRAFT = 'matchmaker_reg_draft'
+
+  // A trip to Google and back keeps what was typed (never the passwords or the photo).
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(DRAFT)
+      if (raw) {
+        const d = JSON.parse(raw)
+        if (d.v) setV((s) => ({ ...s, ...d.v, password: '', confirmPassword: '' }))
+        if (d.gender) setGender(d.gender)
+        if (Array.isArray(d.specialties)) setSpecialties(d.specialties)
+      }
+    } catch { /* no draft */ }
+    currentGoogleEmail().then((email) => { if (email) { setGoogleEmail(email); setV((s) => ({ ...s, email })) } })
+  }, [])
+  useEffect(() => {
+    try { sessionStorage.setItem(DRAFT, JSON.stringify({ v: { ...v, password: '', confirmPassword: '' }, gender, specialties })) } catch { /* ignore */ }
+  }, [v, gender, specialties])
   const topRef = useRef<HTMLDivElement>(null)
 
   const set = (k: keyof typeof v, value: string) => {
@@ -75,9 +97,9 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
     if (v.city.trim().length < 2) err.city = req
     if (specialties.length === 0) err.specialties = t('יש לבחור לפחות תחום אחד', 'Pick at least one')
     if (v.languages.trim().length < 2) err.languages = req
-    if (v.password.length < 10) err.password = t('לפחות 10 תווים', 'At least 10 characters')
+    if (!googleEmail && v.password.length < 10) err.password = t('לפחות 10 תווים', 'At least 10 characters')
     if (!consent) err.consent = t('יש לאשר את ההסכמה', 'Please accept to continue')
-    if (v.confirmPassword !== v.password) err.confirmPassword = t('הסיסמאות אינן תואמות', 'Passwords do not match')
+    if (!googleEmail && v.confirmPassword !== v.password) err.confirmPassword = t('הסיסמאות אינן תואמות', 'Passwords do not match')
     setErrors(err)
     return Object.keys(err).length === 0
   }
@@ -94,6 +116,7 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
       const fd = new FormData()
       fd.append('gender', gender)
       for (const k of ['firstName', 'lastName', 'phone', 'email', 'birthDate', 'biography', 'yearsExperience', 'matchesClosed', 'city', 'languages', 'password'] as const) {
+        if (googleEmail && k === 'password') continue
         fd.append(k, v[k].trim())
       }
       specialties.forEach((s) => fd.append('specialties', s))
@@ -101,7 +124,12 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
       fd.append('consent', '1')
       fd.append('turnstileToken', token)
       fd.append('website', (document.getElementById('mm-website') as HTMLInputElement | null)?.value ?? '')
-      const res = await fetch('/api/register/matchmaker', { method: 'POST', body: fd })
+      const headers: Record<string, string> = {}
+      if (googleEmail) {
+        const { data: sess } = await createClient().auth.getSession()
+        headers.Authorization = `Bearer ${sess.session?.access_token ?? ''}`
+      }
+      const res = await fetch('/api/register/matchmaker', { method: 'POST', headers, body: fd })
       const json = await res.json().catch(() => ({}))
       setResetSignal((n) => n + 1)
       if (!res.ok) {
@@ -109,6 +137,7 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
         setServerError(json?.message ?? t('השליחה נכשלה. נסו שוב.', 'Submission failed. Please try again.'))
         return
       }
+      try { sessionStorage.removeItem(DRAFT) } catch { /* ignore */ }
       setDone(true)
       topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     } catch {
@@ -124,10 +153,12 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
         <div className="w-16 h-16 mx-auto rounded-full bg-navy-800 text-white flex items-center justify-center text-3xl mb-5">✓</div>
         <h2 className="text-2xl font-bold text-navy-800 mb-2">{t('בקשתך התקבלה!', 'Request received!')}</h2>
         <p className="text-navy-500 max-w-md mx-auto">
-          {t(
-            'הבקשה ממתינה לאישור מנהל המערכת. אחרי האישור תוכלו להיכנס עם המייל והסיסמה שבחרתם.',
-            'Your request is waiting for the administrator’s approval. Once approved you can sign in with the email and password you chose.',
-          )}
+          {googleEmail
+            ? t('הבקשה ממתינה לאישור מנהל המערכת. אחרי האישור תוכלו להיכנס עם גוגל, באותו חשבון.', 'Your request is waiting for the administrator’s approval. Once approved you can sign in with Google, using the same account.')
+            : t(
+              'הבקשה ממתינה לאישור מנהל המערכת. אחרי האישור תוכלו להיכנס עם המייל והסיסמה שבחרתם.',
+              'Your request is waiting for the administrator’s approval. Once approved you can sign in with the email and password you chose.',
+            )}
         </p>
       </div>
     )
@@ -148,6 +179,16 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
   return (
     <form onSubmit={submit} noValidate dir={he ? 'rtl' : 'ltr'} className="flex flex-col gap-6 pb-10">
       <div ref={topRef} className="scroll-mt-28" />
+
+      {googleEmail ? (
+        <p className="rounded-2xl bg-white shadow-card px-5 py-4 text-sm text-navy-600">
+          {t('מחוברים עם גוגל: ', 'Signed in with Google: ')}<span dir="ltr" className="font-semibold">{googleEmail}</span>. {t('אין צורך בסיסמה.', 'No password needed.')}
+        </p>
+      ) : (
+        <div className="rounded-[32px] bg-white shadow-card p-6 flex flex-col gap-2">
+          <GoogleButton label={t('הרשמה מהירה עם גוגל', 'Quick sign-up with Google')} nextPath={typeof window !== 'undefined' ? window.location.pathname : '/he/register/matchmaker'} />
+        </div>
+      )}
 
       <p className="self-center rounded-full bg-white shadow-card px-4 py-1.5 text-xs text-navy-500">{t('שדות המסומנים ב-* הם חובה', 'Fields marked * are required')}</p>
 
@@ -195,7 +236,7 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
           </div>
           <div className="flex flex-col gap-1.5">
             <Label req>{t('אימייל', 'Email')}</Label>
-            <input className={`${input} ${border('email')}`} type="email" dir="ltr" placeholder="example@email.com" value={v.email} maxLength={120} onChange={(e) => set('email', e.target.value)} autoComplete="email" />
+            <input className={`${input} ${border('email')}`} type="email" dir="ltr" placeholder="example@email.com" value={v.email} maxLength={120} readOnly={!!googleEmail} onChange={(e) => set('email', e.target.value)} autoComplete="email" />
             <Err k="email" />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -308,7 +349,7 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
       </div>
 
       {/* Sign-in password */}
-      <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-9 flex flex-col gap-4">
+      {!googleEmail && <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-9 flex flex-col gap-4">
         <div>
           <h2 className="text-lg font-bold text-navy-800">{t('סיסמה לכניסה', 'Sign-in password')}</h2>
           <p className="text-sm text-navy-400">{t('תשמש אתכם לכניסה אחרי שהמנהל יאשר את הבקשה', 'You will use it to sign in once the administrator approves your request')}</p>
@@ -325,7 +366,7 @@ export function MatchmakerRegistrationForm({ locale = 'he' }: { locale?: string 
             <Err k="confirmPassword" />
           </div>
         </div>
-      </div>
+      </div>}
 
       <div className="rounded-2xl bg-white shadow-card px-5 py-4">
         <label className="flex items-start gap-3 cursor-pointer">

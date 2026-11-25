@@ -50,11 +50,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: TURNSTILE_FAILED_MESSAGE }, { status: 400 })
   }
 
+  // Signed in with Google: the account already exists and the email is Google's, so no password.
+  let googleUser: { id: string; email: string } | null = null
+  const bearer = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '')
+  if (bearer) {
+    const u = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const k = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (u && k) {
+      const tmp = createClient(u, k, { auth: { persistSession: false, autoRefreshToken: false } })
+      const { data } = await tmp.auth.getUser(bearer)
+      const usr = data?.user
+      const viaGoogle = (usr?.identities ?? []).some((i) => i.provider === 'google')
+      if (usr && viaGoogle && usr.email) googleUser = { id: usr.id, email: usr.email.toLowerCase() }
+    }
+    if (!googleUser) return NextResponse.json({ message: 'ההתחברות עם גוגל פגה. התחברו שוב ונסו שוב.' }, { status: 401 })
+  }
+
   const gender = clean(fd.get('gender'), 10)
   const firstName = clean(fd.get('firstName'), 60)
   const lastName = clean(fd.get('lastName'), 60)
   const phone = clean(fd.get('phone'), 20)
-  const email = clean(fd.get('email'), 120).toLowerCase()
+  const email = googleUser ? googleUser.email : clean(fd.get('email'), 120).toLowerCase()
   const birthDate = clean(fd.get('birthDate'), 10)
   const biography = clean(fd.get('biography'), 1500)
   const years = Number(clean(fd.get('yearsExperience'), 3))
@@ -82,7 +98,7 @@ export async function POST(req: NextRequest) {
   if (specialties.length === 0) fields.specialties = 'יש לבחור לפחות תחום אחד'
   if (languages.length < 2) fields.languages = 'שדה חובה'
   if (!consent) fields.consent = 'יש לאשר את ההסכמה'
-  if (password.length < 10 || password.length > 72) fields.password = 'הסיסמה חייבת להכיל לפחות 10 תווים'
+  if (!googleUser && (password.length < 10 || password.length > 72)) fields.password = 'הסיסמה חייבת להכיל לפחות 10 תווים'
 
   let photoFile: File | null = null
   if (photo instanceof File && photo.size > 0) {
@@ -112,18 +128,22 @@ export async function POST(req: NextRequest) {
     const { data: existingApp } = await (admin as any).from('matchmaker_applications').select('id').eq('email', email).maybeSingle()
     if (existingMm || existingApp) return NextResponse.json(taken, { status: 409 })
 
-    const { data: created, error: userErr } = await admin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { role_requested: 'matchmaker' },
-    })
-    if (userErr || !created?.user) {
-      const exists = /already|registered|exists/i.test(userErr?.message ?? '')
-      if (!exists) console.error('matchmaker registration: createUser failed', userErr?.message)
-      return NextResponse.json(exists ? taken : { message: 'יצירת החשבון נכשלה. נסו שוב.' }, { status: exists ? 409 : 502 })
+    if (googleUser) {
+      userId = googleUser.id
+    } else {
+      const { data: created, error: userErr } = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { role_requested: 'matchmaker' },
+      })
+      if (userErr || !created?.user) {
+        const exists = /already|registered|exists/i.test(userErr?.message ?? '')
+        if (!exists) console.error('matchmaker registration: createUser failed', userErr?.message)
+        return NextResponse.json(exists ? taken : { message: 'יצירת החשבון נכשלה. נסו שוב.' }, { status: exists ? 409 : 502 })
+      }
+      userId = created.user.id
     }
-    userId = created.user.id
 
     if (photoFile) {
       const ext = (photoFile.name.split('.').pop() ?? 'jpg').replace(/[^a-z0-9]/gi, '').slice(0, 5) || 'jpg'
@@ -134,7 +154,7 @@ export async function POST(req: NextRequest) {
       if (upErr) {
         console.error('matchmaker registration: photo upload failed', upErr.message)
         photoPath = null
-        await admin.auth.admin.deleteUser(userId)
+        if (!googleUser) await admin.auth.admin.deleteUser(userId)
         return NextResponse.json({ message: 'העלאת התמונה נכשלה. נסו שוב.' }, { status: 502 })
       }
     }
@@ -158,7 +178,7 @@ export async function POST(req: NextRequest) {
     if (appErr) {
       console.error('matchmaker registration: insert failed', appErr.message)
       if (photoPath) await admin.storage.from('registration-photos').remove([photoPath])
-      await admin.auth.admin.deleteUser(userId) // roll back so the email is not stuck
+      if (!googleUser) await admin.auth.admin.deleteUser(userId) // roll back so the email is not stuck
       return NextResponse.json({ message: 'שמירת הבקשה נכשלה. נסו שוב.' }, { status: 502 })
     }
 
@@ -167,7 +187,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error('matchmaker registration error:', e)
-    if (userId) await admin.auth.admin.deleteUser(userId).catch(() => {})
+    if (userId && !googleUser) await admin.auth.admin.deleteUser(userId).catch(() => {})
     return NextResponse.json({ message: 'אירעה שגיאה. נסו שוב.' }, { status: 500 })
   }
 }

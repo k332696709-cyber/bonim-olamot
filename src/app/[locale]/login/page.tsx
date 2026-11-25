@@ -147,6 +147,9 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
               <Link href={`/${locale}/register/male`} className="underline font-semibold">{isHe ? 'מיועדים' : 'men'}</Link>
               {' · '}
               <Link href={`/${locale}/register/female`} className="underline font-semibold">{isHe ? 'מיועדות' : 'women'}</Link>
+              {' · '}
+              <Link href={`/${locale}/register/matchmaker`} className="underline font-semibold">{isHe ? 'שדכנים' : 'matchmakers'}</Link>
+              {isHe ? '. אם כבר שלחתם בקשת שדכן, היא ממתינה לאישור המנהל.' : '. If you already sent a matchmaker request, it is waiting for the administrator.'}
             </div>
           )}
           <GoogleButton label={isHe ? 'כניסה עם גוגל' : 'Sign in with Google'} nextPath={`/${locale}/login`} />
