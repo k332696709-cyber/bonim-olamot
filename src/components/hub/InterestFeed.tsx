@@ -27,9 +27,11 @@ async function authed(path: string, init: RequestInit = {}) {
  * it is mutual. A matchmaker can open the match from here to move it forward.
  */
 export function InterestFeed({
-  locale, onMatch, onClaimed,
+  locale, onMatch, onClaimed, busyIds,
 }: {
   locale: string
+  /** Candidates in the middle of an active match: a new match cannot be opened for them. */
+  busyIds?: Set<string>
   /** A match that exists (opened here, or opened by itself): the tracker should list it. */
   onMatch?: (m: MatchInfo) => void
   /** The signed-in matchmaker took over a match. */
@@ -138,6 +140,8 @@ export function InterestFeed({
                     <span className="text-xs font-semibold text-green-700">
                       {he ? `✓ בטיפול${i.match?.matchmakerName ? `: ${i.match.matchmakerName}` : ''}` : '✓ Being handled'}
                     </span>
+                  ) : busyIds?.has(i.femaleId) || busyIds?.has(i.maleId) ? (
+                    <span className="text-xs font-semibold text-gray-500">{he ? 'באמצע שידוך פעיל' : 'In an active match'}</span>
                   ) : (
                     <button
                       type="button" disabled={busy === key} onClick={() => open(i)}

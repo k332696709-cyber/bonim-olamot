@@ -487,7 +487,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
 
         {/* ── Interest from candidates ── */}
         <section>
-          <InterestFeed locale={locale} onMatch={handleMatchSeen} onClaimed={handleClaimed} />
+          <InterestFeed locale={locale} onMatch={handleMatchSeen} onClaimed={handleClaimed} busyIds={activeIds} />
         </section>
 
         {/* ── Engagement announcements ── */}
@@ -504,6 +504,7 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
             locale={locale}
             onStageUpdate={handleStageUpdate}
             onDrop={handleDrop}
+            busyIds={activeIds}
             onMatchSaved={handleMatchSaved}
             people={[...femaleProfiles.map((x) => ({ id: x.id, name: `${x.firstName} ${x.lastName}`, gender: 'female' as const })), ...maleProfiles.map((x) => ({ id: x.id, name: `${x.firstName} ${x.lastName}`, gender: 'male' as const }))]}
           />

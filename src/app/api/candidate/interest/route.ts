@@ -4,6 +4,7 @@ import { findRegistration } from '@/lib/server/photos'
 import { notifyOwner } from '@/lib/server/notify'
 import { notifyCandidate } from '@/lib/server/candidateNotify'
 import { PASS_REASON_CODES } from '@/constants/passReasons'
+import { busyProfiles } from '@/lib/server/matches'
 
 export const runtime = 'nodejs'
 
@@ -78,14 +79,20 @@ export async function POST(req: NextRequest) {
       const femaleId = found.gender === 'female' ? me : to
       const maleId = found.gender === 'male' ? me : to
       const { data: existing } = await admin.from('matches').select('id').eq('female_id', femaleId).eq('male_id', maleId).maybeSingle()
+      let busyNote = ''
       if (!existing) {
-        const { error: mErr } = await admin.from('matches').insert({ female_id: femaleId, male_id: maleId })
-        if (mErr) console.error('auto match failed:', mErr.message)
+        // Someone already in the middle of a match is not matched again; the owner decides what to do.
+        if ((await busyProfiles(admin, [femaleId, maleId])).size > 0) {
+          busyNote = 'אחד מהם כבר באמצע שידוך פעיל, ולכן השידוך לא נפתח אוטומטית.'
+        } else {
+          const { error: mErr } = await admin.from('matches').insert({ female_id: femaleId, male_id: maleId })
+          if (mErr) console.error('auto match failed:', mErr.message)
+        }
       }
       if (isNew) {
         await notifyOwner(
           'עניין הדדי בין שני מועמדים',
-          [`${nameOf(mine)} ו${nameOf(theirs)}`, 'שניהם סימנו עניין. השידוך נפתח ומחכה לשדכן/ית שייקח/תיקח אותו.'],
+          [`${nameOf(mine)} ו${nameOf(theirs)}`, busyNote || 'שניהם סימנו עניין. השידוך נפתח ומחכה לשדכן/ית שייקח/תיקח אותו.'],
           '/he/matchmaker',
         )
         await Promise.all([notifyCandidate(admin, me, 'mutual'), notifyCandidate(admin, to, 'mutual')])

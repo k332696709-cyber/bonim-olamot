@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { notifyCandidate } from '@/lib/server/candidateNotify'
+import { BUSY_MESSAGE, busyProfiles } from '@/lib/server/matches'
 
 export const runtime = 'nodejs'
 
@@ -61,6 +62,8 @@ export async function POST(req: NextRequest) {
     if (existing) {
       match = existing
     } else {
+      // Someone in the middle of a match cannot be matched again.
+      if ((await busyProfiles(admin, [femaleId, maleId])).size > 0) return NextResponse.json({ message: BUSY_MESSAGE }, { status: 409 })
       const { data: created, error } = await admin
         .from('matches').insert({ female_id: femaleId, male_id: maleId, matchmaker_id: mm.id }).select('*').single()
       if (error || !created) {

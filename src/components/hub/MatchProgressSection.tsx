@@ -422,6 +422,8 @@ interface MatchProgressSectionProps {
   onDrop: (matchId: string, dropped: boolean) => Promise<boolean>
   onMatchSaved: (m: any) => void
   people: { id: string; name: string; gender: 'female' | 'male' }[]
+  /** Candidates in the middle of an active match: they cannot be chosen for a new one. */
+  busyIds?: Set<string>
 }
 
 export function MatchProgressSection({
@@ -433,6 +435,7 @@ export function MatchProgressSection({
   onDrop,
   onMatchSaved,
   people,
+  busyIds,
 }: MatchProgressSectionProps) {
   const isHe = locale === 'he'
   const [opening, setOpening] = useState(false)
@@ -479,12 +482,12 @@ export function MatchProgressSection({
               <select value={femaleId} onChange={(e) => setFemaleId(e.target.value)}
                 className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm" aria-label={isHe ? 'מיועדת' : 'Woman'}>
                 <option value="">{isHe ? 'מיועדת...' : 'Woman…'}</option>
-                {people.filter((x) => x.gender === 'female').map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                {people.filter((x) => x.gender === 'female').map((x) => <option key={x.id} value={x.id} disabled={busyIds?.has(x.id)}>{x.name}{busyIds?.has(x.id) ? (isHe ? ' (באמצע שידוך)' : ' (in a match)') : ''}</option>)}
               </select>
               <select value={maleId} onChange={(e) => setMaleId(e.target.value)}
                 className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm" aria-label={isHe ? 'מיועד' : 'Man'}>
                 <option value="">{isHe ? 'מיועד...' : 'Man…'}</option>
-                {people.filter((x) => x.gender === 'male').map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                {people.filter((x) => x.gender === 'male').map((x) => <option key={x.id} value={x.id} disabled={busyIds?.has(x.id)}>{x.name}{busyIds?.has(x.id) ? (isHe ? ' (באמצע שידוך)' : ' (in a match)') : ''}</option>)}
               </select>
             </div>
             <FeeEditor
