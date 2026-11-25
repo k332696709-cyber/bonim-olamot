@@ -28,6 +28,8 @@ export interface Proposal {
   highlightsEn: string[]
   conflictsHe: string[]
   conflictsEn: string[]
+  /** Filled in on the server: the person is in the middle of a match with someone else. */
+  busy?: boolean
 }
 
 export type StyleShift = 'more_open' | 'more_conservative' | null

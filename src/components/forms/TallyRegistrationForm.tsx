@@ -29,13 +29,16 @@ export function TallyRegistrationForm({
    * "create": the short registration. "questionnaire": the steps that follow, saved as the person goes.
    * "edit": a signed-in candidate updates their answers (no password, consent or photos here).
    */
-  mode?: 'create' | 'edit' | 'questionnaire'
+  mode?: 'create' | 'edit' | 'questionnaire' | 'pool'
   initialValues?: Record<string, string>
   onSaved?: (result?: { percent?: number; complete?: boolean }) => void
   onCancel?: () => void
 }) {
   const editing = mode === 'edit'
-  const isCreate = mode === 'create'
+  // "pool": a matchmaker enters a candidate into their private pool (same short form, no account, password or consent).
+  const isPool = mode === 'pool'
+  const isCreate = mode === 'create' || isPool
+  const account = mode === 'create'
   const questionnaire = mode === 'questionnaire'
   const [page, setPage] = useState(0)
   const [values, setValues] = useState<Record<string, string>>(() => {
@@ -163,13 +166,13 @@ export function TallyRegistrationForm({
   }
 
   useEffect(() => {
-    if (!isCreate) return
+    if (!account) return
     currentGoogleEmail().then((email) => {
       if (!email) return
       setGoogleEmail(email)
       setValues((v) => ({ ...v, email }))
     })
-  }, [isCreate])
+  }, [account])
 
   const scrollTop = () => topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
@@ -245,7 +248,7 @@ export function TallyRegistrationForm({
     e.preventDefault()
     if (!last) return goNext()
     const acct: Record<string, string> = {}
-    if (isCreate) {
+    if (account) {
       if (!googleEmail && password.length < 10) acct.password = 'הסיסמה חייבת להכיל לפחות 10 תווים'
       if (!googleEmail && confirmPassword !== password) acct.confirmPassword = 'הסיסמאות אינן תואמות'
       if (!consent) acct.consent = 'יש לאשר את ההסכמה כדי להמשיך'
@@ -271,6 +274,10 @@ export function TallyRegistrationForm({
       if (editing || questionnaire) {
         const { data: sess } = await createClient().auth.getSession()
         headers = { Authorization: `Bearer ${sess.session?.access_token ?? ''}` }
+      } else if (isPool) {
+        for (const f of photos) fd.append('photo', f)
+        const { data: sess } = await createClient().auth.getSession()
+        headers = { Authorization: `Bearer ${sess.session?.access_token ?? ''}` }
       } else {
         for (const f of photos) fd.append('photo', f)
         fd.append('consent', '1')
@@ -294,7 +301,7 @@ export function TallyRegistrationForm({
       }
       clearDraft(draftKey)
       clearPhotos(draftKey)
-      if (editing) {
+      if (editing || isPool) {
         onSaved?.()
         return
       }
@@ -697,12 +704,12 @@ export function TallyRegistrationForm({
           <button type="button" onClick={startOver} className="underline font-semibold text-navy-800">התחלה מחדש</button>
         </p>
       )}
-      {isCreate && googleEmail && (
+      {account && googleEmail && (
         <p className="self-center rounded-full bg-white shadow-card px-4 py-2 text-sm text-navy-700">
           מחוברים עם גוגל: <span dir="ltr" className="font-semibold">{googleEmail}</span>. אין צורך בסיסמה.
         </p>
       )}
-      {isCreate && !googleEmail && page === 0 && (
+      {account && !googleEmail && page === 0 && (
         <div className="rounded-[32px] bg-white shadow-card p-5 sm:p-6 flex flex-col gap-3 empty:hidden">
           <GoogleButton label="הרשמה מהירה עם גוגל" nextPath={typeof window !== 'undefined' ? window.location.pathname : '/he'} />
         </div>
@@ -737,7 +744,7 @@ export function TallyRegistrationForm({
         {pages[page].fields.filter((f) => isVisible(f) && !f.ownBox).map(renderField)}
       </div>
 
-      {last && isCreate && !googleEmail && (
+      {last && account && !googleEmail && (
         <div className="rounded-[32px] bg-white shadow-card p-6 sm:p-9 flex flex-col gap-4">
           <div>
             <h2 className="text-xl font-bold text-navy-800">סיסמה לכניסה</h2>
@@ -773,7 +780,7 @@ export function TallyRegistrationForm({
         </div>
       )}
 
-      {last && isCreate && (
+      {last && account && (
         <div className="rounded-2xl bg-white shadow-card px-5 py-4">
           <label className="flex items-start gap-3 cursor-pointer">
             <input
@@ -814,7 +821,7 @@ export function TallyRegistrationForm({
         ) : <span />}
         <button type="submit" disabled={submitting || saving}
           className="h-12 min-w-40 px-9 rounded-full bg-burgundy-500 hover:bg-burgundy-600 disabled:opacity-60 text-white text-sm font-bold transition-colors">
-          {saving ? 'שומר...' : last ? (submitting ? (editing || questionnaire ? 'שומר...' : 'שולח...') : questionnaire ? 'סיום ושמירה' : editing ? 'שמירת השינויים' : 'פתיחת חשבון') : 'הבא'}
+          {saving ? 'שומר...' : last ? (submitting ? (editing || questionnaire ? 'שומר...' : 'שולח...') : questionnaire ? 'סיום ושמירה' : editing ? 'שמירת השינויים' : isPool ? 'שמירה במאגר' : 'פתיחת חשבון') : 'הבא'}
         </button>
       </div>
     </form>

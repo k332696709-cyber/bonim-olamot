@@ -5,13 +5,14 @@ import { mapProfileRow } from '@/lib/supabase/mapProfile'
 import { buildProposals, MIN_MATCH_SCORE, styleRank, type AnyProfile, type Proposal } from '@/lib/matchmaking/assistant'
 import { cityCoords, distanceKm } from '@/constants/cityCoords'
 import { respectsPreferences } from '@/lib/matchmaking/preferences'
+import { busyFor } from '@/lib/server/matches'
 
 export type ProposalState = 'none' | 'interested' | 'mutual' | 'passed'
-export interface LiveProposal extends Proposal { state: ProposalState }
+export interface LiveProposal extends Proposal { state: ProposalState; /** The person is in the middle of a match with someone else. */ busy: boolean }
 
 const LOCK_MS = 48 * 60 * 60 * 1000
 
-export async function loadProposals(admin: any, myProfileId: string): Promise<{ me: AnyProfile; proposals: LiveProposal[]; learned: string[]; interestedInMe: number } | null> {
+export async function loadProposals(admin: any, myProfileId: string): Promise<{ me: AnyProfile; proposals: LiveProposal[]; learned: string[]; interestedInMe: number; meBusy: boolean } | null> {
   const { data: meRow } = await admin.from('profiles').select('*').eq('id', myProfileId).maybeSingle()
   if (!meRow) return null
   const me = mapProfileRow(meRow) as AnyProfile
@@ -95,12 +96,13 @@ export async function loadProposals(admin: any, myProfileId: string): Promise<{ 
   // Only real matches are offered: nobody gets everyone who registered.
   for (let i = scored.length - 1; i >= 0; i--) if (scored[i].score < MIN_MATCH_SCORE) scored.splice(i, 1)
 
+  const { meBusy, others } = await busyFor(admin, myProfileId, scored.map((p) => p.id))
   const proposals: LiveProposal[] = scored.map((p) => {
     const kind = mine.get(p.id)
     const state: ProposalState =
       kind === 'interested' ? (theirs.has(p.id) ? 'mutual' : 'interested') : kind === 'passed' ? 'passed' : 'none'
-    return { ...p, state }
+    return { ...p, state, busy: others.has(p.id) }
   })
   const interestedInMe = Array.from(theirs).filter((id) => !mine.has(id) && byId.has(id)).length
-  return { me, proposals, learned, interestedInMe }
+  return { me, proposals, learned, interestedInMe, meBusy }
 }

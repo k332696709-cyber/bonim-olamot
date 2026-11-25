@@ -13,7 +13,7 @@ import { loadPrefs, savePrefs } from '@/lib/matchmaking/prefsStore'
 import { PASS_REASONS } from '@/constants/passReasons'
 
 type Status = 'interested' | 'mutual' | 'passed'
-type LiveProposal = Proposal & { state: 'none' | Status }
+type LiveProposal = Proposal & { state: 'none' | Status; busy?: boolean }
 
 const label = (opts: { value: string; he: string; en: string }[], v: string, he: boolean) => {
   const o = opts.find((x) => x.value === v)
@@ -37,6 +37,7 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
   const [note, setNote] = useState('')
   const [learned, setLearned] = useState<string[]>([])
   const [interestedInMe, setInterestedInMe] = useState(0)
+  const [meBusy, setMeBusy] = useState(false)
 
   useEffect(() => { setPrefs(loadPrefs()) }, [])
 
@@ -53,6 +54,7 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
         setAll(list)
         setLearned(json.learned ?? [])
         setInterestedInMe(json.interestedInMe ?? 0)
+        setMeBusy(!!json.meBusy)
         const st: Record<string, Status> = {}
         for (const p of list) if (p.state !== 'none') st[p.id] = p.state
         setStatus(st)
@@ -237,6 +239,11 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
                 </p>
                 <p className="text-sm text-navy-500">{p.city} · {p.community}</p>
                 <p className="text-sm text-navy-500">{p.occupation} · {label(styleOpts, p.style, he)}</p>
+                <p className={`mt-1.5 inline-block rounded-full px-3 py-0.5 text-xs font-semibold ${p.busy ? 'bg-burgundy-50 text-burgundy-600' : 'bg-navy-50 text-navy-500'}`}>
+                  {p.busy
+                    ? (he ? (p.gender === 'female' ? 'מיועדת באמצע תהליך' : 'מיועד באמצע תהליך') : 'In the middle of a process')
+                    : (he ? (p.gender === 'female' ? 'פנויה' : 'פנוי') : 'Available')}
+                </p>
               </div>
               <div className="text-center shrink-0">
                 <p className="text-3xl font-light text-burgundy-500 tabular-nums" dir="ltr">{p.score}%</p>
@@ -278,7 +285,14 @@ export function ProposalsList({ locale, me }: { locale: string; me: AnyProfile }
               {he ? 'לכרטיס המלא ולתמונות' : 'Full card and photos'}
             </button>
 
-            {!st && (
+            {!st && (p.busy || meBusy) && (
+              <p className="rounded-full bg-[#f1f1f1] text-navy-500 text-sm px-5 py-3 text-center">
+                {meBusy
+                  ? (he ? 'את/ה באמצע תהליך שידוך, ולכן אי אפשר לסמן עניין כרגע.' : 'You are in the middle of a match, so you cannot show interest right now.')
+                  : (he ? (p.gender === 'female' ? 'המיועדת באמצע תהליך, ולכן אי אפשר לסמן עניין כרגע.' : 'המיועד באמצע תהליך, ולכן אי אפשר לסמן עניין כרגע.') : 'This person is in the middle of a process, so interest cannot be sent right now.')}
+              </p>
+            )}
+            {!st && !p.busy && !meBusy && (
               <div className="flex gap-2 pt-1">
                 <button
                   onClick={() => record(p, 'interested')}

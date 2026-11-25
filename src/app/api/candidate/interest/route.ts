@@ -4,7 +4,7 @@ import { findRegistration } from '@/lib/server/photos'
 import { notifyOwner } from '@/lib/server/notify'
 import { notifyCandidate } from '@/lib/server/candidateNotify'
 import { PASS_REASON_CODES } from '@/constants/passReasons'
-import { busyProfiles } from '@/lib/server/matches'
+import { busyFor, busyProfiles } from '@/lib/server/matches'
 
 export const runtime = 'nodejs'
 
@@ -48,6 +48,13 @@ export async function POST(req: NextRequest) {
   // Only the opposite gender can be proposed.
   const { data: target } = await admin.from('profiles').select('id, gender, first_name').eq('id', to).maybeSingle()
   if (!target || target.gender === found.gender) return NextResponse.json({ message: 'ההצעה לא נמצאה.' }, { status: 404 })
+
+  // Interest is not possible while either side is in the middle of a match with someone else.
+  if (kind === 'interested') {
+    const { meBusy, others } = await busyFor(admin, me, [to])
+    if (meBusy) return NextResponse.json({ message: 'את/ה באמצע תהליך שידוך, ולכן אי אפשר לסמן עניין כרגע.' }, { status: 409 })
+    if (others.has(to)) return NextResponse.json({ message: 'הצד השני באמצע תהליך, ולכן אי אפשר לסמן עניין כרגע.' }, { status: 409 })
+  }
 
   // Only a new "interested" counts as news (a second click does not send everything again).
   const { data: before } = await admin

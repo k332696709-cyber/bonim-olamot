@@ -37,6 +37,18 @@ export async function PATCH(req: NextRequest) {
   const mine = match.matchmaker_id === mm.id || match.co_matchmaker_id === mm.id
   if (!mm.is_admin && !mine) return NextResponse.json({ message: 'השידוך הזה מטופל על ידי שדכן/ית אחר/ת.' }, { status: 403 })
 
+  // A match that came from a matchmaker's private pool: when it comes down, the person goes back to that
+  // private pool (their profile and the match are removed from the site).
+  if (body.dropped) {
+    const { data: fromPool } = await admin.from('matchmaker_pool').select('id, profile_id').eq('match_id', matchId).maybeSingle()
+    if (fromPool) {
+      await admin.from('matches').delete().eq('id', matchId)
+      if (fromPool.profile_id) await admin.from('profiles').delete().eq('id', fromPool.profile_id)
+      await admin.from('matchmaker_pool').update({ profile_id: null, match_id: null }).eq('id', fromPool.id)
+      return NextResponse.json({ ok: true, removed: true })
+    }
+  }
+
   const { error } = await admin
     .from('matches')
     .update({ status: body.dropped ? 'rejected' : 'active', updated_at: new Date().toISOString() })

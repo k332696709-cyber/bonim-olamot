@@ -431,6 +431,9 @@ export default function MatchmakerPage({ params }: { params: { locale: string } 
               <Link href={`/${locale}/matchmaker/colleagues`} className="inline-flex items-center rounded-full border border-navy-200 text-navy-700 hover:bg-navy-50 text-sm font-semibold px-5 h-10 transition-colors">
                 {isHe ? 'צוות השדכנים' : 'The matchmakers'}
               </Link>
+              <Link href={`/${locale}/matchmaker/pool`} className="inline-flex items-center rounded-full bg-navy-800 hover:bg-navy-700 text-white text-sm font-semibold px-5 h-10 transition-colors">
+                {isHe ? 'המאגר האישי שלי' : 'My private pool'}
+              </Link>
               {session && <UserBadge session={session} locale={locale} onLogout={handleLogout} />}
             </div>
             <div className="flex items-center gap-4 flex-wrap">

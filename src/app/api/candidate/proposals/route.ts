@@ -21,5 +21,5 @@ export async function GET(req: NextRequest) {
 
   const result = await loadProposals(admin, found.reg.profile_id)
   if (!result) return NextResponse.json({ message: 'הפרופיל לא נמצא.' }, { status: 404 })
-  return NextResponse.json({ proposals: result.proposals, learned: result.learned, interestedInMe: result.interestedInMe })
+  return NextResponse.json({ proposals: result.proposals, learned: result.learned, interestedInMe: result.interestedInMe, meBusy: result.meBusy })
 }
