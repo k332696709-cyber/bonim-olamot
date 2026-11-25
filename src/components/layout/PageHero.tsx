@@ -50,10 +50,11 @@ export function PageHero({
       <div className={`relative max-w-4xl mx-auto animate-fade-up ${center ? 'text-center' : 'text-start'}`}>
         {back && <div className="mb-4 text-sm text-navy-100">{back}</div>}
         {badge && (
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/15 px-4 py-1.5 text-sm text-burgundy-100 mb-5">
-            <span className="w-2 h-2 rounded-full bg-burgundy-300" />
+          <p className={`flex items-center gap-4 text-sm sm:text-base text-burgundy-100 mb-5 ${center ? 'justify-center' : ''}`}>
+            <span className="h-px w-8 bg-burgundy-300/70" aria-hidden="true" />
             {badge}
-          </span>
+            {center && <span className="h-px w-8 bg-burgundy-300/70" aria-hidden="true" />}
+          </p>
         )}
         <h1 className="text-3xl sm:text-5xl font-bold leading-tight">{title}</h1>
         {subtitle && <p className={`text-navy-100 text-base sm:text-lg mt-4 max-w-2xl ${center ? 'mx-auto' : ''}`}>{subtitle}</p>}

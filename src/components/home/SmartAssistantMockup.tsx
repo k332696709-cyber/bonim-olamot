@@ -27,10 +27,10 @@ export function SmartAssistantMockup({ locale }: { locale: string }) {
     return () => timers.forEach(clearTimeout)
   }, [inView])
 
-  const matches = [
-    { letter: 'ר', meta: he ? 'גיל 24 · ירושלים · ליטאית' : 'Age 24 · Jerusalem · Litvish', score: 94 },
-    { letter: 'ש', meta: he ? 'גיל 26 · בני ברק · חסידית' : 'Age 26 · Bnei Brak · Hasidic', score: 89 },
-    { letter: 'מ', meta: he ? 'גיל 25 · בית שמש · ספרדית' : 'Age 25 · Beit Shemesh · Sephardic', score: 85 },
+  const tips = [
+    { n: '1', text: he ? 'מקום שקט וציבורי: בית קפה או לובי מלון' : 'A quiet public place: a cafe or hotel lobby' },
+    { n: '2', text: he ? 'שעה עד שעתיים, לא יותר מזה' : 'One to two hours, no longer' },
+    { n: '3', text: he ? 'לשאול על ערכים ותוכניות, לא רק על תחביבים' : 'Ask about values and plans, not only hobbies' },
   ]
 
   return (
@@ -51,7 +51,7 @@ export function SmartAssistantMockup({ locale }: { locale: string }) {
 
         <div className="p-4 sm:p-5 flex flex-col gap-3 min-h-[280px] sm:min-h-[360px] bg-[#f6f6f6]">
           <Bubble show={step >= 1} mine>
-            {he ? 'מחפשת בחור ישיבתי מירושלים, גיל 25 עד 28' : 'Looking for a yeshiva guy from Jerusalem, 25 to 28'}
+            {he ? 'מה אתם ממליצים לדייט הראשון?' : 'What do you recommend for a first date?'}
           </Bubble>
 
           {step === 2 && (
@@ -63,13 +63,13 @@ export function SmartAssistantMockup({ locale }: { locale: string }) {
           )}
 
           <Bubble show={step >= 3}>
-            {he ? 'מצאתי 3 הצעות שמתאימות למה שתיארת. הפרטים מוצגים בצורה אנונימית.' : 'I found 3 suggestions that fit your description. Details are shown anonymously.'}
+            {he ? 'שאלה מצוינת. הנה שלוש נקודות שעוזרות לפגישה ראשונה נעימה:' : 'Great question. Here are three points for a pleasant first meeting:'}
           </Bubble>
 
           <div className="flex flex-col gap-2.5 mt-1">
-            {matches.map((m, i) => (
+            {tips.map((m, i) => (
               <div
-                key={m.letter}
+                key={m.n}
                 className="flex items-center gap-3 rounded-2xl bg-white shadow-sm px-4 py-3 transition-all duration-700"
                 style={{
                   transitionDelay: `${i * 220}ms`,
@@ -77,9 +77,8 @@ export function SmartAssistantMockup({ locale }: { locale: string }) {
                   transform: step >= 4 ? 'translateY(0)' : 'translateY(14px)',
                 }}
               >
-                <span className="w-11 h-11 rounded-full bg-navy-800 text-white font-bold flex items-center justify-center">{m.letter}.</span>
-                <span className="flex-1 text-sm text-navy-700">{m.meta}</span>
-                <span className="text-sm font-bold text-burgundy-500 tabular-nums" dir="ltr">{m.score}%</span>
+                <span className="w-11 h-11 rounded-full bg-navy-800 text-white font-bold flex items-center justify-center">{m.n}</span>
+                <span className="flex-1 text-sm text-navy-700">{m.text}</span>
               </div>
             ))}
           </div>
